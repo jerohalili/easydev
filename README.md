@@ -14,7 +14,7 @@ The project also exists as a way to practice building a real weighted-scoring sy
 
 ## Live Website
 
-**Website:** Coming soon — the app isn't deployed yet. See **Setup Instructions** below to run it locally in the meantime.
+**Website:** [https://easydev-mu.vercel.app/](https://easydev-mu.vercel.app/)
 
 ---
 
