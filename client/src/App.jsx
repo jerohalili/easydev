@@ -58,7 +58,10 @@ export default function App() {
   };
 
   const handleSubmitAnswers = async (optionIds) => {
+    if (!optionIds || optionIds.length === 0) return;
+
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch(`${API_BASE}/projects/${projectId}/answers`, {
         method: 'POST',
@@ -173,7 +176,7 @@ export default function App() {
                   Create Project Proposal
                 </h2>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '28px', fontSize: '14px', lineHeight: '1.6' }}>
-                  Name your proposal to begin the questionnaire. Select multiple choices where applicable or skip unfamiliar options without interrupting the recommendation pass.
+                  Name your proposal to begin the questionnaire. Select your project requirements and click continue to progress through the assessment.
                 </p>
 
                 <form onSubmit={startNewProject}>

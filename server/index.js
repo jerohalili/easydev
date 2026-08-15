@@ -119,7 +119,7 @@ app.post('/api/projects', async (req, res) => {
   }
 });
 
-// 5. Fetch Question & Options (Supports is_multiselect flag)
+// 5. Fetch Question & Options
 app.get('/api/questions/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -139,7 +139,7 @@ app.get('/api/questions/:id', async (req, res) => {
   }
 });
 
-// 6. Record Answers (Supports single option_id or array of option_ids)
+// 6. Record Answers (Accepts single option_id or array of option_ids)
 app.post('/api/projects/:id/answers', async (req, res) => {
   const projectId = req.params.id;
   const { question_id, option_id, option_ids } = req.body;
