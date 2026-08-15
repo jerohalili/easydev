@@ -23,24 +23,20 @@ app.get('/api/health', async (req, res) => {
 });
 
 // ----------------------------------------------------
-// Step 4 Endpoints
+// Project & Questionnaire API
 // ----------------------------------------------------
 
-// 1. Create a new project & get initial question ID
+// 1. Create a Project
 app.post('/api/projects', async (req, res) => {
   const { title = 'Untitled Project', description = '' } = req.body;
   try {
-    // Create project record
     const projResult = await pool.query(
       'INSERT INTO projects (title, description) VALUES ($1, $2) RETURNING *',
       [title, description]
     );
     const project = projResult.rows[0];
 
-    // Find the starting question (is_first = TRUE)
-    const qResult = await pool.query(
-      'SELECT id FROM questions WHERE is_first = TRUE LIMIT 1'
-    );
+    const qResult = await pool.query('SELECT id FROM questions WHERE is_first = TRUE LIMIT 1');
     const firstQuestion = qResult.rows[0];
 
     res.status(201).json({
@@ -53,7 +49,7 @@ app.post('/api/projects', async (req, res) => {
   }
 });
 
-// 2. GET /api/questions/:id (returns question prompt + list of selectable options)
+// 2. Fetch Question + Options by ID
 app.get('/api/questions/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -77,7 +73,7 @@ app.get('/api/questions/:id', async (req, res) => {
   }
 });
 
-// 3. POST /api/projects/:id/answers (record an answer, return next_question_id)
+// 3. Record Answer & Return Next Question Branch
 app.post('/api/projects/:id/answers', async (req, res) => {
   const projectId = req.params.id;
   const { question_id, option_id } = req.body;
@@ -87,25 +83,19 @@ app.post('/api/projects/:id/answers', async (req, res) => {
   }
 
   try {
-    // Record user answer
     await pool.query(
       'INSERT INTO answers (project_id, question_id, option_id) VALUES ($1, $2, $3)',
       [projectId, question_id, option_id]
     );
 
-    // Look up chosen option's next_question_id to trigger branching
-    const optionRes = await pool.query(
-      'SELECT next_question_id FROM options WHERE id = $1',
-      [option_id]
-    );
-
+    const optionRes = await pool.query('SELECT next_question_id FROM options WHERE id = $1', [option_id]);
     const nextQuestionId = optionRes.rows[0] ? optionRes.rows[0].next_question_id : null;
 
     res.json({
       project_id: Number(projectId),
       question_id,
       chosen_option_id: option_id,
-      next_question_id: nextQuestionId // null means end of flow
+      next_question_id: nextQuestionId
     });
   } catch (err) {
     console.error('Error saving answer:', err);
@@ -113,40 +103,75 @@ app.post('/api/projects/:id/answers', async (req, res) => {
   }
 });
 
-// 4. POST /api/projects/:id/score (Stub endpoint returning hardcoded scores for now)
+// 4. Real Weighted Scoring Endpoint across 5 Categories
 app.post('/api/projects/:id/score', async (req, res) => {
   const projectId = req.params.id;
 
   try {
-    // Fake results stub matching the required schema output structure
-    const stubResults = [
-      {
-        tech_item_id: 1,
-        name: 'TypeScript',
-        category: 'language',
-        score: 11,
-        reasoning_text: 'High type-safety requirement and Node.js backend preference.'
-      },
-      {
-        tech_item_id: 4,
-        name: 'React',
-        category: 'framework',
-        score: 12,
-        reasoning_text: 'Ideal fit for rich fullstack client application requirements.'
-      },
-      {
-        tech_item_id: 7,
-        name: 'PostgreSQL',
-        category: 'database',
-        score: 10,
-        reasoning_text: 'Best fit for relational schema with ACID transaction guarantees.'
+    // Sum weights for tech items based on user's answers
+    const scoresQuery = `
+      SELECT 
+        t.id AS tech_item_id,
+        t.name,
+        t.category,
+        SUM(w.weight_value)::int AS total_score
+      FROM answers a
+      JOIN weights w ON a.option_id = w.option_id
+      JOIN tech_items t ON w.tech_item_id = t.id
+      WHERE a.project_id = $1
+      GROUP BY t.id, t.name, t.category
+      ORDER BY total_score DESC;
+    `;
+
+    const scoresRes = await pool.query(scoresQuery, [projectId]);
+    const scoredItems = scoresRes.rows;
+
+    const categories = ['language', 'frontend', 'backend', 'database', 'infrastructure'];
+    const recommendations = [];
+
+    for (const category of categories) {
+      const topInCat = scoredItems.find((item) => item.category === category);
+
+      if (topInCat) {
+        // Find top contributing option to form the reasoning string
+        const reasoningQuery = `
+          SELECT o.label AS option_label, q.prompt_text
+          FROM answers a
+          JOIN options o ON a.option_id = o.id
+          JOIN questions q ON a.question_id = q.id
+          JOIN weights w ON a.option_id = w.option_id
+          WHERE a.project_id = $1 AND w.tech_item_id = $2
+          ORDER BY w.weight_value DESC
+          LIMIT 1;
+        `;
+        const reasonRes = await pool.query(reasoningQuery, [projectId, topInCat.tech_item_id]);
+        const reasonRow = reasonRes.rows[0];
+
+        const reasoningText = reasonRow
+          ? `Recommended because you selected "${reasonRow.option_label}" for ${reasonRow.prompt_text.toLowerCase()}`
+          : 'Recommended based on your project constraints.';
+
+        recommendations.push({
+          tech_item_id: topInCat.tech_item_id,
+          name: topInCat.name,
+          category: topInCat.category,
+          score: topInCat.total_score,
+          reasoning_text: reasoningText
+        });
+
+        // Persist result record
+        await pool.query(
+          `INSERT INTO results (project_id, tech_item_id, category, score, reasoning_text)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [projectId, topInCat.tech_item_id, topInCat.category, topInCat.total_score, reasoningText]
+        );
       }
-    ];
+    }
 
     res.json({
       project_id: Number(projectId),
-      is_stub: true,
-      recommendations: stubResults
+      is_stub: false,
+      recommendations
     });
   } catch (err) {
     console.error('Error generating score:', err);
