@@ -8,6 +8,8 @@ const CATEGORY_STYLES = {
   infrastructure: { bg: 'var(--badge-infra-bg)', text: 'var(--badge-infra-text)', border: 'var(--badge-infra-border)' }
 };
 
+const API_BASE = import.meta.env.DEV ? 'http://localhost:5000/api' : '/api';
+
 export default function HistoryView({ onSelectProject, onStartNew }) {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +20,7 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
 
   const fetchHistory = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/projects');
+      const res = await fetch(`${API_BASE}/projects`);
       const data = await res.json();
       setProjects(data);
     } catch (err) {
@@ -31,7 +33,7 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
   const handleDelete = async (e, id) => {
     e.stopPropagation();
     if (!confirm('Are you sure you want to delete this proposal from history?')) return;
-    await fetch(`http://localhost:5000/api/projects/${id}`, { method: 'DELETE' });
+    await fetch(`${API_BASE}/projects/${id}`, { method: 'DELETE' });
     setProjects(prev => prev.filter(p => p.id !== id));
   };
 
