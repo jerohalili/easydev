@@ -17,18 +17,19 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
+      className="btn-interactive"
       style={{
-        padding: '8px 14px',
-        borderRadius: '20px',
+        padding: '8px 16px',
+        borderRadius: '30px',
         border: '1px solid var(--border-color)',
         backgroundColor: 'var(--bg-card)',
         color: 'var(--text-primary)',
         fontSize: '13px',
-        fontWeight: '600',
+        fontWeight: '700',
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
-        gap: '6px',
+        gap: '8px',
         boxShadow: 'var(--card-shadow)'
       }}
     >

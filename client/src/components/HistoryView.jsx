@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 
-const CATEGORY_COLORS = {
-  language: '#ef4444',
-  frontend: '#3b82f6',
-  backend: '#10b981',
-  database: '#f59e0b',
-  infrastructure: '#8b5cf6'
+const CATEGORY_STYLES = {
+  language: { bg: 'var(--badge-lang-bg)', text: 'var(--badge-lang-text)', border: 'var(--badge-lang-border)' },
+  frontend: { bg: 'var(--badge-front-bg)', text: 'var(--badge-front-text)', border: 'var(--badge-front-border)' },
+  backend: { bg: 'var(--badge-back-bg)', text: 'var(--badge-back-text)', border: 'var(--badge-back-border)' },
+  database: { bg: 'var(--badge-db-bg)', text: 'var(--badge-db-text)', border: 'var(--badge-db-border)' },
+  infrastructure: { bg: 'var(--badge-infra-bg)', text: 'var(--badge-infra-text)', border: 'var(--badge-infra-border)' }
 };
 
 export default function HistoryView({ onSelectProject, onStartNew }) {
@@ -36,27 +36,29 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
   };
 
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>Loading project history...</div>;
+    return <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)', fontWeight: '600' }}>Loading proposal history...</div>;
   }
 
   return (
     <div className="animate-fade">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h2 style={{ fontSize: '22px', fontWeight: '800' }}>Project Proposals History</h2>
+          <h2 style={{ fontSize: '22px', fontWeight: '800', color: 'var(--text-primary)' }}>Proposal History</h2>
           <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
             Review past assessments and their recommended tech stack outputs
           </p>
         </div>
         <button
           onClick={onStartNew}
+          className="btn-interactive"
           style={{
             padding: '10px 18px',
             backgroundColor: 'var(--primary-accent)',
             color: '#ffffff',
             border: 'none',
-            borderRadius: '8px',
-            fontWeight: '600',
+            borderRadius: '10px',
+            fontWeight: '700',
+            fontSize: '14px',
             cursor: 'pointer'
           }}
         >
@@ -65,11 +67,12 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
       </div>
 
       {projects.length === 0 ? (
-        <div style={{ background: 'var(--bg-card)', padding: '40px', borderRadius: '12px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
+        <div style={{ background: 'var(--bg-card)', padding: '40px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center', boxShadow: 'var(--card-shadow)' }}>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>No previous project proposals found.</p>
           <button
             onClick={onStartNew}
-            style={{ padding: '10px 18px', backgroundColor: 'var(--primary-accent)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}
+            className="btn-interactive"
+            style={{ padding: '10px 18px', backgroundColor: 'var(--primary-accent)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', cursor: 'pointer' }}
           >
             Create Your First Proposal
           </button>
@@ -80,25 +83,25 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
             <div
               key={proj.id}
               onClick={() => onSelectProject(proj.id)}
+              className="option-card"
               style={{
                 background: 'var(--bg-card)',
-                padding: '20px 24px',
-                borderRadius: '12px',
+                padding: '24px',
+                borderRadius: '16px',
                 border: '1px solid var(--border-color)',
                 boxShadow: 'var(--card-shadow)',
-                cursor: 'pointer',
-                transition: 'transform 0.15s ease'
+                cursor: 'pointer'
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)' }}>{proj.title}</h3>
+                <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)' }}>{proj.title}</h3>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)' }}>
                     {new Date(proj.created_at).toLocaleDateString()}
                   </span>
                   <button
                     onClick={(e) => handleDelete(e, proj.id)}
-                    style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '14px' }}
+                    style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '16px', padding: '4px' }}
                     title="Delete project"
                   >
                     🗑️
@@ -107,28 +110,31 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
               </div>
 
               {proj.description && (
-                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: '1.5' }}>
                   {proj.description}
                 </p>
               )}
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
-                {proj.recommendations && proj.recommendations.map((rec) => (
-                  <span
-                    key={rec.name}
-                    style={{
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      padding: '4px 10px',
-                      borderRadius: '6px',
-                      backgroundColor: 'var(--bg-input)',
-                      color: CATEGORY_COLORS[rec.category] || 'var(--text-primary)',
-                      border: '1px solid var(--border-color)'
-                    }}
-                  >
-                    {rec.name}
-                  </span>
-                ))}
+                {proj.recommendations && proj.recommendations.map((rec) => {
+                  const styleBadge = CATEGORY_STYLES[rec.category] || { bg: 'var(--bg-input)', text: 'var(--text-primary)', border: 'var(--border-color)' };
+                  return (
+                    <span
+                      key={rec.name}
+                      style={{
+                        fontSize: '12px',
+                        fontWeight: '700',
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        backgroundColor: styleBadge.bg,
+                        color: styleBadge.text,
+                        border: `1px solid ${styleBadge.border}`
+                      }}
+                    >
+                      {rec.name}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           ))}

@@ -13,16 +13,16 @@ export default function QuestionCard({ question, options, onSelectOption, loadin
 
   return (
     <div
-      className="animate-fade-in"
+      className="animate-fade"
       style={{
         background: 'var(--bg-card)',
-        padding: '32px',
-        borderRadius: '16px',
+        padding: '36px',
+        borderRadius: '20px',
         border: '1px solid var(--border-color)',
-        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)'
+        boxShadow: 'var(--card-shadow)'
       }}
     >
-      <h2 style={{ fontSize: '22px', fontWeight: '700', marginBottom: '24px', color: 'var(--text-primary)', lineHeight: '1.4' }}>
+      <h2 style={{ fontSize: '22px', fontWeight: '800', marginBottom: '24px', color: 'var(--text-primary)', lineHeight: '1.4' }}>
         {question.prompt_text}
       </h2>
 
@@ -30,38 +30,46 @@ export default function QuestionCard({ question, options, onSelectOption, loadin
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '28px' }}>
           {options.map((opt) => {
             const isSelected = selectedOptionId === opt.id;
+            const isDontKnow = opt.label.toLowerCase().includes('don\'t know') || opt.label.toLowerCase().includes('not sure');
+
             return (
               <button
                 key={opt.id}
                 type="button"
+                className="option-card"
                 onClick={() => setSelectedOptionId(opt.id)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justify: 'space-between',
+                  justifyContent: 'space-between',
                   textAlign: 'left',
                   padding: '16px 20px',
                   borderRadius: '12px',
-                  border: isSelected ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)',
-                  backgroundColor: isSelected ? 'var(--accent-glow)' : 'rgba(15, 23, 42, 0.5)',
-                  color: isSelected ? '#ffffff' : 'var(--text-secondary)',
-                  fontWeight: isSelected ? '600' : '400',
+                  borderWidth: '2px',
+                  borderStyle: 'solid',
+                  borderColor: isSelected ? 'var(--primary-accent)' : 'transparent',
+                  backgroundColor: isSelected ? 'var(--accent-glow)' : 'var(--bg-card)',
+                  color: isSelected ? 'var(--text-primary)' : (isDontKnow ? 'var(--text-muted)' : 'var(--text-secondary)'),
+                  fontWeight: isSelected ? '700' : '500',
+                  fontStyle: isDontKnow ? 'italic' : 'normal',
                   cursor: 'pointer',
-                  fontSize: '15px',
-                  transition: 'all 0.15s ease'
+                  fontSize: '15px'
                 }}
               >
                 <span>{opt.label}</span>
                 <span
                   style={{
-                    width: '18px',
-                    height: '18px',
+                    width: '20px',
+                    height: '20px',
                     borderRadius: '50%',
-                    border: isSelected ? '5px solid var(--accent-primary)' : '2px solid var(--text-muted)',
-                    backgroundColor: 'transparent',
+                    borderWidth: '2px',
+                    borderStyle: 'solid',
+                    borderColor: isSelected ? 'var(--primary-accent)' : 'var(--border-color)',
+                    backgroundColor: isSelected ? 'var(--primary-accent)' : 'transparent',
                     display: 'inline-block',
                     flexShrink: 0,
-                    marginLeft: '12px'
+                    marginLeft: '12px',
+                    transition: 'all 0.15s ease'
                   }}
                 />
               </button>
@@ -71,22 +79,22 @@ export default function QuestionCard({ question, options, onSelectOption, loadin
 
         <button
           type="submit"
+          className="btn-interactive"
           disabled={!selectedOptionId || loading}
           style={{
             width: '100%',
             padding: '14px',
-            backgroundColor: selectedOptionId && !loading ? 'var(--accent-primary)' : 'var(--bg-card-hover)',
+            backgroundColor: selectedOptionId && !loading ? 'var(--primary-accent)' : 'var(--bg-input)',
             color: selectedOptionId && !loading ? '#ffffff' : 'var(--text-muted)',
             border: 'none',
-            borderRadius: '10px',
-            fontWeight: '600',
+            borderRadius: '12px',
+            fontWeight: '700',
             fontSize: '16px',
             cursor: selectedOptionId && !loading ? 'pointer' : 'not-allowed',
-            transition: 'all 0.2s ease',
-            boxShadow: selectedOptionId && !loading ? '0 4px 12px var(--accent-glow)' : 'none'
+            boxShadow: selectedOptionId && !loading ? '0 4px 14px var(--accent-glow)' : 'none'
           }}
         >
-          {loading ? 'Processing Answer...' : 'Continue →'}
+          {loading ? 'Processing Choice...' : 'Continue →'}
         </button>
       </form>
     </div>
