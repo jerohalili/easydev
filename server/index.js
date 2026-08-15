@@ -178,15 +178,13 @@ app.post('/api/projects/:id/answers', async (req, res) => {
   }
 });
 
-// 7. Dynamic Weighted Scoring Engine
+// 7. Dynamic Weighted Scoring Engine (Omit categories with 0 points)
 app.post('/api/projects/:id/score', async (req, res) => {
   const projectId = req.params.id;
 
   try {
-    // Clear past results if re-scoring
     await pool.query('DELETE FROM results WHERE project_id = $1', [projectId]);
 
-    // Calculate score per tech item based ONLY on selected option answers
     const scoresQuery = `
       SELECT 
         t.id AS tech_item_id,
@@ -208,20 +206,11 @@ app.post('/api/projects/:id/score', async (req, res) => {
     const recommendations = [];
 
     for (const category of categories) {
-      let topInCat = scoredItems.find(i => i.category === category);
+      const itemsInCat = scoredItems.filter(i => i.category === category);
+      const topInCat = itemsInCat[0];
 
-      // Fallback baseline if no option added points to this category
-      if (!topInCat) {
-        const fallbackRes = await pool.query(
-          'SELECT id AS tech_item_id, name, category FROM tech_items WHERE category = $1 LIMIT 1',
-          [category]
-        );
-        if (fallbackRes.rows[0]) {
-          topInCat = { ...fallbackRes.rows[0], total_score: 0 };
-        }
-      }
-
-      if (topInCat) {
+      // Only recommend a category if the user's answers accumulated weight points for it
+      if (topInCat && topInCat.total_score > 0) {
         const reasoningQuery = `
           SELECT o.label AS option_label, q.prompt_text
           FROM answers a
@@ -236,8 +225,8 @@ app.post('/api/projects/:id/score', async (req, res) => {
         const reasonRow = reasonRes.rows[0];
 
         const reasoningText = reasonRow
-          ? `Selected because you chose "${reasonRow.option_label}" for ${reasonRow.prompt_text.toLowerCase()}`
-          : `Standard industry baseline pick for ${category} tier.`;
+          ? `Selected because you chose "${reasonRow.option_label}"`
+          : `Top match based on your project requirements.`;
 
         recommendations.push({
           tech_item_id: topInCat.tech_item_id,
