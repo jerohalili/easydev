@@ -1,3 +1,4 @@
+// client/src/components/QuestionCard.jsx
 import React, { useState } from 'react';
 
 export default function QuestionCard({ question, options, onSelectOption, loading }) {
@@ -22,9 +23,12 @@ export default function QuestionCard({ question, options, onSelectOption, loadin
         boxShadow: 'var(--card-shadow)'
       }}
     >
-      <h2 style={{ fontSize: '22px', fontWeight: '800', marginBottom: '24px', color: 'var(--text-primary)', lineHeight: '1.4' }}>
+      <h2 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '8px', color: 'var(--text-primary)' }}>
         {question.prompt_text}
       </h2>
+      <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '24px' }}>
+        Select the option that best matches your project scope. If you are unsure, pick "I don't know".
+      </p>
 
       <form onSubmit={handleSubmit}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '28px' }}>
@@ -41,7 +45,7 @@ export default function QuestionCard({ question, options, onSelectOption, loadin
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
+                  justify: 'space-between',
                   textAlign: 'left',
                   padding: '16px 20px',
                   borderRadius: '12px',
@@ -56,7 +60,9 @@ export default function QuestionCard({ question, options, onSelectOption, loadin
                   fontSize: '15px'
                 }}
               >
-                <span>{opt.label}</span>
+                <div>
+                  <div style={{ fontWeight: '700' }}>{opt.label}</div>
+                </div>
                 <span
                   style={{
                     width: '20px',

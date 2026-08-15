@@ -178,14 +178,15 @@ app.post('/api/projects/:id/answers', async (req, res) => {
   }
 });
 
-// 7. Weighted Scoring Engine
+// 7. Dynamic Weighted Scoring Engine
 app.post('/api/projects/:id/score', async (req, res) => {
   const projectId = req.params.id;
 
   try {
-    // Delete past results if re-scoring
+    // Clear past results if re-scoring
     await pool.query('DELETE FROM results WHERE project_id = $1', [projectId]);
 
+    // Calculate score per tech item based ONLY on selected option answers
     const scoresQuery = `
       SELECT 
         t.id AS tech_item_id,
@@ -193,8 +194,9 @@ app.post('/api/projects/:id/score', async (req, res) => {
         t.category,
         COALESCE(SUM(w.weight_value), 0)::int AS total_score
       FROM tech_items t
-      LEFT JOIN weights w ON w.tech_item_id = t.id
-      LEFT JOIN answers a ON a.option_id = w.option_id AND a.project_id = $1
+      JOIN weights w ON w.tech_item_id = t.id
+      JOIN answers a ON a.option_id = w.option_id
+      WHERE a.project_id = $1
       GROUP BY t.id, t.name, t.category
       ORDER BY total_score DESC;
     `;
@@ -206,8 +208,18 @@ app.post('/api/projects/:id/score', async (req, res) => {
     const recommendations = [];
 
     for (const category of categories) {
-      const itemsInCat = scoredItems.filter(i => i.category === category);
-      const topInCat = itemsInCat[0];
+      let topInCat = scoredItems.find(i => i.category === category);
+
+      // Fallback baseline if no option added points to this category
+      if (!topInCat) {
+        const fallbackRes = await pool.query(
+          'SELECT id AS tech_item_id, name, category FROM tech_items WHERE category = $1 LIMIT 1',
+          [category]
+        );
+        if (fallbackRes.rows[0]) {
+          topInCat = { ...fallbackRes.rows[0], total_score: 0 };
+        }
+      }
 
       if (topInCat) {
         const reasoningQuery = `
@@ -224,7 +236,7 @@ app.post('/api/projects/:id/score', async (req, res) => {
         const reasonRow = reasonRes.rows[0];
 
         const reasoningText = reasonRow
-          ? `Recommended because you chose "${reasonRow.option_label}" for ${reasonRow.prompt_text.toLowerCase()}`
+          ? `Selected because you chose "${reasonRow.option_label}" for ${reasonRow.prompt_text.toLowerCase()}`
           : `Standard industry baseline pick for ${category} tier.`;
 
         recommendations.push({
