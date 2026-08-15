@@ -35,7 +35,8 @@ app.get('/api/projects', async (req, res) => {
               'name', t.name,
               'category', r.category,
               'score', r.score,
-              'reasoning_text', r.reasoning_text
+              'reasoning_text', r.reasoning_text,
+              'trade_offs', t.trade_offs
             )
           ) FILTER (WHERE r.id IS NOT NULL), '[]'
         ) AS recommendations
@@ -63,7 +64,7 @@ app.get('/api/projects/:id', async (req, res) => {
     }
 
     const resultsRes = await pool.query(
-      `SELECT r.*, t.name FROM results r 
+      `SELECT r.*, t.name, t.description, t.trade_offs FROM results r 
        JOIN tech_items t ON r.tech_item_id = t.id 
        WHERE r.project_id = $1`,
       [id]
@@ -118,7 +119,7 @@ app.post('/api/projects', async (req, res) => {
   }
 });
 
-// 5. Fetch Question & Options (Ensuring "I don't know" option exists per question)
+// 5. Fetch Question & Options
 app.get('/api/questions/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -132,20 +133,7 @@ app.get('/api/questions/:id', async (req, res) => {
       [id]
     );
 
-    let options = optionsRes.rows;
-    
-    // Fallback: If no neutral option was manually seeded, inject a default "I don't know"
-    const hasDontKnow = options.some(o => o.label.toLowerCase().includes('don\'t know') || o.label.toLowerCase().includes('not sure'));
-    if (!hasDontKnow && options.length > 0) {
-      const defaultNextQ = options[0].next_question_id;
-      options.push({
-        id: -Number(id), // Dynamic negative ID for client reference
-        label: "I don't know / Not sure yet (Use neutral defaults)",
-        next_question_id: defaultNextQ
-      });
-    }
-
-    res.json({ question: questionRes.rows[0], options });
+    res.json({ question: questionRes.rows[0], options: optionsRes.rows });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch question' });
   }
@@ -157,45 +145,36 @@ app.post('/api/projects/:id/answers', async (req, res) => {
   const { question_id, option_id } = req.body;
 
   try {
-    // If positive real option_id, save to answers table
-    if (option_id > 0) {
-      await pool.query(
-        'INSERT INTO answers (project_id, question_id, option_id) VALUES ($1, $2, $3)',
-        [projectId, question_id, option_id]
-      );
-      const optionRes = await pool.query('SELECT next_question_id FROM options WHERE id = $1', [option_id]);
-      const nextQuestionId = optionRes.rows[0] ? optionRes.rows[0].next_question_id : null;
-      return res.json({ project_id: Number(projectId), next_question_id: nextQuestionId });
-    } else {
-      // "I don't know" selected: lookup next question ID without saving a weighted answer
-      const qId = Math.abs(option_id);
-      const optionRes = await pool.query('SELECT next_question_id FROM options WHERE question_id = $1 LIMIT 1', [qId]);
-      const nextQuestionId = optionRes.rows[0] ? optionRes.rows[0].next_question_id : null;
-      return res.json({ project_id: Number(projectId), next_question_id: nextQuestionId });
-    }
+    await pool.query(
+      'INSERT INTO answers (project_id, question_id, option_id) VALUES ($1, $2, $3)',
+      [projectId, question_id, option_id]
+    );
+    const optionRes = await pool.query('SELECT next_question_id FROM options WHERE id = $1', [option_id]);
+    const nextQuestionId = optionRes.rows[0] ? optionRes.rows[0].next_question_id : null;
+    return res.json({ project_id: Number(projectId), next_question_id: nextQuestionId });
   } catch (err) {
     res.status(500).json({ error: 'Failed to record answer' });
   }
 });
 
-// 7. Dynamic Weighted Scoring Engine (Omit categories with 0 points)
+// 7. Dynamic Weighted Scoring Engine
 app.post('/api/projects/:id/score', async (req, res) => {
   const projectId = req.params.id;
 
   try {
-    await pool.query('DELETE FROM results WHERE project_id = $1', [projectId]);
-
     const scoresQuery = `
       SELECT 
         t.id AS tech_item_id,
         t.name,
         t.category,
+        t.description,
+        t.trade_offs,
         COALESCE(SUM(w.weight_value), 0)::int AS total_score
       FROM tech_items t
       JOIN weights w ON w.tech_item_id = t.id
       JOIN answers a ON a.option_id = w.option_id
       WHERE a.project_id = $1
-      GROUP BY t.id, t.name, t.category
+      GROUP BY t.id, t.name, t.category, t.description, t.trade_offs
       ORDER BY total_score DESC;
     `;
 
@@ -209,31 +188,28 @@ app.post('/api/projects/:id/score', async (req, res) => {
       const itemsInCat = scoredItems.filter(i => i.category === category);
       const topInCat = itemsInCat[0];
 
-      // Only recommend a category if the user's answers accumulated weight points for it
       if (topInCat && topInCat.total_score > 0) {
-        const reasoningQuery = `
-          SELECT o.label AS option_label, q.prompt_text
+        const constraintQuery = `
+          SELECT o.label AS option_label
           FROM answers a
           JOIN options o ON a.option_id = o.id
-          JOIN questions q ON a.question_id = q.id
           JOIN weights w ON a.option_id = w.option_id
           WHERE a.project_id = $1 AND w.tech_item_id = $2
           ORDER BY w.weight_value DESC
-          LIMIT 1;
+          LIMIT 2;
         `;
-        const reasonRes = await pool.query(reasoningQuery, [projectId, topInCat.tech_item_id]);
-        const reasonRow = reasonRes.rows[0];
+        const constraintRes = await pool.query(constraintQuery, [projectId, topInCat.tech_item_id]);
+        const keyChoices = constraintRes.rows.map(r => r.option_label).join(' & ');
 
-        const reasoningText = reasonRow
-          ? `Selected because you chose "${reasonRow.option_label}"`
-          : `Top match based on your project requirements.`;
+        const reasoningText = `${topInCat.description} Recommended because your choices prioritized: ${keyChoices || 'optimal system alignment'}.`;
 
         recommendations.push({
           tech_item_id: topInCat.tech_item_id,
           name: topInCat.name,
           category: topInCat.category,
           score: topInCat.total_score,
-          reasoning_text: reasoningText
+          reasoning_text: reasoningText,
+          trade_offs: topInCat.trade_offs
         });
 
         await pool.query(
@@ -251,11 +227,7 @@ app.post('/api/projects/:id/score', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
-
-// Get all tech items (grouped by category for building custom stack dropdowns)
+// 8. Get All Tech Items
 app.get('/api/tech-items', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM tech_items ORDER BY category, name ASC');
@@ -265,7 +237,7 @@ app.get('/api/tech-items', async (req, res) => {
   }
 });
 
-// Get user-built stack for a project
+// 9. Get User-Built Custom Stack Choices
 app.get('/api/projects/:id/user-stack', async (req, res) => {
   const { id } = req.params;
   try {
@@ -282,7 +254,7 @@ app.get('/api/projects/:id/user-stack', async (req, res) => {
   }
 });
 
-// Save or update user-built stack choice per category
+// 10. Save/Update Custom User Stack Choice
 app.post('/api/projects/:id/user-stack', async (req, res) => {
   const { id } = req.params;
   const { category, tech_item_id, notes = '' } = req.body;
@@ -300,4 +272,8 @@ app.post('/api/projects/:id/user-stack', async (req, res) => {
     console.error('Save user stack error:', err);
     res.status(500).json({ error: 'Failed to save user stack choice' });
   }
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });

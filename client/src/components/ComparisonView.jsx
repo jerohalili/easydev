@@ -6,7 +6,6 @@ export default function ComparisonView({ projectId, recommendations, apiBase = '
   const [techItems, setTechItems] = useState([]);
   const [userSelections, setUserSelections] = useState({});
   const [loading, setLoading] = useState(true);
-  const [savingCategory, setSavingCategory] = useState(null);
 
   useEffect(() => {
     loadComparisonData();
@@ -39,7 +38,6 @@ export default function ComparisonView({ projectId, recommendations, apiBase = '
   const handleSelectTech = async (category, techItemId) => {
     const numericId = Number(techItemId);
     setUserSelections(prev => ({ ...prev, [category]: numericId }));
-    setSavingCategory(category);
 
     try {
       await fetch(`${apiBase}/projects/${projectId}/user-stack`, {
@@ -49,102 +47,151 @@ export default function ComparisonView({ projectId, recommendations, apiBase = '
       });
     } catch (err) {
       console.error('Error saving selection:', err);
-    } finally {
-      setSavingCategory(null);
     }
   };
 
   if (loading) {
-    return <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>Loading comparison tool...</div>;
+    return (
+      <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>
+        Loading architectural trade-off analyzer...
+      </div>
+    );
   }
 
   return (
-    <div className="animate-fade" style={{ marginTop: '32px' }}>
-      <div style={{ marginBottom: '20px' }}>
+    <div className="animate-fade" style={{ marginTop: '36px' }}>
+      <div style={{ marginBottom: '24px' }}>
         <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>
-          Side-by-Side Stack Comparison
+          Architectural Trade-Off Analysis
         </h3>
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-          Compare EasyDev's recommended stack against your custom preferred choices.
+          Evaluate technical pros, cons, and tradeoffs when selecting alternative stack choices.
         </p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         {CATEGORIES.map(category => {
           const recItem = recommendations.find(r => r.category === category);
           const catTechs = techItems.filter(t => t.category === category);
-          const userChoiceId = userSelections[category] || (recItem ? recItem.tech_item_id : '');
-          const isMatch = recItem && Number(userChoiceId) === Number(recItem.tech_item_id);
+          const customChoiceId = userSelections[category] || (recItem ? recItem.tech_item_id : '');
+          const customItem = techItems.find(t => Number(t.id) === Number(customChoiceId));
+          const isMatch = recItem && Number(customChoiceId) === Number(recItem.tech_item_id);
 
           return (
             <div
               key={category}
               style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '16px',
-                padding: '16px 20px',
-                borderRadius: '14px',
+                borderRadius: '16px',
                 border: '1px solid var(--border-color)',
-                backgroundColor: 'var(--bg-main)'
+                backgroundColor: 'var(--bg-card)',
+                padding: '20px',
+                boxShadow: 'var(--card-shadow)'
               }}
             >
-              {/* Column 1: EasyDev Recommended Stack */}
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                    {category} (Recommended)
+              <div
+                style={{
+                  display: 'flex',
+                  justify: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '16px',
+                  borderBottom: '1px solid var(--border-color)',
+                  paddingBottom: '12px'
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: '800',
+                    textTransform: 'uppercase',
+                    color: 'var(--primary-accent)',
+                    letterSpacing: '0.08em'
+                  }}
+                >
+                  {category} Layer
+                </span>
+                {customChoiceId && (
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      padding: '4px 10px',
+                      borderRadius: '8px',
+                      backgroundColor: isMatch ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
+                      color: isMatch ? '#10b981' : '#f59e0b',
+                      border: `1px solid ${isMatch ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`
+                    }}
+                  >
+                    {isMatch ? '✓ Matching Recommendation' : '⚡ Custom Override Active'}
                   </span>
-                </div>
-                <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>
-                  {recItem ? recItem.name : 'None (Optional)'}
-                </div>
+                )}
               </div>
 
-              {/* Column 2: User-Customized Stack */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                    Your Custom Choice
-                  </span>
-                  {userChoiceId && (
-                    <span
-                      style={{
-                        fontSize: '11px',
-                        fontWeight: '800',
-                        padding: '2px 8px',
-                        borderRadius: '6px',
-                        backgroundColor: isMatch ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                        color: isMatch ? '#10b981' : '#f59e0b',
-                        border: `1px solid ${isMatch ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`
-                      }}
-                    >
-                      {isMatch ? '✓ Matches Recommendation' : '⚡ Custom Override'}
-                    </span>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                {/* Recommended Tech Card */}
+                <div style={{ backgroundColor: 'var(--bg-main)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                    EASYDEV RECOMMENDED
+                  </div>
+                  <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '8px' }}>
+                    {recItem ? recItem.name : 'N/A (Skipped)'}
+                  </div>
+                  {recItem && (
+                    <>
+                      <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5', marginBottom: '10px' }}>
+                        {recItem.reasoning_text}
+                      </p>
+                      {recItem.trade_offs && (
+                        <div style={{ fontSize: '11px', color: 'var(--text-primary)' }}>
+                          <strong style={{ color: '#10b981' }}>Pros:</strong> {recItem.trade_offs.pros?.join(', ')}<br />
+                          <strong style={{ color: '#ef4444' }}>Cons:</strong> {recItem.trade_offs.cons?.join(', ')}
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
-                <select
-                  value={userChoiceId}
-                  onChange={e => handleSelectTech(category, e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color)',
-                    backgroundColor: 'var(--bg-card)',
-                    color: 'var(--text-primary)',
-                    fontWeight: '600',
-                    fontSize: '14px'
-                  }}
-                >
-                  <option value="">-- Select custom alternative --</option>
-                  {catTechs.map(t => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
+                {/* Custom Tech Choice Card */}
+                <div style={{ backgroundColor: 'var(--bg-main)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                    YOUR CUSTOM SELECTION
+                  </div>
+                  <select
+                    value={customChoiceId}
+                    onChange={e => handleSelectTech(category, e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--border-color)',
+                      backgroundColor: 'var(--bg-input)',
+                      color: 'var(--text-primary)',
+                      fontWeight: '700',
+                      fontSize: '14px',
+                      marginBottom: '10px'
+                    }}
+                  >
+                    <option value="">-- Select custom alternative --</option>
+                    {catTechs.map(t => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  {customItem && (
+                    <>
+                      <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5', marginBottom: '10px' }}>
+                        {customItem.description}
+                      </p>
+                      {customItem.trade_offs && (
+                        <div style={{ fontSize: '11px', color: 'var(--text-primary)' }}>
+                          <strong style={{ color: '#10b981' }}>Pros:</strong> {customItem.trade_offs.pros?.join(', ')}<br />
+                          <strong style={{ color: '#ef4444' }}>Cons:</strong> {customItem.trade_offs.cons?.join(', ')}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           );

@@ -76,15 +76,12 @@ export default function ResultsView({ projectId, results, onRestart }) {
           })}
         </div>
 
-        <ComparisonView projectId={projectId} recommendations={results} />
-
         <button
           onClick={onRestart}
           className="btn-interactive"
           style={{
             width: '100%',
             padding: '14px',
-            marginTop: '28px',
             backgroundColor: 'var(--primary-accent)',
             color: '#ffffff',
             border: 'none',
@@ -98,6 +95,8 @@ export default function ResultsView({ projectId, results, onRestart }) {
           Start New Assessment
         </button>
       </div>
+
+      <ComparisonView projectId={projectId} recommendations={results} />
     </>
   );
 }

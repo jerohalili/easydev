@@ -1,4 +1,3 @@
--- server/schema.sql
 DROP TABLE IF EXISTS user_stacks CASCADE;
 DROP TABLE IF EXISTS results CASCADE;
 DROP TABLE IF EXISTS answers CASCADE;
@@ -35,7 +34,9 @@ CREATE TABLE options (
 CREATE TABLE tech_items (
   id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
-  category VARCHAR(50) NOT NULL -- 'language', 'frontend', 'backend', 'database', 'infrastructure'
+  category VARCHAR(50) NOT NULL, -- 'language', 'frontend', 'backend', 'database', 'infrastructure'
+  description TEXT,
+  trade_offs JSONB
 );
 
 -- 5. Weights Matrix
@@ -81,29 +82,33 @@ CREATE TABLE user_stacks (
 -- SEED DATA
 -- ========================================================
 
-INSERT INTO tech_items (id, name, category) VALUES
-(1, 'JavaScript / TypeScript', 'language'),
-(2, 'Python', 'language'),
-(3, 'Go (Golang)', 'language'),
-(4, 'Dart', 'language'),
-(5, 'Java / C#', 'language'),
-(10, 'Next.js (React)', 'frontend'),
-(11, 'Vite + React (SPA)', 'frontend'),
-(12, 'Astro', 'frontend'),
-(13, 'Flutter (Mobile)', 'frontend'),
-(14, 'React Native (Mobile)', 'frontend'),
-(20, 'Node.js (Express / NestJS)', 'backend'),
-(21, 'Python (FastAPI / Django)', 'backend'),
-(22, 'Go (Gin / Fiber)', 'backend'),
-(23, 'Supabase / Firebase (BaaS)', 'backend'),
-(30, 'PostgreSQL', 'database'),
-(31, 'MongoDB', 'database'),
-(32, 'SQLite / Turso', 'database'),
-(33, 'Redis (In-Memory Cache)', 'database'),
-(40, 'Vercel / Netlify', 'infrastructure'),
-(41, 'Docker + VPS (Hetzner / DigitalOcean)', 'infrastructure'),
-(42, 'AWS (S3 / ECS / CloudFront)', 'infrastructure'),
-(43, 'Firebase Hosting / Supabase Cloud', 'infrastructure');
+INSERT INTO tech_items (id, name, category, description, trade_offs) VALUES
+(1, 'JavaScript / TypeScript', 'language', 'Industry-standard strongly-typed language for full-stack JavaScript ecosystems.', '{"pros": ["Unified language across frontend and backend", "Massive package ecosystem (npm)"], "cons": ["Single-threaded runtime considerations", "Fast ecosystem churn"]}'),
+(2, 'Python', 'language', 'High-level language optimized for AI/ML pipelines, rapid iteration, and backend automation.', '{"pros": ["First-class AI/ML ecosystem (PyTorch, Pandas)", "Readable and expressive syntax"], "cons": ["Slower raw execution speed than compiled languages", "GIL limits multi-core execution"]}'),
+(3, 'Go (Golang)', 'language', 'Statically-typed language engineered for concurrent microservices and low-latency cloud infrastructure.', '{"pros": ["Low memory footprint and high performance", "Goroutines simplify massive concurrency"], "cons": ["No classic OOP inheritance", "More boilerplate compared to dynamic languages"]}'),
+(4, 'Dart', 'language', 'Client-optimized language tailored for cross-platform UI development with Flutter.', '{"pros": ["Optimized for fast multi-platform UI rendering", "Ahead-Of-Time compiled to native machine code"], "cons": ["Smaller backend ecosystem outside mobile UI"]}'),
+(5, 'Java / C#', 'language', 'Enterprise-grade object-oriented systems language with strong static typing and mature tooling.', '{"pros": ["Robust enterprise ecosystem", "High stability and long-term support"], "cons": ["Verbosity requires more setup", "Higher memory overhead than C/Go"]}'),
+
+(10, 'Next.js (React)', 'frontend', 'Production React framework with built-in SSR, SSG, routing, and server components.', '{"pros": ["Superior initial page load speed and SEO", "Seamless server/client component model"], "cons": ["Framework locking risks", "Complex server-side caching rules"]}'),
+(11, 'Vite + React (SPA)', 'frontend', 'Lightweight Single Page Application architecture focused on client-side state and instant hot reload.', '{"pros": ["Minimal config and fast local builds", "Simple client-side mental model"], "cons": ["Requires client JS enabled for rendering", "SEO requires extra static rendering strategy"]}'),
+(12, 'Astro', 'frontend', 'Content-first web framework delivering near-zero JavaScript by default via Islands Architecture.', '{"pros": ["Unmatched Lighthouse performance scores", "Allows embedding React/Vue components as needed"], "cons": ["Not designed for highly complex dynamic web dashboards"]}'),
+(13, 'Flutter (Mobile)', 'frontend', 'Google cross-platform UI toolkit compiling to native iOS and Android binaries from a single codebase.', '{"pros": ["60fps pixel-perfect custom rendering", "Single code implementation for mobile"], "cons": ["Larger initial app bundle size", "Requires platform channels for deep OS native APIs"]}'),
+(14, 'React Native (Mobile)', 'frontend', 'Cross-platform mobile framework leveraging native platform components via React primitives.', '{"pros": ["Shares React skills and code logic with web", "Direct access to platform native components"], "cons": ["Bridge overhead for heavy native animations", "Frequent version upgrade friction"]}'),
+
+(20, 'Node.js (Express / NestJS)', 'backend', 'Asynchronous event-driven backend runtime suited for API services and full-stack web platforms.', '{"pros": ["Shared data models with JS/TS frontends", "Massive middleware ecosystem"], "cons": ["CPU-bound computational tasks block event loop"]}'),
+(21, 'Python (FastAPI / Django)', 'backend', 'High-performance Python web framework featuring async endpoints and automatic OpenAPI documentation.', '{"pros": ["Native integration with AI/ML services", "Automatic interactive OpenAPI/Swagger docs"], "cons": ["Requires strict async library discipline"]}'),
+(22, 'Go (Gin / Fiber)', 'backend', 'Ultra-fast lightweight HTTP web framework engineered for high-concurrency microservices.', '{"pros": ["Blazing fast request throughput and low latency", "Minimal memory consumption per request"], "cons": ["Requires manual handling for complex ORM patterns"]}'),
+(23, 'Supabase / Firebase (BaaS)', 'backend', 'Backend-as-a-Service providing real-time data synchronization, managed auth, and direct DB access.', '{"pros": ["Accelerates MVP development by replacing custom backend code", "Built-in auth and live subscriptions"], "cons": ["Vendor lock-in risks", "Custom complex business logic requires serverless functions"]}'),
+
+(30, 'PostgreSQL', 'database', 'ACID-compliant relational database designed for complex relational queries, indexing, and high reliability.', '{"pros": ["Strong data integrity and complex relational support", "Extensible with JSONB, PostGIS, and PGVector"], "cons": ["Requires vertical scaling strategy for massive write traffic"]}'),
+(31, 'MongoDB', 'database', 'Document-oriented NoSQL database storing flexible JSON-like schemas for rapidly changing data structures.', '{"pros": ["Schema flexibility for dynamic unstructured data", "Easily horizontal sharding"], "cons": ["Lacks multi-table ACID guarantees without careful setup"]}'),
+(32, 'SQLite / Turso', 'database', 'Lightweight embedded or edge-replicated SQL database with zero configuration requirements.', '{"pros": ["Zero server setup cost or maintenance overhead", "Extremely fast local and edge read latency"], "cons": ["Not designed for heavy concurrent write operations"]}'),
+(33, 'Redis (In-Memory Cache)', 'database', 'In-memory key-value data store used for high-speed caching, session management, and pub/sub broker queues.', '{"pros": ["Sub-millisecond read/write execution", "Built-in data structures (Lists, Sets, Hashes)"], "cons": ["Data size limited by RAM budget", "Requires persistence configuration for durable storage"]}'),
+
+(40, 'Vercel / Netlify', 'infrastructure', 'Serverless deployment platform built for instant global edge deployment and automated continuous integration.', '{"pros": ["Zero infrastructure management", "Automatic preview deployments per Git branch"], "cons": ["Higher bandwidth cost at massive scale"]}'),
+(41, 'Docker + VPS (Hetzner / DigitalOcean)', 'infrastructure', 'Containerized hosting configuration offering cost control and infrastructure portability.', '{"pros": ["Predictable flat monthly compute cost", "Complete control over server environment"], "cons": ["Requires manual OS security patching and server maintenance"]}'),
+(42, 'AWS (S3 / ECS / CloudFront)', 'infrastructure', 'Enterprise cloud infrastructure ecosystem capable of supporting arbitrary workload scale.', '{"pros": ["Unlimited horizontal scalability and compliance controls", "Industry standard for production environments"], "cons": ["High configuration complexity and unexpected bill spikes"]}'),
+(43, 'Firebase Hosting / Supabase Cloud', 'infrastructure', 'Managed application cloud platform tailored for BaaS-backed mobile and web apps.', '{"pros": ["Tightly integrated with backend auth and database", "Seamless deployment pipeline"], "cons": ["Tied strictly to ecosystem platform services"]}');
 
 INSERT INTO questions (id, prompt_text, is_first) VALUES
 (1, 'What primary type of software are you building?', TRUE),
@@ -117,7 +122,6 @@ INSERT INTO questions (id, prompt_text, is_first) VALUES
 (9, 'What is your project timeline and delivery target?', FALSE);
 
 INSERT INTO options (id, question_id, label, next_question_id) VALUES
--- Q1: Software Type (106 is explicit neutral routing to Q2)
 (101, 1, 'Content Site / Blog / Portfolio (Fast static pages, low maintenance)', 2),
 (102, 1, 'Full-Stack Web Application (Dashboards, user accounts, interactive tools)', 2),
 (103, 1, 'Mobile Application (iOS & Android App)', 2),
@@ -125,27 +129,23 @@ INSERT INTO options (id, question_id, label, next_question_id) VALUES
 (105, 1, 'Data / AI / Machine Learning Pipeline (Data processing, ML models, scripts)', 3),
 (106, 1, 'I don''t know / Not sure yet (Use neutral web defaults)', 2),
 
--- Q2: Target Platform
 (201, 2, 'Modern Web Browsers (Desktop & Mobile Responsive)', 3),
 (202, 2, 'Cross-Platform Mobile Devices (iOS & Android App Stores)', 3),
 (203, 2, 'Static Web & Content Delivery Networks (CDN Edge)', 3),
 (204, 2, 'I don''t know / Not sure yet', 3),
 
--- Q3: Special Feature Workload
 (301, 3, 'Standard CRUD forms, blogs, and marketing pages', 4),
 (302, 3, 'Real-time features (Live chat, instant notifications, WebSockets)', 4),
 (303, 3, 'Heavy background jobs, AI inference, or data processing', 4),
 (304, 3, 'High-concurrency API handling thousands of requests per second', 4),
 (305, 3, 'I don''t know / Not sure yet', 4),
 
--- Q4: Data Storage
 (401, 4, 'Structured relational tables (Users, orders, relations)', 5),
 (402, 4, 'Flexible JSON documents / unstructured records', 5),
 (403, 4, 'Lightweight local database or file-based storage', 5),
 (404, 4, 'No database required (Pure static files or external API calls)', 5),
 (405, 4, 'I don''t know / Not sure yet', 5),
 
--- Q5: Team Expertise
 (501, 5, 'JavaScript / TypeScript', 6),
 (502, 5, 'Python', 6),
 (503, 5, 'Go / Systems Programming', 6),
@@ -153,25 +153,21 @@ INSERT INTO options (id, question_id, label, next_question_id) VALUES
 (505, 5, 'Open to learning anything recommended', 6),
 (506, 5, 'I don''t know / Not sure yet', 6),
 
--- Q6: Urgency & Flexibility
 (601, 6, 'Need fastest possible setup (Minimal boilerplate & config)', 7),
 (602, 6, 'Willing to configure custom servers and tools for performance', 7),
 (603, 6, 'I don''t know / Not sure yet', 7),
 
--- Q7: Deployment Platform
 (701, 7, 'Serverless PaaS (Vercel, Netlify, Render)', 8),
 (702, 7, 'Containerized VPS (Docker, Hetzner, DigitalOcean)', 8),
 (703, 7, 'Managed BaaS / Cloud (Firebase, Supabase)', 8),
 (704, 7, 'Enterprise Cloud Infrastructure (AWS, GCP, Azure)', 8),
 (705, 7, 'I don''t know / Not sure yet', 8),
 
--- Q8: Budget
 (801, 8, 'Strictly free tier or open-source self-hosted', 9),
 (802, 8, 'Moderate monthly budget ($10 - $50/mo)', 9),
 (803, 8, 'Enterprise budget for production scale', 9),
 (804, 8, 'I don''t know / Not sure yet', 9),
 
--- Q9: Timeline
 (901, 9, 'Quick hackathon / MVP prototype needed in days', NULL),
 (902, 9, 'Production system built for long-term maintainability', NULL),
 (903, 9, 'I don''t know / Not sure yet', NULL);
