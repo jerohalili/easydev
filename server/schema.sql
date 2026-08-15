@@ -1,4 +1,5 @@
--- Drop existing tables for clean re-runs
+-- server/schema.sql
+DROP TABLE IF EXISTS user_stacks CASCADE;
 DROP TABLE IF EXISTS results CASCADE;
 DROP TABLE IF EXISTS answers CASCADE;
 DROP TABLE IF EXISTS weights CASCADE;
@@ -22,7 +23,7 @@ CREATE TABLE questions (
   is_first BOOLEAN DEFAULT FALSE
 );
 
--- 3. Options Table (Branching: next_question_id = NULL means terminal question)
+-- 3. Options Table
 CREATE TABLE options (
   id SERIAL PRIMARY KEY,
   question_id INT REFERENCES questions(id) ON DELETE CASCADE,
@@ -30,7 +31,7 @@ CREATE TABLE options (
   next_question_id INT REFERENCES questions(id) ON DELETE SET NULL
 );
 
--- 4. Tech Items Table (5 Categories)
+-- 4. Tech Items Table
 CREATE TABLE tech_items (
   id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
@@ -54,7 +55,7 @@ CREATE TABLE answers (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 7. Results History Table
+-- 7. Recommended Results Table
 CREATE TABLE results (
   id SERIAL PRIMARY KEY,
   project_id INT REFERENCES projects(id) ON DELETE CASCADE,
@@ -65,159 +66,148 @@ CREATE TABLE results (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 8. Custom User-Built Stack Table (For Side-by-Side Comparison)
+CREATE TABLE user_stacks (
+  id SERIAL PRIMARY KEY,
+  project_id INT REFERENCES projects(id) ON DELETE CASCADE,
+  category VARCHAR(50) NOT NULL,
+  tech_item_id INT REFERENCES tech_items(id) ON DELETE CASCADE,
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(project_id, category)
+);
+
 -- ========================================================
 -- SEED DATA
 -- ========================================================
 
--- Tech Items (27 items across 5 categories)
 INSERT INTO tech_items (id, name, category) VALUES
--- Languages
 (1, 'JavaScript / TypeScript', 'language'),
 (2, 'Python', 'language'),
-(3, 'Java', 'language'),
-(4, 'C#', 'language'),
-(5, 'Go (Golang)', 'language'),
-(6, 'Rust', 'language'),
+(3, 'Go (Golang)', 'language'),
+(4, 'Dart', 'language'),
+(5, 'Java / C#', 'language'),
+(10, 'Next.js (React)', 'frontend'),
+(11, 'Vite + React (SPA)', 'frontend'),
+(12, 'Astro', 'frontend'),
+(13, 'Flutter (Mobile)', 'frontend'),
+(14, 'React Native (Mobile)', 'frontend'),
+(20, 'Node.js (Express / NestJS)', 'backend'),
+(21, 'Python (FastAPI / Django)', 'backend'),
+(22, 'Go (Gin / Fiber)', 'backend'),
+(23, 'Supabase / Firebase (BaaS)', 'backend'),
+(30, 'PostgreSQL', 'database'),
+(31, 'MongoDB', 'database'),
+(32, 'SQLite / Turso', 'database'),
+(33, 'Redis (In-Memory Cache)', 'database'),
+(40, 'Vercel / Netlify', 'infrastructure'),
+(41, 'Docker + VPS (Hetzner / DigitalOcean)', 'infrastructure'),
+(42, 'AWS (S3 / ECS / CloudFront)', 'infrastructure'),
+(43, 'Firebase Hosting / Supabase Cloud', 'infrastructure');
 
--- Frontend Frameworks & Libraries
-(7, 'React', 'frontend'),
-(8, 'Next.js', 'frontend'),
-(9, 'Vue.js', 'frontend'),
-(10, 'Angular', 'frontend'),
-(11, 'Tailwind CSS', 'frontend'),
-
--- Backend Frameworks
-(12, 'Node.js (Express / NestJS)', 'backend'),
-(13, 'Spring Boot', 'backend'),
-(14, 'Django / FastAPI', 'backend'),
-(15, 'ASP.NET Core', 'backend'),
-(16, 'Ruby on Rails', 'backend'),
-
--- Databases & Storage
-(17, 'PostgreSQL', 'database'),
-(18, 'MongoDB', 'database'),
-(19, 'MySQL', 'database'),
-(20, 'Redis', 'database'),
-(21, 'Snowflake / BigQuery', 'database'),
-
--- Cloud & DevOps Infrastructure
-(22, 'AWS (Amazon Web Services)', 'infrastructure'),
-(23, 'Docker', 'infrastructure'),
-(24, 'Kubernetes', 'infrastructure'),
-(25, 'Terraform', 'infrastructure'),
-(26, 'GitHub Actions', 'infrastructure');
-
--- Questions (9 Questions Flow)
 INSERT INTO questions (id, prompt_text, is_first) VALUES
-(1, 'What are you building?', TRUE),
-(2, 'What special features do you need?', FALSE),
-(3, 'How many active users do you expect?', FALSE),
-(4, 'What kind of data will your system handle?', FALSE),
-(5, 'What programming languages does your team already know?', FALSE),
-(6, 'Do you have time for team training or learning new tools?', FALSE),
-(7, 'Where do you plan to run and host the application?', FALSE),
-(8, 'What is your budget structure for software and infrastructure?', FALSE),
-(9, 'How fast do you need a working version launched?', FALSE);
+(1, 'What primary type of software are you building?', TRUE),
+(2, 'What platform will your users interact with most?', FALSE),
+(3, 'What specialized feature or workload does your system need?', FALSE),
+(4, 'What kind of data storage fits your project requirements?', FALSE),
+(5, 'What languages or frameworks is your team most comfortable with?', FALSE),
+(6, 'What is your team learning bandwidth or setup urgency?', FALSE),
+(7, 'Where do you plan to deploy and host the application?', FALSE),
+(8, 'What is your operational budget for infrastructure?', FALSE),
+(9, 'What is your project timeline and delivery target?', FALSE);
 
--- Options with Branching
 INSERT INTO options (id, question_id, label, next_question_id) VALUES
--- Q1: Building target (Option 4 'API' branches straight to Q3, skipping frontend Q2)
-(1, 1, 'Website or Web Application', 2),
-(2, 1, 'Mobile Application', 2),
-(3, 1, 'E-commerce / Online Store', 2),
-(4, 1, 'An API / Backend Microservice', 3),
+-- Q1: Software Type (106 is explicit neutral routing to Q2)
+(101, 1, 'Content Site / Blog / Portfolio (Fast static pages, low maintenance)', 2),
+(102, 1, 'Full-Stack Web Application (Dashboards, user accounts, interactive tools)', 2),
+(103, 1, 'Mobile Application (iOS & Android App)', 2),
+(104, 1, 'API / Microservice (Backend logic only, no user-facing UI)', 3),
+(105, 1, 'Data / AI / Machine Learning Pipeline (Data processing, ML models, scripts)', 3),
+(106, 1, 'I don''t know / Not sure yet (Use neutral web defaults)', 2),
 
--- Q2: Special Features
-(5, 2, 'Real-time chat or live web-socket notifications', 3),
-(6, 2, 'Video streaming & high-resolution media handling', 3),
-(7, 2, 'Fast full-text search & indexing tools', 3),
-(8, 2, 'Standard CRUD workflows, forms, and landing pages', 3),
+-- Q2: Target Platform
+(201, 2, 'Modern Web Browsers (Desktop & Mobile Responsive)', 3),
+(202, 2, 'Cross-Platform Mobile Devices (iOS & Android App Stores)', 3),
+(203, 2, 'Static Web & Content Delivery Networks (CDN Edge)', 3),
+(204, 2, 'I don''t know / Not sure yet', 3),
 
--- Q3: Scale & Users
-(9, 3, 'A few hundred to thousands of users (Prototype / Small scale)', 4),
-(10, 3, 'Tens of thousands to hundreds of thousands of users', 4),
-(11, 3, 'Millions of active visitors (High Scale / Enterprise)', 4),
+-- Q3: Special Feature Workload
+(301, 3, 'Standard CRUD forms, blogs, and marketing pages', 4),
+(302, 3, 'Real-time features (Live chat, instant notifications, WebSockets)', 4),
+(303, 3, 'Heavy background jobs, AI inference, or data processing', 4),
+(304, 3, 'High-concurrency API handling thousands of requests per second', 4),
+(305, 3, 'I don''t know / Not sure yet', 4),
 
--- Q4: Data Nature
-(12, 4, 'Simple user profiles & structured relational tables', 5),
-(13, 4, 'Flexible JSON documents / unstructured data', 5),
-(14, 4, 'Heavy media files, massive logs, or analytical data', 5),
+-- Q4: Data Storage
+(401, 4, 'Structured relational tables (Users, orders, relations)', 5),
+(402, 4, 'Flexible JSON documents / unstructured records', 5),
+(403, 4, 'Lightweight local database or file-based storage', 5),
+(404, 4, 'No database required (Pure static files or external API calls)', 5),
+(405, 4, 'I don''t know / Not sure yet', 5),
 
 -- Q5: Team Expertise
-(15, 5, 'JavaScript / TypeScript', 6),
-(16, 5, 'Python', 6),
-(17, 5, 'Java or C#', 6),
-(18, 5, 'Go or Rust', 6),
-(19, 5, 'Open to learning anything required', 6),
+(501, 5, 'JavaScript / TypeScript', 6),
+(502, 5, 'Python', 6),
+(503, 5, 'Go / Systems Programming', 6),
+(504, 5, 'Dart / Mobile Development', 6),
+(505, 5, 'Open to learning anything recommended', 6),
+(506, 5, 'I don''t know / Not sure yet', 6),
 
--- Q6: Training Time
-(20, 6, 'Must use familiar tech to save time (No training time)', 7),
-(21, 6, 'Team can quickly learn new frameworks or paradigms', 7),
+-- Q6: Urgency & Flexibility
+(601, 6, 'Need fastest possible setup (Minimal boilerplate & config)', 7),
+(602, 6, 'Willing to configure custom servers and tools for performance', 7),
+(603, 6, 'I don''t know / Not sure yet', 7),
 
--- Q7: Hosting Platform
-(22, 7, 'Cloud providers (AWS, Google Cloud, Azure)', 8),
-(23, 7, 'Containerized platform (Docker / Kubernetes)', 8),
-(24, 7, 'Simple serverless or PaaS hosting (Vercel, Render)', 8),
+-- Q7: Deployment Platform
+(701, 7, 'Serverless PaaS (Vercel, Netlify, Render)', 8),
+(702, 7, 'Containerized VPS (Docker, Hetzner, DigitalOcean)', 8),
+(703, 7, 'Managed BaaS / Cloud (Firebase, Supabase)', 8),
+(704, 7, 'Enterprise Cloud Infrastructure (AWS, GCP, Azure)', 8),
+(705, 7, 'I don''t know / Not sure yet', 8),
 
 -- Q8: Budget
-(25, 8, 'Strictly free, open-source, or minimal tier tools', 9),
-(26, 8, 'Moderate production cloud budget', 9),
-(27, 8, 'Enterprise budget for paid managed services', 9),
+(801, 8, 'Strictly free tier or open-source self-hosted', 9),
+(802, 8, 'Moderate monthly budget ($10 - $50/mo)', 9),
+(803, 8, 'Enterprise budget for production scale', 9),
+(804, 8, 'I don''t know / Not sure yet', 9),
 
--- Q9: Timeline (Terminal Question)
-(28, 9, 'Quick prototype / MVP needed in a few weeks', NULL),
-(29, 9, 'Stable system built for long-term production use', NULL);
+-- Q9: Timeline
+(901, 9, 'Quick hackathon / MVP prototype needed in days', NULL),
+(902, 9, 'Production system built for long-term maintainability', NULL),
+(903, 9, 'I don''t know / Not sure yet', NULL);
 
--- Hand-assigned Weights Matrix (Option ID -> Tech Item ID -> Weight)
 INSERT INTO weights (option_id, tech_item_id, weight_value) VALUES
--- Q1
-(1, 1, 4), (1, 7, 5), (1, 8, 4), (1, 11, 4), (1, 12, 3), -- Web
-(2, 1, 3), (2, 7, 4), (2, 12, 3),                       -- Mobile
-(3, 1, 4), (3, 8, 4), (3, 12, 3), (3, 17, 4),           -- E-commerce
-(4, 5, 5), (4, 6, 4), (4, 12, 3), (4, 14, 4), (4, 23, 4), -- API Only
+(101, 12, 12), (101, 40, 10), (101, 32, 6),
+(102, 1, 8), (102, 10, 10), (102, 20, 8), (102, 30, 8),
+(103, 4, 10), (103, 13, 12), (103, 14, 10), (103, 23, 10),
+(104, 3, 10), (104, 22, 12), (104, 20, 8), (104, 41, 8),
+(105, 2, 12), (105, 21, 12), (105, 30, 8), (105, 41, 8),
+(201, 10, 8), (201, 11, 8),
+(202, 13, 10), (202, 14, 10), (202, 43, 8),
+(203, 12, 10), (203, 40, 10),
+(301, 10, 6), (301, 12, 8),
+(302, 20, 10), (302, 33, 10), (302, 23, 8),
+(303, 2, 10), (303, 21, 10), (303, 41, 8),
+(304, 3, 12), (304, 22, 12), (304, 33, 8),
+(401, 30, 12),
+(402, 31, 12),
+(403, 32, 12),
+(501, 1, 10), (501, 10, 8), (501, 20, 8),
+(502, 2, 10), (502, 21, 10),
+(503, 3, 10), (503, 22, 10),
+(504, 4, 10), (504, 13, 10),
+(601, 10, 6), (601, 12, 8), (601, 23, 10), (601, 40, 10),
+(602, 22, 8), (602, 41, 10), (602, 42, 8),
+(701, 40, 12),
+(702, 41, 12),
+(703, 23, 10), (703, 43, 12),
+(704, 42, 12),
+(801, 32, 8), (801, 40, 8), (801, 41, 8),
+(802, 30, 8), (802, 41, 8),
+(803, 42, 12),
+(901, 12, 8), (901, 23, 10), (901, 40, 10),
+(902, 30, 8), (902, 41, 8), (902, 42, 8);
 
--- Q2
-(5, 1, 3), (5, 12, 5), (5, 20, 5),                      -- Real-time chat (Node + Redis)
-(6, 22, 5), (6, 23, 4), (6, 20, 3),                     -- Video streaming (AWS + Redis)
-(7, 17, 4), (7, 20, 4), (7, 21, 3),                     -- Search (Postgres + Redis)
-(8, 7, 3), (8, 11, 4), (8, 16, 4),                      -- Standard CRUD (Tailwind + Rails)
-
--- Q3
-(9, 8, 3), (9, 12, 3), (9, 26, 4),                      -- Small scale (GitHub Actions)
-(10, 17, 4), (10, 22, 4), (10, 23, 4),                   -- Medium scale (AWS + Docker)
-(11, 5, 5), (11, 6, 5), (11, 13, 4), (11, 17, 4), (11, 24, 5), (11, 25, 5), -- High scale (Go, Rust, K8s, Terraform)
-
--- Q4
-(12, 17, 5), (12, 19, 4),                               -- Relational
-(13, 18, 5),                                            -- MongoDB
-(14, 21, 5), (14, 22, 4), (14, 25, 4),                   -- Snowflake / BigQuery
-
--- Q5
-(15, 1, 5), (15, 7, 4), (15, 8, 4), (15, 12, 5),        -- JS/TS
-(16, 2, 5), (16, 14, 5),                                -- Python / FastAPI
-(17, 3, 5), (17, 4, 5), (17, 13, 5), (17, 15, 5),        -- Java/C#
-(18, 5, 5), (18, 6, 5),                                 -- Go/Rust
-(19, 1, 2), (19, 2, 2), (19, 7, 2),                     -- Open
-
--- Q6
-(20, 1, 3), (20, 12, 3), (20, 16, 4),                   -- Familiar tools
-(21, 5, 3), (21, 6, 3), (21, 8, 3),                     -- Learning bandwidth
-
--- Q7
-(22, 22, 5),                                            -- AWS
-(23, 23, 5), (23, 24, 4),                               -- Docker / K8s
-(24, 8, 4), (24, 12, 3),                                -- PaaS/Serverless
-
--- Q8
-(25, 17, 3), (25, 19, 3), (25, 23, 3), (25, 26, 4),     -- Free/Open source
-(26, 22, 3), (26, 23, 3),                               -- Moderate budget
-(27, 21, 4), (27, 22, 5), (27, 24, 4), (27, 25, 4),     -- Enterprise budget
-
--- Q9
-(28, 8, 4), (28, 11, 4), (28, 12, 3), (28, 16, 5),      -- Quick MVP (Next.js, Rails, Node)
-(29, 1, 3), (29, 3, 4), (29, 13, 4), (29, 17, 5), (29, 25, 4); -- Long term (Postgres, Spring Boot, Terraform)
-
--- Reset ID Sequences
 SELECT setval('questions_id_seq', (SELECT MAX(id) FROM questions));
 SELECT setval('options_id_seq', (SELECT MAX(id) FROM options));
 SELECT setval('tech_items_id_seq', (SELECT MAX(id) FROM tech_items));

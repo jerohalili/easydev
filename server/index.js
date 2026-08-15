@@ -254,3 +254,50 @@ app.post('/api/projects/:id/score', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
+// Get all tech items (grouped by category for building custom stack dropdowns)
+app.get('/api/tech-items', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM tech_items ORDER BY category, name ASC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch tech items' });
+  }
+});
+
+// Get user-built stack for a project
+app.get('/api/projects/:id/user-stack', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const query = `
+      SELECT u.category, u.tech_item_id, u.notes, t.name 
+      FROM user_stacks u
+      JOIN tech_items t ON u.tech_item_id = t.id
+      WHERE u.project_id = $1
+    `;
+    const result = await pool.query(query, [id]);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch user stack' });
+  }
+});
+
+// Save or update user-built stack choice per category
+app.post('/api/projects/:id/user-stack', async (req, res) => {
+  const { id } = req.params;
+  const { category, tech_item_id, notes = '' } = req.body;
+
+  try {
+    const query = `
+      INSERT INTO user_stacks (project_id, category, tech_item_id, notes)
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT (project_id, category)
+      DO UPDATE SET tech_item_id = EXCLUDED.tech_item_id, notes = EXCLUDED.notes;
+    `;
+    await pool.query(query, [id, category, tech_item_id, notes]);
+    res.json({ message: 'User stack choice saved' });
+  } catch (err) {
+    console.error('Save user stack error:', err);
+    res.status(500).json({ error: 'Failed to save user stack choice' });
+  }
+});

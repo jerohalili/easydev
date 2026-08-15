@@ -164,7 +164,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Assessment Flow */}
+        {/* Assessment Tab */}
         {activeTab === 'new' && (
           <>
             {screen === 'start' && (
@@ -258,6 +258,7 @@ export default function App() {
 
             {screen === 'results' && (
               <ResultsView
+                projectId={projectId}
                 results={results}
                 onRestart={() => {
                   setProjectTitle('');
@@ -272,6 +273,7 @@ export default function App() {
         {/* History Tab */}
         {activeTab === 'history' && (
           <HistoryView
+            apiBase={API_BASE}
             onSelectProject={loadPastProject}
             onStartNew={() => {
               setActiveTab('new');
