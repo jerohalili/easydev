@@ -153,6 +153,7 @@ INSERT INTO options (id, question_id, label, next_question_id) VALUES
 (504, 5, 'Dart / Mobile Development', 6),
 (505, 5, 'Open to learning anything recommended', 6),
 (506, 5, 'I don''t know / Not sure yet', 6),
+(507, 5, 'Java / C#', 6),
 
 (601, 6, 'Need fastest possible setup (Minimal boilerplate & config)', 7),
 (602, 6, 'Willing to configure custom servers and tools for performance', 7),
@@ -193,17 +194,18 @@ INSERT INTO weights (option_id, tech_item_id, weight_value) VALUES
 (502, 2, 10), (502, 21, 10),
 (503, 3, 10), (503, 22, 10),
 (504, 4, 10), (504, 13, 10),
+(507, 5, 12), (507, 42, 8),
 (601, 10, 6), (601, 12, 8), (601, 23, 10), (601, 40, 10),
 (602, 22, 8), (602, 41, 10), (602, 42, 8),
 (701, 40, 12),
 (702, 41, 12),
 (703, 23, 10), (703, 43, 12),
-(704, 42, 12),
+(704, 42, 12), (704, 5, 6),
 (801, 32, 8), (801, 40, 8), (801, 41, 8),
 (802, 30, 8), (802, 41, 8),
-(803, 42, 12),
+(803, 42, 12), (803, 5, 10),
 (901, 12, 8), (901, 23, 10), (901, 40, 10),
-(902, 30, 8), (902, 41, 8), (902, 42, 8);
+(902, 30, 8), (902, 41, 8), (902, 42, 8), (902, 5, 6);
 
 SELECT setval('questions_id_seq', (SELECT MAX(id) FROM questions));
 SELECT setval('options_id_seq', (SELECT MAX(id) FROM options));

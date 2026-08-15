@@ -16,6 +16,7 @@ export default function App() {
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [options, setOptions] = useState([]);
   const [stepCount, setStepCount] = useState(1);
+  const [totalSteps, setTotalSteps] = useState(9);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -39,8 +40,9 @@ export default function App() {
       setProjectId(projData.project.id);
 
       if (projData.first_question_id) {
-        await fetchQuestion(projData.first_question_id);
+        const remaining = await fetchQuestion(projData.first_question_id);
         setStepCount(1);
+        setTotalSteps(remaining);
         setScreen('quiz');
       }
     } catch (err) {
@@ -55,6 +57,7 @@ export default function App() {
     const data = await res.json();
     setCurrentQuestion(data.question);
     setOptions(data.options);
+    return data.remaining_steps;
   };
 
   const handleSubmitAnswers = async (optionIds) => {
@@ -74,8 +77,10 @@ export default function App() {
       const data = await res.json();
 
       if (data.next_question_id) {
-        await fetchQuestion(data.next_question_id);
-        setStepCount((prev) => prev + 1);
+        const remaining = await fetchQuestion(data.next_question_id);
+        const newStep = stepCount + 1;
+        setStepCount(newStep);
+        setTotalSteps(newStep - 1 + remaining);
       } else {
         await fetchResults(projectId);
       }
@@ -249,7 +254,7 @@ export default function App() {
 
             {screen === 'quiz' && currentQuestion && (
               <div>
-                <ProgressBar stepCount={stepCount} />
+                <ProgressBar stepCount={stepCount} totalSteps={totalSteps} />
                 <QuestionCard
                   question={currentQuestion}
                   options={options}

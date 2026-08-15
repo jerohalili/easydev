@@ -119,6 +119,26 @@ app.post('/api/projects', async (req, res) => {
   }
 });
 
+// helper: walk forward from a question along its default (first-option) path,
+// counting how many questions remain including this one. Safe here because
+// every sibling option for a given question shares the same next_question_id
+// except Q1, where it's a reasonable estimate for the ~ shown before Q1 is answered.
+async function countStepsFromIncluding(questionId) {
+  let count = 0;
+  let current = questionId;
+  const visited = new Set();
+  while (current && !visited.has(current)) {
+    visited.add(current);
+    count++;
+    const { rows } = await pool.query(
+      'SELECT next_question_id FROM options WHERE question_id = $1 LIMIT 1',
+      [current]
+    );
+    current = rows[0] ? rows[0].next_question_id : null;
+  }
+  return count;
+}
+
 // 5. Fetch Question & Options
 app.get('/api/questions/:id', async (req, res) => {
   const { id } = req.params;
@@ -133,7 +153,9 @@ app.get('/api/questions/:id', async (req, res) => {
       [id]
     );
 
-    res.json({ question: questionRes.rows[0], options: optionsRes.rows });
+    const remainingSteps = await countStepsFromIncluding(Number(id));
+
+    res.json({ question: questionRes.rows[0], options: optionsRes.rows, remaining_steps: remainingSteps });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch question' });
   }
@@ -175,8 +197,6 @@ app.post('/api/projects/:id/score', async (req, res) => {
   const projectId = req.params.id;
 
   try {
-    await pool.query('DELETE FROM results WHERE project_id = $1', [projectId]);
-
     const scoresQuery = `
       SELECT 
         t.id AS tech_item_id,
