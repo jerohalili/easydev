@@ -119,7 +119,7 @@ app.post('/api/projects', async (req, res) => {
   }
 });
 
-// 5. Fetch Question & Options
+// 5. Fetch Question & Options (Supports is_multiselect flag)
 app.get('/api/questions/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -139,21 +139,34 @@ app.get('/api/questions/:id', async (req, res) => {
   }
 });
 
-// 6. Record Answer
+// 6. Record Answers (Supports single option_id or array of option_ids)
 app.post('/api/projects/:id/answers', async (req, res) => {
   const projectId = req.params.id;
-  const { question_id, option_id } = req.body;
+  const { question_id, option_id, option_ids } = req.body;
+
+  const targetOptionIds = option_ids && Array.isArray(option_ids) ? option_ids : (option_id ? [option_id] : []);
+
+  if (targetOptionIds.length === 0) {
+    return res.status(400).json({ error: 'No option selected' });
+  }
 
   try {
-    await pool.query(
-      'INSERT INTO answers (project_id, question_id, option_id) VALUES ($1, $2, $3)',
-      [projectId, question_id, option_id]
-    );
-    const optionRes = await pool.query('SELECT next_question_id FROM options WHERE id = $1', [option_id]);
+    await pool.query('DELETE FROM answers WHERE project_id = $1 AND question_id = $2', [projectId, question_id]);
+
+    for (const optId of targetOptionIds) {
+      await pool.query(
+        'INSERT INTO answers (project_id, question_id, option_id) VALUES ($1, $2, $3)',
+        [projectId, question_id, optId]
+      );
+    }
+
+    const optionRes = await pool.query('SELECT next_question_id FROM options WHERE id = $1', [targetOptionIds[0]]);
     const nextQuestionId = optionRes.rows[0] ? optionRes.rows[0].next_question_id : null;
+
     return res.json({ project_id: Number(projectId), next_question_id: nextQuestionId });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to record answer' });
+    console.error('Error recording answers:', err);
+    res.status(500).json({ error: 'Failed to record answers' });
   }
 });
 
@@ -162,6 +175,8 @@ app.post('/api/projects/:id/score', async (req, res) => {
   const projectId = req.params.id;
 
   try {
+    await pool.query('DELETE FROM results WHERE project_id = $1', [projectId]);
+
     const scoresQuery = `
       SELECT 
         t.id AS tech_item_id,
@@ -190,13 +205,13 @@ app.post('/api/projects/:id/score', async (req, res) => {
 
       if (topInCat && topInCat.total_score > 0) {
         const constraintQuery = `
-          SELECT o.label AS option_label
+          SELECT DISTINCT o.label AS option_label
           FROM answers a
           JOIN options o ON a.option_id = o.id
           JOIN weights w ON a.option_id = w.option_id
           WHERE a.project_id = $1 AND w.tech_item_id = $2
-          ORDER BY w.weight_value DESC
-          LIMIT 2;
+          ORDER BY o.label ASC
+          LIMIT 3;
         `;
         const constraintRes = await pool.query(constraintQuery, [projectId, topInCat.tech_item_id]);
         const keyChoices = constraintRes.rows.map(r => r.option_label).join(' & ');

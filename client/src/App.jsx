@@ -57,7 +57,7 @@ export default function App() {
     setOptions(data.options);
   };
 
-  const handleSelectOption = async (optionId) => {
+  const handleSubmitAnswers = async (optionIds) => {
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/projects/${projectId}/answers`, {
@@ -65,7 +65,7 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           question_id: currentQuestion.id,
-          option_id: optionId
+          option_ids: optionIds
         })
       });
       const data = await res.json();
@@ -77,7 +77,7 @@ export default function App() {
         await fetchResults(projectId);
       }
     } catch (err) {
-      setError('Failed to record answer.');
+      setError('Failed to record answers.');
     } finally {
       setLoading(false);
     }
@@ -173,7 +173,7 @@ export default function App() {
                   Create Project Proposal
                 </h2>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '28px', fontSize: '14px', lineHeight: '1.6' }}>
-                  Name your proposal to begin the questionnaire. Every step includes an "I don't know / Not sure yet" option so you can skip unfamiliar choices without interrupting the recommendation pass.
+                  Name your proposal to begin the questionnaire. Select multiple choices where applicable or skip unfamiliar options without interrupting the recommendation pass.
                 </p>
 
                 <form onSubmit={startNewProject}>
@@ -250,7 +250,7 @@ export default function App() {
                 <QuestionCard
                   question={currentQuestion}
                   options={options}
-                  onSelectOption={handleSelectOption}
+                  onSubmitAnswers={handleSubmitAnswers}
                   loading={loading}
                 />
               </div>

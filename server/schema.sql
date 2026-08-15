@@ -19,7 +19,8 @@ CREATE TABLE projects (
 CREATE TABLE questions (
   id SERIAL PRIMARY KEY,
   prompt_text TEXT NOT NULL,
-  is_first BOOLEAN DEFAULT FALSE
+  is_first BOOLEAN DEFAULT FALSE,
+  is_multiselect BOOLEAN DEFAULT FALSE
 );
 
 -- 3. Options Table
@@ -67,7 +68,7 @@ CREATE TABLE results (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 8. Custom User-Built Stack Table (For Side-by-Side Comparison)
+-- 8. Custom User-Built Stack Table
 CREATE TABLE user_stacks (
   id SERIAL PRIMARY KEY,
   project_id INT REFERENCES projects(id) ON DELETE CASCADE,
@@ -110,16 +111,16 @@ INSERT INTO tech_items (id, name, category, description, trade_offs) VALUES
 (42, 'AWS (S3 / ECS / CloudFront)', 'infrastructure', 'Enterprise cloud infrastructure ecosystem capable of supporting arbitrary workload scale.', '{"pros": ["Unlimited horizontal scalability and compliance controls", "Industry standard for production environments"], "cons": ["High configuration complexity and unexpected bill spikes"]}'),
 (43, 'Firebase Hosting / Supabase Cloud', 'infrastructure', 'Managed application cloud platform tailored for BaaS-backed mobile and web apps.', '{"pros": ["Tightly integrated with backend auth and database", "Seamless deployment pipeline"], "cons": ["Tied strictly to ecosystem platform services"]}');
 
-INSERT INTO questions (id, prompt_text, is_first) VALUES
-(1, 'What primary type of software are you building?', TRUE),
-(2, 'What platform will your users interact with most?', FALSE),
-(3, 'What specialized feature or workload does your system need?', FALSE),
-(4, 'What kind of data storage fits your project requirements?', FALSE),
-(5, 'What languages or frameworks is your team most comfortable with?', FALSE),
-(6, 'What is your team learning bandwidth or setup urgency?', FALSE),
-(7, 'Where do you plan to deploy and host the application?', FALSE),
-(8, 'What is your operational budget for infrastructure?', FALSE),
-(9, 'What is your project timeline and delivery target?', FALSE);
+INSERT INTO questions (id, prompt_text, is_first, is_multiselect) VALUES
+(1, 'What primary type of software are you building?', TRUE, FALSE),
+(2, 'What platform will your users interact with most?', FALSE, TRUE),
+(3, 'What specialized feature or workload does your system need?', FALSE, TRUE),
+(4, 'What kind of data storage fits your project requirements?', FALSE, FALSE),
+(5, 'What languages or frameworks is your team most comfortable with?', FALSE, TRUE),
+(6, 'What is your team learning bandwidth or setup urgency?', FALSE, FALSE),
+(7, 'Where do you plan to deploy and host the application?', FALSE, TRUE),
+(8, 'What is your operational budget for infrastructure?', FALSE, FALSE),
+(9, 'What is your project timeline and delivery target?', FALSE, FALSE);
 
 INSERT INTO options (id, question_id, label, next_question_id) VALUES
 (101, 1, 'Content Site / Blog / Portfolio (Fast static pages, low maintenance)', 2),

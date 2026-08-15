@@ -88,10 +88,11 @@ export default function ComparisonView({ projectId, recommendations, apiBase = '
                 boxShadow: 'var(--card-shadow)'
               }}
             >
+              {/* Card Header with Status Badge aligned strictly to the right */}
               <div
                 style={{
                   display: 'flex',
-                  justify: 'space-between',
+                  justifyContent: 'space-between',
                   alignItems: 'center',
                   marginBottom: '16px',
                   borderBottom: '1px solid var(--border-color)',
@@ -109,9 +110,11 @@ export default function ComparisonView({ projectId, recommendations, apiBase = '
                 >
                   {category} Layer
                 </span>
+
                 {customChoiceId && (
                   <span
                     style={{
+                      marginLeft: 'auto',
                       fontSize: '11px',
                       fontWeight: '800',
                       padding: '4px 10px',
