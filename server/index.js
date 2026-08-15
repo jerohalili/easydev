@@ -9,24 +9,98 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// ----------------------------------------------------
-// Healthcheck Route
-// ----------------------------------------------------
+// Healthcheck
 app.get('/api/health', async (req, res) => {
   try {
     const result = await pool.query('SELECT NOW()');
     res.json({ status: 'ok', time: result.rows[0].now });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Database connection failed' });
   }
 });
 
-// ----------------------------------------------------
-// Project & Questionnaire API
-// ----------------------------------------------------
+// 1. Get All Projects History with Recommended Stacks Summary
+app.get('/api/projects', async (req, res) => {
+  try {
+    const projectsQuery = `
+      SELECT 
+        p.id, 
+        p.title, 
+        p.description, 
+        p.created_at,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'tech_item_id', r.tech_item_id,
+              'name', t.name,
+              'category', r.category,
+              'score', r.score,
+              'reasoning_text', r.reasoning_text
+            )
+          ) FILTER (WHERE r.id IS NOT NULL), '[]'
+        ) AS recommendations
+      FROM projects p
+      LEFT JOIN results r ON p.id = r.project_id
+      LEFT JOIN tech_items t ON r.tech_item_id = t.id
+      GROUP BY p.id
+      ORDER BY p.created_at DESC;
+    `;
+    const result = await pool.query(projectsQuery);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching project history:', err);
+    res.status(500).json({ error: 'Failed to fetch project history' });
+  }
+});
 
-// 1. Create a Project
+// 2. Get Single Project Details with Saved Answers and Results
+app.get('/api/projects/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const projectRes = await pool.query('SELECT * FROM projects WHERE id = $1', [id]);
+    if (projectRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const resultsRes = await pool.query(
+      `SELECT r.*, t.name FROM results r 
+       JOIN tech_items t ON r.tech_item_id = t.id 
+       WHERE r.project_id = $1`,
+      [id]
+    );
+
+    const answersRes = await pool.query(
+      `SELECT a.question_id, q.prompt_text, o.label AS selected_option 
+       FROM answers a 
+       JOIN questions q ON a.question_id = q.id 
+       JOIN options o ON a.option_id = o.id 
+       WHERE a.project_id = $1`,
+      [id]
+    );
+
+    res.json({
+      project: projectRes.rows[0],
+      recommendations: resultsRes.rows,
+      answers: answersRes.rows
+    });
+  } catch (err) {
+    console.error('Error fetching project detail:', err);
+    res.status(500).json({ error: 'Failed to fetch project detail' });
+  }
+});
+
+// 3. Delete Project from History
+app.delete('/api/projects/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('DELETE FROM projects WHERE id = $1', [id]);
+    res.json({ message: 'Project deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete project' });
+  }
+});
+
+// 4. Create Project
 app.post('/api/projects', async (req, res) => {
   const { title = 'Untitled Project', description = '' } = req.body;
   try {
@@ -34,22 +108,17 @@ app.post('/api/projects', async (req, res) => {
       'INSERT INTO projects (title, description) VALUES ($1, $2) RETURNING *',
       [title, description]
     );
-    const project = projResult.rows[0];
-
     const qResult = await pool.query('SELECT id FROM questions WHERE is_first = TRUE LIMIT 1');
-    const firstQuestion = qResult.rows[0];
-
     res.status(201).json({
-      project,
-      first_question_id: firstQuestion ? firstQuestion.id : null
+      project: projResult.rows[0],
+      first_question_id: qResult.rows[0] ? qResult.rows[0].id : null
     });
   } catch (err) {
-    console.error('Error creating project:', err);
     res.status(500).json({ error: 'Failed to create project' });
   }
 });
 
-// 2. Fetch Question + Options by ID
+// 5. Fetch Question & Options (Ensuring "I don't know" option exists per question)
 app.get('/api/questions/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -63,62 +132,69 @@ app.get('/api/questions/:id', async (req, res) => {
       [id]
     );
 
-    res.json({
-      question: questionRes.rows[0],
-      options: optionsRes.rows
-    });
+    let options = optionsRes.rows;
+    
+    // Fallback: If no neutral option was manually seeded, inject a default "I don't know"
+    const hasDontKnow = options.some(o => o.label.toLowerCase().includes('don\'t know') || o.label.toLowerCase().includes('not sure'));
+    if (!hasDontKnow && options.length > 0) {
+      const defaultNextQ = options[0].next_question_id;
+      options.push({
+        id: -Number(id), // Dynamic negative ID for client reference
+        label: "I don't know / Not sure yet (Use neutral defaults)",
+        next_question_id: defaultNextQ
+      });
+    }
+
+    res.json({ question: questionRes.rows[0], options });
   } catch (err) {
-    console.error('Error fetching question:', err);
     res.status(500).json({ error: 'Failed to fetch question' });
   }
 });
 
-// 3. Record Answer & Return Next Question Branch
+// 6. Record Answer
 app.post('/api/projects/:id/answers', async (req, res) => {
   const projectId = req.params.id;
   const { question_id, option_id } = req.body;
 
-  if (!question_id || !option_id) {
-    return res.status(400).json({ error: 'question_id and option_id are required' });
-  }
-
   try {
-    await pool.query(
-      'INSERT INTO answers (project_id, question_id, option_id) VALUES ($1, $2, $3)',
-      [projectId, question_id, option_id]
-    );
-
-    const optionRes = await pool.query('SELECT next_question_id FROM options WHERE id = $1', [option_id]);
-    const nextQuestionId = optionRes.rows[0] ? optionRes.rows[0].next_question_id : null;
-
-    res.json({
-      project_id: Number(projectId),
-      question_id,
-      chosen_option_id: option_id,
-      next_question_id: nextQuestionId
-    });
+    // If positive real option_id, save to answers table
+    if (option_id > 0) {
+      await pool.query(
+        'INSERT INTO answers (project_id, question_id, option_id) VALUES ($1, $2, $3)',
+        [projectId, question_id, option_id]
+      );
+      const optionRes = await pool.query('SELECT next_question_id FROM options WHERE id = $1', [option_id]);
+      const nextQuestionId = optionRes.rows[0] ? optionRes.rows[0].next_question_id : null;
+      return res.json({ project_id: Number(projectId), next_question_id: nextQuestionId });
+    } else {
+      // "I don't know" selected: lookup next question ID without saving a weighted answer
+      const qId = Math.abs(option_id);
+      const optionRes = await pool.query('SELECT next_question_id FROM options WHERE question_id = $1 LIMIT 1', [qId]);
+      const nextQuestionId = optionRes.rows[0] ? optionRes.rows[0].next_question_id : null;
+      return res.json({ project_id: Number(projectId), next_question_id: nextQuestionId });
+    }
   } catch (err) {
-    console.error('Error saving answer:', err);
     res.status(500).json({ error: 'Failed to record answer' });
   }
 });
 
-// 4. Real Weighted Scoring Endpoint across 5 Categories
+// 7. Weighted Scoring Engine
 app.post('/api/projects/:id/score', async (req, res) => {
   const projectId = req.params.id;
 
   try {
-    // Sum weights for tech items based on user's answers
+    // Delete past results if re-scoring
+    await pool.query('DELETE FROM results WHERE project_id = $1', [projectId]);
+
     const scoresQuery = `
       SELECT 
         t.id AS tech_item_id,
         t.name,
         t.category,
-        SUM(w.weight_value)::int AS total_score
-      FROM answers a
-      JOIN weights w ON a.option_id = w.option_id
-      JOIN tech_items t ON w.tech_item_id = t.id
-      WHERE a.project_id = $1
+        COALESCE(SUM(w.weight_value), 0)::int AS total_score
+      FROM tech_items t
+      LEFT JOIN weights w ON w.tech_item_id = t.id
+      LEFT JOIN answers a ON a.option_id = w.option_id AND a.project_id = $1
       GROUP BY t.id, t.name, t.category
       ORDER BY total_score DESC;
     `;
@@ -130,10 +206,10 @@ app.post('/api/projects/:id/score', async (req, res) => {
     const recommendations = [];
 
     for (const category of categories) {
-      const topInCat = scoredItems.find((item) => item.category === category);
+      const itemsInCat = scoredItems.filter(i => i.category === category);
+      const topInCat = itemsInCat[0];
 
       if (topInCat) {
-        // Find top contributing option to form the reasoning string
         const reasoningQuery = `
           SELECT o.label AS option_label, q.prompt_text
           FROM answers a
@@ -148,8 +224,8 @@ app.post('/api/projects/:id/score', async (req, res) => {
         const reasonRow = reasonRes.rows[0];
 
         const reasoningText = reasonRow
-          ? `Recommended because you selected "${reasonRow.option_label}" for ${reasonRow.prompt_text.toLowerCase()}`
-          : 'Recommended based on your project constraints.';
+          ? `Recommended because you chose "${reasonRow.option_label}" for ${reasonRow.prompt_text.toLowerCase()}`
+          : `Standard industry baseline pick for ${category} tier.`;
 
         recommendations.push({
           tech_item_id: topInCat.tech_item_id,
@@ -159,7 +235,6 @@ app.post('/api/projects/:id/score', async (req, res) => {
           reasoning_text: reasoningText
         });
 
-        // Persist result record
         await pool.query(
           `INSERT INTO results (project_id, tech_item_id, category, score, reasoning_text)
            VALUES ($1, $2, $3, $4, $5)`,
@@ -168,13 +243,9 @@ app.post('/api/projects/:id/score', async (req, res) => {
       }
     }
 
-    res.json({
-      project_id: Number(projectId),
-      is_stub: false,
-      recommendations
-    });
+    res.json({ project_id: Number(projectId), recommendations });
   } catch (err) {
-    console.error('Error generating score:', err);
+    console.error('Error scoring:', err);
     res.status(500).json({ error: 'Failed to score project' });
   }
 });
