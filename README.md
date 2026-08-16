@@ -14,7 +14,7 @@ The project also exists as a way to practice building a real weighted-scoring sy
 
 ## Live Website
 
-**Website:** _deploying to GitHub Pages (client) + Render (API) + Neon (database) — link coming soon_
+**Website:** [https://easydev-mu.vercel.app/](https://easydev-mu.vercel.app/)
 
 ---
 
@@ -41,8 +41,7 @@ The project also exists as a way to practice building a real weighted-scoring sy
 ---
 
 ### Dev Tools
-- Nodemon (backend hot-reload)
-- Docker Compose (local Postgres)
+- Vercel CLI (`vercel dev` runs the client and API functions together, matching production)
 - ESLint
 
 ---
@@ -113,7 +112,7 @@ The project was built schema-first, deliberately, because the riskiest unknowns 
 
 - A client-side entry point for editing a completed project's answers (the backend already supports it cleanly)
 - A full responsive pass and consistent design-system application across every screen
-- Deployment
+- Error and empty states in the client (e.g. failed requests aren't surfaced consistently)
 
 ---
 
@@ -121,7 +120,8 @@ The project was built schema-first, deliberately, because the riskiest unknowns 
 
 ### Prerequisites
 - Node.js 18+
-- PostgreSQL (or Docker, via the included `docker-compose.yml`)
+- [Vercel CLI](https://vercel.com/docs/cli) (`npm i -g vercel`)
+- A [Neon](https://neon.tech) Postgres database (or any Postgres instance — just point `DATABASE_URL` at it)
 
 ### 1. Clone the repo
 ```bash
@@ -129,41 +129,28 @@ git clone https://github.com/jerohalili/easydev.git
 cd easydev
 ```
 
-### 2. Start Postgres
+### 2. Install dependencies
 ```bash
-docker compose up -d
-```
-
-### 3. Set up the server
-```bash
-cd server
 npm install
+cd client && npm install && cd ..
 ```
 
-Create a `.env` file in `server/`:
-```
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/easydev
-PORT=5000
-```
-
-Load the schema and seed data:
+### 3. Configure environment
 ```bash
-psql "$DATABASE_URL" -f schema.sql
+cp .env.example .env
 ```
+Fill in `DATABASE_URL` with your Neon connection string (or `vercel env pull .env` if the project is already linked to Vercel).
 
-Start the server:
+### 4. Load the schema and seed data
 ```bash
-npm run dev
+psql "$DATABASE_URL" -f server/schema.sql
 ```
 
-### 4. Set up the client
+### 5. Run it
 ```bash
-cd ../client
-npm install
-npm run dev
+vercel dev
 ```
-
-The app will be running with the client on Vite's default port and the API on `http://localhost:5000`.
+This serves the client and the `/api` serverless functions together on one local port — the same setup as production.
 
 ---
 
