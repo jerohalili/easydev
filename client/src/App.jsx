@@ -4,8 +4,7 @@ import QuestionCard from './components/QuestionCard';
 import ResultsView from './components/ResultsView';
 import HistoryView from './components/HistoryView';
 import ThemeToggle from './components/ThemeToggle';
-
-const API_BASE = import.meta.env.DEV ? 'http://localhost:5000/api' : '/api';
+import { API_BASE } from './config';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('new');

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE } from '../config';
 
 const CATEGORIES = ['language', 'frontend', 'backend', 'database', 'infrastructure'];
 
-export default function ComparisonView({ projectId, recommendations, apiBase = (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api') }) {
+export default function ComparisonView({ projectId, recommendations, apiBase = API_BASE }) {
   const [techItems, setTechItems] = useState([]);
   const [userSelections, setUserSelections] = useState({});
   const [loading, setLoading] = useState(true);

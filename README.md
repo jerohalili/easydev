@@ -14,7 +14,7 @@ The project also exists as a way to practice building a real weighted-scoring sy
 
 ## Live Website
 
-**Website:** [https://easydev-mu.vercel.app/](https://easydev-mu.vercel.app/)
+**Website:** _deploying to GitHub Pages (client) + Render (API) + Neon (database) — link coming soon_
 
 ---
 

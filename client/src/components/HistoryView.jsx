@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { API_BASE } from '../config';
 
 const CATEGORY_STYLES = {
   language: { bg: 'var(--badge-lang-bg)', text: 'var(--badge-lang-text)', border: 'var(--badge-lang-border)' },
@@ -7,8 +8,6 @@ const CATEGORY_STYLES = {
   database: { bg: 'var(--badge-db-bg)', text: 'var(--badge-db-text)', border: 'var(--badge-db-border)' },
   infrastructure: { bg: 'var(--badge-infra-bg)', text: 'var(--badge-infra-text)', border: 'var(--badge-infra-border)' }
 };
-
-const API_BASE = import.meta.env.DEV ? 'http://localhost:5000/api' : '/api';
 
 export default function HistoryView({ onSelectProject, onStartNew }) {
   const [projects, setProjects] = useState([]);
