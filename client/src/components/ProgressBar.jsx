@@ -4,40 +4,23 @@ export default function ProgressBar({ stepCount, totalSteps = 9 }) {
   const progressPercent = Math.min(Math.round((stepCount / totalSteps) * 100), 100);
 
   return (
-    <div className="animate-fade mb-6 sm:mb-8">
-      {/* Label and Percentage Badge */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
-        <span 
-          className="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider" 
-          style={{ color: 'var(--text-muted)' }}
-        >
+    <div style={{ marginBottom: '24px', width: '100%', boxSizing: 'border-box' }} className="animate-fade">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+        <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
           Questionnaire Progress
         </span>
-        <span 
-          className="self-start sm:self-auto text-[11px] sm:text-xs font-extrabold px-2.5 py-1 rounded-full border transition-all"
-          style={{ 
-            color: 'var(--primary-accent)', 
-            backgroundColor: 'var(--accent-glow)',
-            borderColor: 'var(--border-color)'
-          }}
-        >
+        <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--primary-accent)', background: 'var(--accent-glow)', padding: '4px 10px', borderRadius: '20px', border: '1px solid var(--border-color)' }}>
           Step {stepCount} of ~{totalSteps} ({progressPercent}%)
         </span>
       </div>
-
-      {/* Progress Track */}
-      <div 
-        className="h-2.5 w-full rounded-full overflow-hidden border transition-all"
-        style={{ 
-          backgroundColor: 'var(--bg-input)', 
-          borderColor: 'var(--border-color)' 
-        }}
-      >
+      <div style={{ height: '8px', width: '100%', backgroundColor: 'var(--bg-input)', borderRadius: '999px', overflow: 'hidden', border: '1px solid var(--border-color)', boxSizing: 'border-box' }}>
         <div
-          className="h-full rounded-full transition-all duration-500 ease-out"
           style={{
+            height: '100%',
             width: `${progressPercent}%`,
             backgroundColor: 'var(--primary-accent)',
+            borderRadius: '999px',
+            transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
             boxShadow: '0 0 12px var(--primary-accent)'
           }}
         />
