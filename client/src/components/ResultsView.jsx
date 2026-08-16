@@ -11,31 +11,39 @@ const CATEGORY_STYLES = {
 
 export default function ResultsView({ projectId, results, onRestart }) {
   return (
-    <>
+    <div style={{ width: '100%', boxSizing: 'border-box' }} className="animate-fade">
       <div
-        className="animate-fade p-6 sm:p-9 rounded-2xl sm:rounded-[20px] border transition-all"
         style={{
           backgroundColor: 'var(--bg-card)',
-          borderColor: 'var(--border-color)',
-          boxShadow: 'var(--card-shadow)'
+          padding: '32px 24px',
+          borderRadius: '20px',
+          border: '1px solid var(--border-color)',
+          boxShadow: 'var(--card-shadow)',
+          marginBottom: '32px',
+          boxSizing: 'border-box'
         }}
       >
-        <div className="mb-6 sm:mb-7">
-          <h2 className="text-xl sm:text-2xl font-extrabold" style={{ color: 'var(--text-primary)' }}>
+        <div style={{ marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 6px 0' }}>
             Recommended Architecture Stack
           </h2>
-          <p className="text-xs sm:text-sm mt-1 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
             Tailored tech stack generated from your constraint questionnaire choices.
           </p>
         </div>
 
-        <div className="flex flex-col gap-4 mb-8">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '28px', width: '100%' }}>
           {(!results || results.length === 0) ? (
             <div 
-              className="p-6 rounded-xl border border-dashed text-center"
-              style={{ borderColor: 'var(--border-color)' }}
+              style={{
+                padding: '24px',
+                borderRadius: '14px',
+                border: '1px dashed var(--border-color)',
+                textAlign: 'center',
+                backgroundColor: 'var(--bg-main)'
+              }}
             >
-              <p className="text-xs sm:text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
                 No recommendations were generated for this assessment. This can happen if your answers
                 didn't weight strongly enough toward any specific technology in a category — try restarting
                 and adjusting your responses.
@@ -51,28 +59,40 @@ export default function ResultsView({ projectId, results, onRestart }) {
             return (
               <div
                 key={item.tech_item_id || item.name}
-                className="p-4 sm:p-5 rounded-xl sm:rounded-2xl border flex flex-col gap-2 transition-all"
                 style={{
                   backgroundColor: 'var(--bg-main)',
-                  borderColor: 'var(--border-color)'
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '14px',
+                  padding: '18px 20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                  boxSizing: 'border-box',
+                  width: '100%'
                 }}
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <span className="text-base sm:text-lg font-extrabold" style={{ color: 'var(--text-primary)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px' }}>
+                  <span style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', wordBreak: 'break-word', flex: 1 }}>
                     {item.name}
                   </span>
                   <span
-                    className="self-start sm:self-auto text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-md border"
                     style={{
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      padding: '4px 10px',
+                      borderRadius: '6px',
                       backgroundColor: styleBadge.bg,
                       color: styleBadge.text,
-                      borderColor: styleBadge.border
+                      border: `1px solid ${styleBadge.border}`,
+                      whiteSpace: 'nowrap'
                     }}
                   >
                     {item.category}
                   </span>
                 </div>
-                <p className="text-xs sm:text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5', wordBreak: 'break-word' }}>
                   {item.reasoning_text}
                 </p>
               </div>
@@ -81,11 +101,21 @@ export default function ResultsView({ projectId, results, onRestart }) {
         </div>
 
         <button
+          type="button"
           onClick={onRestart}
-          className="btn-interactive w-full p-3.5 sm:p-4 rounded-xl font-bold text-sm sm:text-base text-white transition-all cursor-pointer"
+          className="btn-interactive"
           style={{
+            width: '100%',
+            padding: '14px',
             backgroundColor: 'var(--primary-accent)',
-            boxShadow: '0 4px 14px var(--accent-glow)'
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '12px',
+            fontWeight: '700',
+            fontSize: '15px',
+            cursor: 'pointer',
+            boxShadow: '0 4px 14px var(--accent-glow)',
+            boxSizing: 'border-box'
           }}
         >
           Start New Assessment
@@ -93,6 +123,6 @@ export default function ResultsView({ projectId, results, onRestart }) {
       </div>
 
       <ComparisonView projectId={projectId} recommendations={results || []} />
-    </>
+    </div>
   );
 }
