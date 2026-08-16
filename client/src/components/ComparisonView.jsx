@@ -68,9 +68,7 @@ export default function ComparisonView({ projectId, recommendations = [], apiBas
 
   if (loading) {
     return (
-      <div 
-        style={{ padding: '48px 0', textAlign: 'center', fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}
-      >
+      <div style={{ padding: '48px 0', textAlign: 'center', fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}>
         Loading architectural trade-off analyzer...
       </div>
     );
@@ -79,7 +77,6 @@ export default function ComparisonView({ projectId, recommendations = [], apiBas
   if (loadError) {
     return (
       <div 
-        className="animate-fade"
         style={{
           marginTop: '32px',
           padding: '16px 20px',
@@ -101,7 +98,6 @@ export default function ComparisonView({ projectId, recommendations = [], apiBas
         <button
           type="button"
           onClick={loadComparisonData}
-          className="btn-interactive"
           style={{
             backgroundColor: 'transparent',
             color: 'var(--primary-accent)',
@@ -121,7 +117,7 @@ export default function ComparisonView({ projectId, recommendations = [], apiBas
   }
 
   return (
-    <div className="animate-fade" style={{ marginTop: '36px', width: '100%', boxSizing: 'border-box' }}>
+    <div style={{ marginTop: '36px', width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
       {/* Header Info */}
       <div style={{ marginBottom: '24px' }}>
         <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 4px 0' }}>
@@ -138,7 +134,7 @@ export default function ComparisonView({ projectId, recommendations = [], apiBas
       </div>
 
       {/* Category Layer Cards Container */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%', boxSizing: 'border-box' }}>
         {CATEGORIES.map(category => {
           const recItem = recommendations.find(r => r.category === category);
           const catTechs = techItems.filter(t => t.category === category);
@@ -154,9 +150,11 @@ export default function ComparisonView({ projectId, recommendations = [], apiBas
                 borderRadius: '20px',
                 border: '1px solid var(--border-color)',
                 boxShadow: 'var(--card-shadow)',
-                padding: '24px',
+                padding: '20px 16px',
                 boxSizing: 'border-box',
-                width: '100%'
+                width: '100%',
+                maxWidth: '100%',
+                overflow: 'hidden'
               }}
             >
               {/* Card Header with Status Badge */}
@@ -164,7 +162,7 @@ export default function ComparisonView({ projectId, recommendations = [], apiBas
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'center',
+                  alignItems: 'flex-start',
                   flexWrap: 'wrap',
                   gap: '10px',
                   paddingBottom: '14px',
@@ -203,12 +201,12 @@ export default function ComparisonView({ projectId, recommendations = [], apiBas
                 )}
               </div>
 
-              {/* Side-by-Side Comparison Columns */}
+              {/* Side-by-Side / Stacked Comparison Columns */}
               <div
                 style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                  gap: '20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '16px',
                   width: '100%',
                   boxSizing: 'border-box'
                 }}
@@ -219,32 +217,38 @@ export default function ComparisonView({ projectId, recommendations = [], apiBas
                     backgroundColor: 'var(--bg-main)',
                     border: '1px solid var(--border-color)',
                     borderRadius: '14px',
-                    padding: '18px',
+                    padding: '16px',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                     gap: '14px',
-                    boxSizing: 'border-box'
+                    boxSizing: 'border-box',
+                    width: '100%',
+                    wordBreak: 'break-word'
                   }}
                 >
                   <div>
                     <div style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: '6px' }}>
                       EasyDev Recommended
                     </div>
-                    <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '8px', wordBreak: 'break-word' }}>
+                    <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '8px' }}>
                       {recItem ? recItem.name : 'N/A (Skipped)'}
                     </div>
                     {recItem && (
-                      <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5', wordBreak: 'break-word' }}>
+                      <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
                         {recItem.reasoning_text}
                       </p>
                     )}
                   </div>
 
                   {recItem && recItem.trade_offs && (
-                    <div style={{ fontSize: '11px', paddingTop: '10px', borderTop: '1px solid var(--border-color)', color: 'var(--text-primary)', lineHeight: '1.4' }}>
-                      <strong style={{ color: '#10b981' }}>Pros:</strong> {recItem.trade_offs.pros?.join(', ')}<br />
-                      <strong style={{ color: '#ef4444' }}>Cons:</strong> {recItem.trade_offs.cons?.join(', ')}
+                    <div style={{ fontSize: '11px', paddingTop: '12px', borderTop: '1px solid var(--border-color)', color: 'var(--text-primary)', lineHeight: '1.5' }}>
+                      <div style={{ marginBottom: '8px' }}>
+                        <strong style={{ color: '#16a34a' }}>Pros:</strong> {recItem.trade_offs.pros?.join(', ')}
+                      </div>
+                      <div>
+                        <strong style={{ color: '#dc2626' }}>Cons:</strong> {recItem.trade_offs.cons?.join(', ')}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -255,12 +259,14 @@ export default function ComparisonView({ projectId, recommendations = [], apiBas
                     backgroundColor: 'var(--bg-main)',
                     border: '1px solid var(--border-color)',
                     borderRadius: '14px',
-                    padding: '18px',
+                    padding: '16px',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                     gap: '14px',
-                    boxSizing: 'border-box'
+                    boxSizing: 'border-box',
+                    width: '100%',
+                    wordBreak: 'break-word'
                   }}
                 >
                   <div>
@@ -273,6 +279,7 @@ export default function ComparisonView({ projectId, recommendations = [], apiBas
                       onChange={e => handleSelectTech(category, e.target.value)}
                       style={{
                         width: '100%',
+                        maxWidth: '100%',
                         padding: '10px 12px',
                         borderRadius: '10px',
                         fontWeight: '700',
@@ -295,16 +302,20 @@ export default function ComparisonView({ projectId, recommendations = [], apiBas
                     </select>
 
                     {customItem && (
-                      <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5', wordBreak: 'break-word' }}>
+                      <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
                         {customItem.description}
                       </p>
                     )}
                   </div>
 
                   {customItem && customItem.trade_offs && (
-                    <div style={{ fontSize: '11px', paddingTop: '10px', borderTop: '1px solid var(--border-color)', color: 'var(--text-primary)', lineHeight: '1.4' }}>
-                      <strong style={{ color: '#10b981' }}>Pros:</strong> {customItem.trade_offs.pros?.join(', ')}<br />
-                      <strong style={{ color: '#ef4444' }}>Cons:</strong> {customItem.trade_offs.cons?.join(', ')}
+                    <div style={{ fontSize: '11px', paddingTop: '12px', borderTop: '1px solid var(--border-color)', color: 'var(--text-primary)', lineHeight: '1.5' }}>
+                      <div style={{ marginBottom: '8px' }}>
+                        <strong style={{ color: '#16a34a' }}>Pros:</strong> {customItem.trade_offs.pros?.join(', ')}
+                      </div>
+                      <div>
+                        <strong style={{ color: '#dc2626' }}>Cons:</strong> {customItem.trade_offs.cons?.join(', ')}
+                      </div>
                     </div>
                   )}
                 </div>
