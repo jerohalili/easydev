@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Sun, Moon } from '@phosphor-icons/react';
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState(() => {
@@ -32,8 +33,19 @@ export default function ThemeToggle() {
         gap: '8px',
         boxShadow: 'var(--card-shadow)'
       }}
+      aria-label="Toggle color theme"
     >
-      <span>{theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}</span>
+      {theme === 'light' ? (
+        <>
+          <Moon size={16} weight="duotone" style={{ color: 'var(--primary-accent)' }} />
+          <span>Dark Mode</span>
+        </>
+      ) : (
+        <>
+          <Sun size={16} weight="duotone" style={{ color: 'var(--primary-accent)' }} />
+          <span>Light Mode</span>
+        </>
+      )}
     </button>
   );
 }

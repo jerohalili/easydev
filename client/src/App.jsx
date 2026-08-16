@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ClockCounterClockwise, ArrowRight, ClipboardText } from '@phosphor-icons/react';
 import ProgressBar from './components/ProgressBar';
 import QuestionCard from './components/QuestionCard';
 import ResultsView from './components/ResultsView';
@@ -129,7 +130,10 @@ export default function App() {
                 onClick={() => setActiveTab('new')}
                 className="btn-interactive"
                 style={{
-                  padding: '8px 16px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 14px',
                   border: 'none',
                   borderRadius: '8px',
                   backgroundColor: activeTab === 'new' ? 'var(--primary-accent)' : 'transparent',
@@ -139,13 +143,17 @@ export default function App() {
                   cursor: 'pointer'
                 }}
               >
-                Assessment
+                <ClipboardText size={16} weight="duotone" />
+                <span>Assessment</span>
               </button>
               <button
                 onClick={() => setActiveTab('history')}
                 className="btn-interactive"
                 style={{
-                  padding: '8px 16px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 14px',
                   border: 'none',
                   borderRadius: '8px',
                   backgroundColor: activeTab === 'history' ? 'var(--primary-accent)' : 'transparent',
@@ -155,7 +163,8 @@ export default function App() {
                   cursor: 'pointer'
                 }}
               >
-                📜 History
+                <ClockCounterClockwise size={16} weight="duotone" />
+                <span>History</span>
               </button>
             </div>
 
@@ -239,12 +248,17 @@ export default function App() {
                       border: 'none',
                       borderRadius: '12px',
                       fontWeight: '700',
-                      fontSize: '16px',
+                      fontSize: '15px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justify: 'center',
+                      gap: '8px',
                       cursor: projectTitle.trim() && !loading ? 'pointer' : 'not-allowed',
                       boxShadow: projectTitle.trim() && !loading ? '0 4px 14px var(--accent-glow)' : 'none'
                     }}
                   >
-                    {loading ? 'Initializing Engine...' : 'Start Assessment →'}
+                    <span>{loading ? 'Initializing Engine...' : 'Start Assessment'}</span>
+                    {!loading && <ArrowRight size={18} weight="bold" />}
                   </button>
                 </form>
               </div>

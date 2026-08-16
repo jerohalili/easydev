@@ -1,4 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { 
+  Plus, 
+  Trash, 
+  ClockCounterClockwise, 
+  ArrowClockwise, 
+  Code, 
+  FolderSimple 
+} from '@phosphor-icons/react';
 import { apiFetch } from '../config';
 
 const CATEGORY_STYLES = {
@@ -45,8 +53,7 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
   if (loading) {
     return (
       <div 
-        className="py-12 text-center text-xs sm:text-sm font-semibold tracking-wide" 
-        style={{ color: 'var(--text-muted)' }}
+        style={{ padding: '48px 0', textAlign: 'center', fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}
       >
         Loading proposal history...
       </div>
@@ -54,48 +61,80 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
   }
 
   return (
-    <div className="animate-fade mt-6 sm:mt-8">
+    <div className="animate-fade" style={{ marginTop: '24px' }}>
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h2 className="text-xl sm:text-2xl font-extrabold" style={{ color: 'var(--text-primary)' }}>
-            Proposal History
-          </h2>
-          <p className="text-xs sm:text-sm mt-1 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ClockCounterClockwise size={22} weight="duotone" style={{ color: 'var(--primary-accent)' }} />
+            <h2 style={{ fontSize: '22px', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>
+              Proposal History
+            </h2>
+          </div>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
             Review past assessments and their recommended tech stack outputs
           </p>
         </div>
         <button
           onClick={onStartNew}
-          className="btn-interactive w-full sm:w-auto px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white cursor-pointer transition-all shrink-0"
-          style={{ backgroundColor: 'var(--primary-accent)' }}
+          className="btn-interactive"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '10px 18px',
+            backgroundColor: 'var(--primary-accent)',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '10px',
+            fontWeight: '700',
+            fontSize: '13px',
+            cursor: 'pointer'
+          }}
         >
-          + New Assessment
+          <Plus size={16} weight="bold" />
+          <span>New Assessment</span>
         </button>
       </div>
 
       {/* Error Alert */}
       {error && (
         <div 
-          className="p-4 sm:p-5 rounded-2xl mb-6 flex flex-col sm:flex-row justify-between items-center gap-3 border"
           style={{ 
+            padding: '14px 18px', 
             backgroundColor: 'var(--accent-glow)', 
-            borderColor: 'var(--primary-accent)' 
+            border: '1px solid var(--primary-accent)', 
+            color: 'var(--primary-accent)', 
+            borderRadius: '12px', 
+            marginBottom: '24px', 
+            fontSize: '13px', 
+            fontWeight: '600',
+            display: 'flex',
+            justify: 'space-between',
+            alignItems: 'center',
+            gap: '12px'
           }}
         >
-          <span className="text-xs sm:text-sm font-bold" style={{ color: 'var(--primary-accent)' }}>
-            {error}
-          </span>
+          <span>{error}</span>
           <button
             onClick={fetchHistory}
-            className="btn-interactive px-4 py-1.5 rounded-xl text-xs font-extrabold cursor-pointer transition-all shrink-0"
+            className="btn-interactive"
             style={{ 
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '6px 12px', 
               backgroundColor: 'transparent', 
               color: 'var(--primary-accent)', 
-              border: '1px solid var(--primary-accent)' 
+              border: '1px solid var(--primary-accent)', 
+              borderRadius: '8px', 
+              fontWeight: '700', 
+              fontSize: '12px', 
+              cursor: 'pointer' 
             }}
           >
-            Try again
+            <ArrowClockwise size={14} weight="bold" />
+            Retry
           </button>
         </div>
       )}
@@ -103,68 +142,92 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
       {/* Empty State */}
       {!error && projects.length === 0 && (
         <div 
-          className="p-8 sm:p-12 rounded-2xl border text-center"
           style={{ 
             backgroundColor: 'var(--bg-card)', 
-            borderColor: 'var(--border-color)', 
-            boxShadow: 'var(--card-shadow)' 
+            padding: '40px 20px', 
+            borderRadius: '16px', 
+            border: '1px solid var(--border-color)', 
+            textAlign: 'center',
+            boxShadow: 'var(--card-shadow)'
           }}
         >
-          <p className="text-xs sm:text-sm mb-5 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+          <FolderSimple size={40} weight="duotone" style={{ color: 'var(--text-muted)', marginBottom: '12px' }} />
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '16px' }}>
             No previous project proposals found.
           </p>
           <button
             onClick={onStartNew}
-            className="btn-interactive px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white cursor-pointer transition-all"
-            style={{ backgroundColor: 'var(--primary-accent)' }}
+            className="btn-interactive"
+            style={{
+              padding: '10px 18px',
+              backgroundColor: 'var(--primary-accent)',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '10px',
+              fontWeight: '700',
+              fontSize: '13px',
+              cursor: 'pointer'
+            }}
           >
             Create Your First Proposal
           </button>
         </div>
       )}
 
-      {/* Project History Cards List */}
+      {/* Project Cards List */}
       {!error && projects.length > 0 && (
-        <div className="flex flex-col gap-4">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {projects.map((proj) => (
             <div
               key={proj.id}
               onClick={() => onSelectProject(proj.id)}
-              className="option-card p-5 sm:p-6 rounded-2xl border cursor-pointer transition-all"
+              className="option-card"
               style={{
                 backgroundColor: 'var(--bg-card)',
-                borderColor: 'var(--border-color)',
-                boxShadow: 'var(--card-shadow)'
+                padding: '20px 24px',
+                borderRadius: '16px',
+                border: '1px solid var(--border-color)',
+                boxShadow: 'var(--card-shadow)',
+                cursor: 'pointer'
               }}
             >
-              {/* Card Title & Meta Info */}
-              <div className="flex justify-between items-start gap-3 mb-2">
-                <h3 className="text-base sm:text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                <h3 style={{ fontSize: '17px', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>
                   {proj.title}
                 </h3>
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className="text-[11px] sm:text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)' }}>
                     {new Date(proj.created_at).toLocaleDateString()}
                   </span>
                   <button
                     onClick={(e) => handleDelete(e, proj.id)}
-                    className="p-1 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer text-sm"
+                    style={{ 
+                      background: 'none', 
+                      border: 'none', 
+                      color: 'var(--text-muted)', 
+                      cursor: 'pointer', 
+                      padding: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      borderRadius: '6px',
+                      transition: 'color 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary-accent)'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
                     title="Delete project"
                   >
-                    X
+                    <Trash size={18} weight="regular" />
                   </button>
                 </div>
               </div>
 
-              {/* Description */}
               {proj.description && (
-                <p className="text-xs sm:text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '14px', lineHeight: '1.5', margin: '0 0 14px 0' }}>
                   {proj.description}
                 </p>
               )}
 
-              {/* Tech Stack Badges */}
-              <div className="flex flex-wrap gap-2 mt-3">
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {proj.recommendations && proj.recommendations.map((rec) => {
                   const styleBadge = CATEGORY_STYLES[rec.category] || { 
                     bg: 'var(--bg-input)', 
@@ -174,13 +237,20 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
                   return (
                     <span
                       key={rec.name}
-                      className="text-[11px] sm:text-xs font-bold px-2.5 py-1 rounded-md border"
                       style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        padding: '4px 10px',
+                        borderRadius: '6px',
                         backgroundColor: styleBadge.bg,
                         color: styleBadge.text,
-                        borderColor: styleBadge.border
+                        border: `1px solid ${styleBadge.border}`
                       }}
                     >
+                      <Code size={12} weight="bold" />
                       {rec.name}
                     </span>
                   );
