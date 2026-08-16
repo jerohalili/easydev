@@ -10,7 +10,7 @@ export default function ProgressBar({ stepCount, totalSteps = 9 }) {
           Questionnaire Progress
         </span>
         <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--primary-accent)', background: 'var(--accent-glow)', padding: '4px 10px', borderRadius: '20px', border: '1px solid var(--border-color)' }}>
-          Step {stepCount} of ~{totalSteps} ({progressPercent}%)
+          Step {stepCount} of {totalSteps} ({progressPercent}%)
         </span>
       </div>
       <div style={{ height: '8px', width: '100%', backgroundColor: 'var(--bg-input)', borderRadius: '999px', overflow: 'hidden', border: '1px solid var(--border-color)', boxSizing: 'border-box' }}>

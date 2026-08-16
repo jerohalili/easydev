@@ -3,7 +3,7 @@ import { API_BASE, apiFetch } from '../config';
 
 const CATEGORIES = ['language', 'frontend', 'backend', 'database', 'infrastructure'];
 
-export default function ComparisonView({ projectId, recommendations, apiBase = API_BASE }) {
+export default function ComparisonView({ projectId, recommendations = [], apiBase = API_BASE }) {
   const [techItems, setTechItems] = useState([]);
   const [userSelections, setUserSelections] = useState({});
   const [loading, setLoading] = useState(true);
@@ -11,7 +11,9 @@ export default function ComparisonView({ projectId, recommendations, apiBase = A
   const [saveError, setSaveError] = useState(null);
 
   useEffect(() => {
-    loadComparisonData();
+    if (projectId) {
+      loadComparisonData();
+    }
   }, [projectId]);
 
   const loadComparisonData = async () => {
@@ -23,12 +25,14 @@ export default function ComparisonView({ projectId, recommendations, apiBase = A
         apiFetch(`/projects/${projectId}/user-stack`, undefined, apiBase)
       ]);
 
-      setTechItems(techData);
+      setTechItems(techData || []);
 
       const mappedSelections = {};
-      userStackData.forEach(item => {
-        mappedSelections[item.category] = item.tech_item_id;
-      });
+      if (Array.isArray(userStackData)) {
+        userStackData.forEach(item => {
+          mappedSelections[item.category] = item.tech_item_id;
+        });
+      }
       setUserSelections(mappedSelections);
     } catch (err) {
       setLoadError(err.message || 'Failed to load the comparison data.');
@@ -38,6 +42,15 @@ export default function ComparisonView({ projectId, recommendations, apiBase = A
   };
 
   const handleSelectTech = async (category, techItemId) => {
+    if (!techItemId) {
+      setUserSelections(prev => {
+        const copy = { ...prev };
+        delete copy[category];
+        return copy;
+      });
+      return;
+    }
+
     const numericId = Number(techItemId);
     setUserSelections(prev => ({ ...prev, [category]: numericId }));
     setSaveError(null);
@@ -153,7 +166,7 @@ export default function ComparisonView({ projectId, recommendations, apiBase = A
                 )}
               </div>
 
-              {/* Side-by-Side Comparison Grid (Responsive: 1 col on mobile, 2 cols on md+) */}
+              {/* Side-by-Side Comparison Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 
                 {/* EasyDev Recommended Tech Card */}

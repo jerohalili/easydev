@@ -30,7 +30,7 @@ export default function ResultsView({ projectId, results, onRestart }) {
         </div>
 
         <div className="flex flex-col gap-4 mb-8">
-          {results.length === 0 ? (
+          {(!results || results.length === 0) ? (
             <div 
               className="p-6 rounded-xl border border-dashed text-center"
               style={{ borderColor: 'var(--border-color)' }}
@@ -92,7 +92,7 @@ export default function ResultsView({ projectId, results, onRestart }) {
         </button>
       </div>
 
-      <ComparisonView projectId={projectId} recommendations={results} />
+      <ComparisonView projectId={projectId} recommendations={results || []} />
     </>
   );
 }
