@@ -111,18 +111,19 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', padding: '32px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div style={{ minHeight: '100vh', padding: '32px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div style={{ width: '100%', maxWidth: '680px' }}>
+        
         {/* Header & Navigation */}
         <header style={{ marginBottom: '36px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <h1 style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em', margin: 0 }}>
               EasyDev
             </h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>Tech Stack Identifier</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: '4px 0 0 0' }}>Tech Stack Identifier</p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', background: 'var(--bg-card)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)' }}>
               <button
                 onClick={() => setActiveTab('new')}
@@ -132,7 +133,7 @@ export default function App() {
                   border: 'none',
                   borderRadius: '8px',
                   backgroundColor: activeTab === 'new' ? 'var(--primary-accent)' : 'transparent',
-                  color: activeTab === 'new' ? '#fff' : 'var(--text-secondary)',
+                  color: activeTab === 'new' ? '#ffffff' : 'var(--text-secondary)',
                   fontWeight: '700',
                   fontSize: '13px',
                   cursor: 'pointer'
@@ -148,7 +149,7 @@ export default function App() {
                   border: 'none',
                   borderRadius: '8px',
                   backgroundColor: activeTab === 'history' ? 'var(--primary-accent)' : 'transparent',
-                  color: activeTab === 'history' ? '#fff' : 'var(--text-secondary)',
+                  color: activeTab === 'history' ? '#ffffff' : 'var(--text-secondary)',
                   fontWeight: '700',
                   fontSize: '13px',
                   cursor: 'pointer'
@@ -157,12 +158,14 @@ export default function App() {
                 📜 History
               </button>
             </div>
+
             <ThemeToggle />
           </div>
         </header>
 
+        {/* Error Alert */}
         {error && (
-          <div style={{ padding: '14px 18px', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#dc2626', borderRadius: '12px', marginBottom: '24px', fontSize: '14px', fontWeight: '600' }}>
+          <div style={{ padding: '14px 18px', backgroundColor: 'var(--accent-glow)', border: '1px solid var(--primary-accent)', color: 'var(--primary-accent)', borderRadius: '12px', marginBottom: '24px', fontSize: '14px', fontWeight: '600' }}>
             {error}
           </div>
         )}
@@ -172,10 +175,10 @@ export default function App() {
           <>
             {screen === 'start' && (
               <div className="animate-fade" style={{ background: 'var(--bg-card)', padding: '36px', borderRadius: '20px', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)' }}>
-                <h2 style={{ fontSize: '22px', fontWeight: '800', marginBottom: '8px', color: 'var(--text-primary)' }}>
+                <h2 style={{ fontSize: '22px', fontWeight: '800', marginBottom: '8px', color: 'var(--text-primary)', margin: '0 0 8px 0' }}>
                   Create Project Proposal
                 </h2>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: '28px', fontSize: '14px', lineHeight: '1.6' }}>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '28px', fontSize: '14px', lineHeight: '1.6', margin: '0 0 28px 0' }}>
                   Name your proposal to begin the questionnaire. Select your project requirements and click continue to progress through the assessment.
                 </p>
 

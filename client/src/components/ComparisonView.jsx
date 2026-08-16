@@ -55,7 +55,10 @@ export default function ComparisonView({ projectId, recommendations, apiBase = A
 
   if (loading) {
     return (
-      <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>
+      <div 
+        className="py-12 text-center text-xs sm:text-sm font-semibold tracking-wide" 
+        style={{ color: 'var(--text-muted)' }}
+      >
         Loading architectural trade-off analyzer...
       </div>
     );
@@ -63,12 +66,24 @@ export default function ComparisonView({ projectId, recommendations, apiBase = A
 
   if (loadError) {
     return (
-      <div className="animate-fade" style={{ marginTop: '36px', padding: '20px', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-        <span style={{ color: '#dc2626', fontSize: '14px', fontWeight: '600' }}>{loadError}</span>
+      <div 
+        className="animate-fade mt-8 p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-3 border"
+        style={{ 
+          backgroundColor: 'var(--accent-glow)', 
+          borderColor: 'var(--primary-accent)' 
+        }}
+      >
+        <span className="text-xs sm:text-sm font-bold" style={{ color: 'var(--primary-accent)' }}>
+          {loadError}
+        </span>
         <button
           onClick={loadComparisonData}
-          className="btn-interactive"
-          style={{ padding: '6px 14px', backgroundColor: 'transparent', color: '#dc2626', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '8px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}
+          className="btn-interactive px-4 py-2 rounded-xl text-xs font-extrabold cursor-pointer transition-all shrink-0"
+          style={{ 
+            backgroundColor: 'transparent', 
+            color: 'var(--primary-accent)', 
+            border: '1px solid var(--primary-accent)' 
+          }}
         >
           Try again
         </button>
@@ -77,22 +92,24 @@ export default function ComparisonView({ projectId, recommendations, apiBase = A
   }
 
   return (
-    <div className="animate-fade" style={{ marginTop: '36px' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>
+    <div className="animate-fade mt-8 sm:mt-10">
+      {/* Header Info */}
+      <div className="mb-6">
+        <h3 className="text-lg sm:text-xl font-extrabold" style={{ color: 'var(--text-primary)' }}>
           Architectural Trade-Off Analysis
         </h3>
-        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+        <p className="text-xs sm:text-sm mt-1 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
           Evaluate technical pros, cons, and tradeoffs when selecting alternative stack choices.
         </p>
         {saveError && (
-          <p style={{ fontSize: '13px', color: '#dc2626', fontWeight: '600', marginTop: '10px' }}>
+          <p className="text-xs sm:text-sm font-bold mt-2" style={{ color: '#dc2626' }}>
             {saveError}
           </p>
         )}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* Category Layer Cards */}
+      <div className="flex flex-col gap-6">
         {CATEGORIES.map(category => {
           const recItem = recommendations.find(r => r.category === category);
           const catTechs = techItems.filter(t => t.category === category);
@@ -103,48 +120,32 @@ export default function ComparisonView({ projectId, recommendations, apiBase = A
           return (
             <div
               key={category}
+              className="p-5 sm:p-6 rounded-2xl border transition-all"
               style={{
-                borderRadius: '16px',
-                border: '1px solid var(--border-color)',
                 backgroundColor: 'var(--bg-card)',
-                padding: '20px',
+                borderColor: 'var(--border-color)',
                 boxShadow: 'var(--card-shadow)'
               }}
             >
-              {/* Card Header with Status Badge aligned strictly to the right */}
+              {/* Card Header with Status Badge */}
               <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '16px',
-                  borderBottom: '1px solid var(--border-color)',
-                  paddingBottom: '12px'
-                }}
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-4 border-b"
+                style={{ borderColor: 'var(--border-color)' }}
               >
                 <span
-                  style={{
-                    fontSize: '12px',
-                    fontWeight: '800',
-                    textTransform: 'uppercase',
-                    color: 'var(--primary-accent)',
-                    letterSpacing: '0.08em'
-                  }}
+                  className="text-xs font-extrabold uppercase tracking-widest"
+                  style={{ color: 'var(--primary-accent)' }}
                 >
                   {category} Layer
                 </span>
 
                 {customChoiceId && (
                   <span
+                    className="self-start sm:self-auto text-[11px] font-bold px-2.5 py-1 rounded-lg border"
                     style={{
-                      marginLeft: 'auto',
-                      fontSize: '11px',
-                      fontWeight: '800',
-                      padding: '4px 10px',
-                      borderRadius: '8px',
                       backgroundColor: isMatch ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
                       color: isMatch ? '#10b981' : '#f59e0b',
-                      border: `1px solid ${isMatch ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`
+                      borderColor: isMatch ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'
                     }}
                   >
                     {isMatch ? '✓ Matching Recommendation' : '⚡ Custom Override Active'}
@@ -152,72 +153,85 @@ export default function ComparisonView({ projectId, recommendations, apiBase = A
                 )}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                {/* Recommended Tech Card */}
-                <div style={{ backgroundColor: 'var(--bg-main)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                    EASYDEV RECOMMENDED
-                  </div>
-                  <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '8px' }}>
-                    {recItem ? recItem.name : 'N/A (Skipped)'}
-                  </div>
-                  {recItem && (
-                    <>
-                      <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5', marginBottom: '10px' }}>
+              {/* Side-by-Side Comparison Grid (Responsive: 1 col on mobile, 2 cols on md+) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                
+                {/* EasyDev Recommended Tech Card */}
+                <div 
+                  className="p-4 rounded-xl border flex flex-col justify-between"
+                  style={{ 
+                    backgroundColor: 'var(--bg-main)', 
+                    borderColor: 'var(--border-color)' 
+                  }}
+                >
+                  <div>
+                    <div className="text-[10px] font-extrabold uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>
+                      EasyDev Recommended
+                    </div>
+                    <div className="text-base font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+                      {recItem ? recItem.name : 'N/A (Skipped)'}
+                    </div>
+                    {recItem && (
+                      <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
                         {recItem.reasoning_text}
                       </p>
-                      {recItem.trade_offs && (
-                        <div style={{ fontSize: '11px', color: 'var(--text-primary)' }}>
-                          <strong style={{ color: '#10b981' }}>Pros:</strong> {recItem.trade_offs.pros?.join(', ')}<br />
-                          <strong style={{ color: '#ef4444' }}>Cons:</strong> {recItem.trade_offs.cons?.join(', ')}
-                        </div>
-                      )}
-                    </>
+                    )}
+                  </div>
+
+                  {recItem && recItem.trade_offs && (
+                    <div className="text-[11px] pt-2 border-t" style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}>
+                      <strong style={{ color: '#10b981' }}>Pros:</strong> {recItem.trade_offs.pros?.join(', ')}<br />
+                      <strong style={{ color: '#ef4444' }}>Cons:</strong> {recItem.trade_offs.cons?.join(', ')}
+                    </div>
                   )}
                 </div>
 
-                {/* Custom Tech Choice Card */}
-                <div style={{ backgroundColor: 'var(--bg-main)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                    YOUR CUSTOM SELECTION
-                  </div>
-                  <select
-                    value={customChoiceId}
-                    onChange={e => handleSelectTech(category, e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      borderRadius: '8px',
-                      border: '1px solid var(--border-color)',
-                      backgroundColor: 'var(--bg-input)',
-                      color: 'var(--text-primary)',
-                      fontWeight: '700',
-                      fontSize: '14px',
-                      marginBottom: '10px'
-                    }}
-                  >
-                    <option value="">-- Select custom alternative --</option>
-                    {catTechs.map(t => (
-                      <option key={t.id} value={t.id}>
-                        {t.name}
-                      </option>
-                    ))}
-                  </select>
+                {/* Custom Tech Selection Card */}
+                <div 
+                  className="p-4 rounded-xl border flex flex-col justify-between"
+                  style={{ 
+                    backgroundColor: 'var(--bg-main)', 
+                    borderColor: 'var(--border-color)' 
+                  }}
+                >
+                  <div>
+                    <div className="text-[10px] font-extrabold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>
+                      Your Custom Selection
+                    </div>
+                    
+                    <select
+                      value={customChoiceId}
+                      onChange={e => handleSelectTech(category, e.target.value)}
+                      className="w-full p-2.5 rounded-lg font-bold text-xs sm:text-sm mb-3 border cursor-pointer focus:outline-none transition-all"
+                      style={{
+                        backgroundColor: 'var(--bg-input)',
+                        borderColor: 'var(--border-color)',
+                        color: 'var(--text-primary)'
+                      }}
+                    >
+                      <option value="">-- Select custom alternative --</option>
+                      {catTechs.map(t => (
+                        <option key={t.id} value={t.id}>
+                          {t.name}
+                        </option>
+                      ))}
+                    </select>
 
-                  {customItem && (
-                    <>
-                      <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5', marginBottom: '10px' }}>
+                    {customItem && (
+                      <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
                         {customItem.description}
                       </p>
-                      {customItem.trade_offs && (
-                        <div style={{ fontSize: '11px', color: 'var(--text-primary)' }}>
-                          <strong style={{ color: '#10b981' }}>Pros:</strong> {customItem.trade_offs.pros?.join(', ')}<br />
-                          <strong style={{ color: '#ef4444' }}>Cons:</strong> {customItem.trade_offs.cons?.join(', ')}
-                        </div>
-                      )}
-                    </>
+                    )}
+                  </div>
+
+                  {customItem && customItem.trade_offs && (
+                    <div className="text-[11px] pt-2 border-t" style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}>
+                      <strong style={{ color: '#10b981' }}>Pros:</strong> {customItem.trade_offs.pros?.join(', ')}<br />
+                      <strong style={{ color: '#ef4444' }}>Cons:</strong> {customItem.trade_offs.cons?.join(', ')}
+                    </div>
                   )}
                 </div>
+
               </div>
             </div>
           );

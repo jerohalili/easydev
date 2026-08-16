@@ -13,70 +13,66 @@ export default function ResultsView({ projectId, results, onRestart }) {
   return (
     <>
       <div
-        className="animate-fade"
+        className="animate-fade p-6 sm:p-9 rounded-2xl sm:rounded-[20px] border transition-all"
         style={{
-          background: 'var(--bg-card)',
-          padding: '36px',
-          borderRadius: '20px',
-          border: '1px solid var(--border-color)',
+          backgroundColor: 'var(--bg-card)',
+          borderColor: 'var(--border-color)',
           boxShadow: 'var(--card-shadow)'
         }}
       >
-        <div style={{ marginBottom: '28px' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>
+        <div className="mb-6 sm:mb-7">
+          <h2 className="text-xl sm:text-2xl font-extrabold" style={{ color: 'var(--text-primary)' }}>
             Recommended Architecture Stack
           </h2>
-          <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+          <p className="text-xs sm:text-sm mt-1 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
             Tailored tech stack generated from your constraint questionnaire choices.
           </p>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+        <div className="flex flex-col gap-4 mb-8">
           {results.length === 0 ? (
-            <div style={{ border: '1px dashed var(--border-color)', padding: '24px', borderRadius: '14px', textAlign: 'center' }}>
-              <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+            <div 
+              className="p-6 rounded-xl border border-dashed text-center"
+              style={{ borderColor: 'var(--border-color)' }}
+            >
+              <p className="text-xs sm:text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                 No recommendations were generated for this assessment. This can happen if your answers
                 didn't weight strongly enough toward any specific technology in a category — try restarting
                 and adjusting your responses.
               </p>
             </div>
           ) : results.map((item) => {
-            const styleBadge = CATEGORY_STYLES[item.category] || { bg: 'var(--accent-glow)', text: 'var(--primary-accent)', border: 'var(--border-color)' };
+            const styleBadge = CATEGORY_STYLES[item.category] || { 
+              bg: 'var(--accent-glow)', 
+              text: 'var(--primary-accent)', 
+              border: 'var(--border-color)' 
+            };
 
             return (
               <div
                 key={item.tech_item_id || item.name}
+                className="p-4 sm:p-5 rounded-xl sm:rounded-2xl border flex flex-col gap-2 transition-all"
                 style={{
-                  border: '1px solid var(--border-color)',
-                  padding: '20px',
-                  borderRadius: '14px',
                   backgroundColor: 'var(--bg-main)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px'
+                  borderColor: 'var(--border-color)'
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)' }}>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <span className="text-base sm:text-lg font-extrabold" style={{ color: 'var(--text-primary)' }}>
                     {item.name}
                   </span>
                   <span
+                    className="self-start sm:self-auto text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-md border"
                     style={{
-                      textTransform: 'uppercase',
-                      fontSize: '11px',
-                      fontWeight: '800',
-                      letterSpacing: '0.08em',
-                      padding: '4px 10px',
-                      borderRadius: '8px',
                       backgroundColor: styleBadge.bg,
                       color: styleBadge.text,
-                      border: `1px solid ${styleBadge.border}`
+                      borderColor: styleBadge.border
                     }}
                   >
                     {item.category}
                   </span>
                 </div>
-                <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                <p className="text-xs sm:text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                   {item.reasoning_text}
                 </p>
               </div>
@@ -86,17 +82,9 @@ export default function ResultsView({ projectId, results, onRestart }) {
 
         <button
           onClick={onRestart}
-          className="btn-interactive"
+          className="btn-interactive w-full p-3.5 sm:p-4 rounded-xl font-bold text-sm sm:text-base text-white transition-all cursor-pointer"
           style={{
-            width: '100%',
-            padding: '14px',
             backgroundColor: 'var(--primary-accent)',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '12px',
-            fontWeight: '700',
-            fontSize: '16px',
-            cursor: 'pointer',
             boxShadow: '0 4px 14px var(--accent-glow)'
           }}
         >

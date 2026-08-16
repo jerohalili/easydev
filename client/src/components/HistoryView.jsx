@@ -43,114 +43,142 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
   };
 
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)', fontWeight: '600' }}>Loading proposal history...</div>;
+    return (
+      <div 
+        className="py-12 text-center text-xs sm:text-sm font-semibold tracking-wide" 
+        style={{ color: 'var(--text-muted)' }}
+      >
+        Loading proposal history...
+      </div>
+    );
   }
 
   return (
-    <div className="animate-fade">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+    <div className="animate-fade mt-6 sm:mt-8">
+      {/* Header Bar */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h2 style={{ fontSize: '22px', fontWeight: '800', color: 'var(--text-primary)' }}>Proposal History</h2>
-          <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+          <h2 className="text-xl sm:text-2xl font-extrabold" style={{ color: 'var(--text-primary)' }}>
+            Proposal History
+          </h2>
+          <p className="text-xs sm:text-sm mt-1 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
             Review past assessments and their recommended tech stack outputs
           </p>
         </div>
         <button
           onClick={onStartNew}
-          className="btn-interactive"
-          style={{
-            padding: '10px 18px',
-            backgroundColor: 'var(--primary-accent)',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '10px',
-            fontWeight: '700',
-            fontSize: '14px',
-            cursor: 'pointer'
-          }}
+          className="btn-interactive w-full sm:w-auto px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white cursor-pointer transition-all shrink-0"
+          style={{ backgroundColor: 'var(--primary-accent)' }}
         >
           + New Assessment
         </button>
       </div>
 
+      {/* Error Alert */}
       {error && (
-        <div style={{ padding: '14px 18px', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#dc2626', borderRadius: '12px', marginBottom: '24px', fontSize: '14px', fontWeight: '600', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <span>{error}</span>
+        <div 
+          className="p-4 sm:p-5 rounded-2xl mb-6 flex flex-col sm:flex-row justify-between items-center gap-3 border"
+          style={{ 
+            backgroundColor: 'var(--accent-glow)', 
+            borderColor: 'var(--primary-accent)' 
+          }}
+        >
+          <span className="text-xs sm:text-sm font-bold" style={{ color: 'var(--primary-accent)' }}>
+            {error}
+          </span>
           <button
             onClick={fetchHistory}
-            className="btn-interactive"
-            style={{ padding: '6px 14px', backgroundColor: 'transparent', color: '#dc2626', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '8px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}
+            className="btn-interactive px-4 py-1.5 rounded-xl text-xs font-extrabold cursor-pointer transition-all shrink-0"
+            style={{ 
+              backgroundColor: 'transparent', 
+              color: 'var(--primary-accent)', 
+              border: '1px solid var(--primary-accent)' 
+            }}
           >
             Try again
           </button>
         </div>
       )}
 
+      {/* Empty State */}
       {!error && projects.length === 0 && (
-        <div style={{ background: 'var(--bg-card)', padding: '40px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center', boxShadow: 'var(--card-shadow)' }}>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>No previous project proposals found.</p>
+        <div 
+          className="p-8 sm:p-12 rounded-2xl border text-center"
+          style={{ 
+            backgroundColor: 'var(--bg-card)', 
+            borderColor: 'var(--border-color)', 
+            boxShadow: 'var(--card-shadow)' 
+          }}
+        >
+          <p className="text-xs sm:text-sm mb-5 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            No previous project proposals found.
+          </p>
           <button
             onClick={onStartNew}
-            className="btn-interactive"
-            style={{ padding: '10px 18px', backgroundColor: 'var(--primary-accent)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', cursor: 'pointer' }}
+            className="btn-interactive px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white cursor-pointer transition-all"
+            style={{ backgroundColor: 'var(--primary-accent)' }}
           >
             Create Your First Proposal
           </button>
         </div>
       )}
 
+      {/* Project History Cards List */}
       {!error && projects.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div className="flex flex-col gap-4">
           {projects.map((proj) => (
             <div
               key={proj.id}
               onClick={() => onSelectProject(proj.id)}
-              className="option-card"
+              className="option-card p-5 sm:p-6 rounded-2xl border cursor-pointer transition-all"
               style={{
-                background: 'var(--bg-card)',
-                padding: '24px',
-                borderRadius: '16px',
-                border: '1px solid var(--border-color)',
-                boxShadow: 'var(--card-shadow)',
-                cursor: 'pointer'
+                backgroundColor: 'var(--bg-card)',
+                borderColor: 'var(--border-color)',
+                boxShadow: 'var(--card-shadow)'
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)' }}>{proj.title}</h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)' }}>
+              {/* Card Title & Meta Info */}
+              <div className="flex justify-between items-start gap-3 mb-2">
+                <h3 className="text-base sm:text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {proj.title}
+                </h3>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="text-[11px] sm:text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>
                     {new Date(proj.created_at).toLocaleDateString()}
                   </span>
                   <button
                     onClick={(e) => handleDelete(e, proj.id)}
-                    style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '16px', padding: '4px' }}
+                    className="p-1 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer text-sm"
                     title="Delete project"
                   >
-                    🗑️
+                    X
                   </button>
                 </div>
               </div>
 
+              {/* Description */}
               {proj.description && (
-                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: '1.5' }}>
+                <p className="text-xs sm:text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                   {proj.description}
                 </p>
               )}
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
+              {/* Tech Stack Badges */}
+              <div className="flex flex-wrap gap-2 mt-3">
                 {proj.recommendations && proj.recommendations.map((rec) => {
-                  const styleBadge = CATEGORY_STYLES[rec.category] || { bg: 'var(--bg-input)', text: 'var(--text-primary)', border: 'var(--border-color)' };
+                  const styleBadge = CATEGORY_STYLES[rec.category] || { 
+                    bg: 'var(--bg-input)', 
+                    text: 'var(--text-primary)', 
+                    border: 'var(--border-color)' 
+                  };
                   return (
                     <span
                       key={rec.name}
+                      className="text-[11px] sm:text-xs font-bold px-2.5 py-1 rounded-md border"
                       style={{
-                        fontSize: '12px',
-                        fontWeight: '700',
-                        padding: '4px 10px',
-                        borderRadius: '6px',
                         backgroundColor: styleBadge.bg,
                         color: styleBadge.text,
-                        border: `1px solid ${styleBadge.border}`
+                        borderColor: styleBadge.border
                       }}
                     >
                       {rec.name}
