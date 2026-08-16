@@ -1,124 +1,132 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
-
 :root {
-  /* Light Theme - Clean, High Contrast, Vibrant Accents */
+  /* Color Palette Variables (Light Theme Defaults) */
   --bg-main: #f8fafc;
   --bg-card: #ffffff;
-  --bg-card-hover: #f1f5f9;
   --bg-input: #f1f5f9;
-  --border-color: #cbd5e1;
-  --border-focus: #4f46e5;
   --text-primary: #0f172a;
-  --text-secondary: #334155;
-  --text-muted: #64748b;
-  
-  --primary-accent: #4f46e5;
-  --primary-hover: #4338ca;
-  --primary-active: #3730a3;
-  --accent-glow: rgba(79, 70, 229, 0.15);
-  --card-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
-
-  /* Vivid Category Badges (Light) */
-  --badge-lang-bg: #fee2e2; --badge-lang-text: #dc2626; --badge-lang-border: #fca5a5;
-  --badge-front-bg: #dbeafe; --badge-front-text: #2563eb; --badge-front-border: #93c5fd;
-  --badge-back-bg: #d1fae5; --badge-back-text: #059669; --badge-back-border: #6ee7b7;
-  --badge-db-bg: #fef3c7; --badge-db-text: #d97706; --badge-db-border: #fde68a;
-  --badge-infra-bg: #f3e8ff; --badge-infra-text: #7c3aed; --badge-infra-border: #c4b5fd;
-}
-
-[data-theme='dark'] {
-  /* Dark Theme - Deep Slate, High Legibility, Neon Accents */
-  --bg-main: #0b0f19;
-  --bg-card: #151d2a;
-  --bg-card-hover: #1e293b;
-  --bg-input: #1e293b;
-  --border-color: #334155;
-  --border-focus: #6366f1;
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
+  --text-secondary: #475569;
   --text-muted: #94a3b8;
+  --border-color: #e2e8f0;
+  --primary-accent: #dc2626;
+  --accent-glow: rgba(220, 38, 38, 0.08);
+  --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
 
-  --primary-accent: #6366f1;
-  --primary-hover: #4f46e5;
-  --primary-active: #4338ca;
-  --accent-glow: rgba(99, 102, 241, 0.25);
-  --card-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.5), 0 4px 12px -2px rgba(0, 0, 0, 0.3);
+  /* Category Badges */
+  --badge-lang-bg: rgba(239, 68, 68, 0.1);
+  --badge-lang-text: #dc2626;
+  --badge-lang-border: rgba(239, 68, 68, 0.25);
 
-  /* Vivid Category Badges (Dark) */
-  --badge-lang-bg: rgba(239, 68, 68, 0.15); --badge-lang-text: #f87171; --badge-lang-border: rgba(239, 68, 68, 0.4);
-  --badge-front-bg: rgba(59, 130, 246, 0.15); --badge-front-text: #60a5fa; --badge-front-border: rgba(59, 130, 246, 0.4);
-  --badge-back-bg: rgba(16, 185, 129, 0.15); --badge-back-text: #34d399; --badge-back-border: rgba(16, 185, 129, 0.4);
-  --badge-db-bg: rgba(245, 158, 11, 0.15); --badge-db-text: #fbbf24; --badge-db-border: rgba(245, 158, 11, 0.4);
-  --badge-infra-bg: rgba(168, 85, 247, 0.15); --badge-infra-text: #c084fc; --badge-infra-border: rgba(168, 85, 247, 0.4);
+  --badge-front-bg: rgba(37, 99, 235, 0.1);
+  --badge-front-text: #2563eb;
+  --badge-front-border: rgba(37, 99, 235, 0.25);
+
+  --badge-back-bg: rgba(5, 150, 105, 0.1);
+  --badge-back-text: #059669;
+  --badge-back-border: rgba(5, 150, 105, 0.25);
+
+  --badge-db-bg: rgba(217, 119, 6, 0.1);
+  --badge-db-text: #d97706;
+  --badge-db-border: rgba(217, 119, 6, 0.25);
+
+  --badge-infra-bg: rgba(220, 38, 38, 0.1);
+  --badge-infra-text: #dc2626;
+  --badge-infra-border: rgba(220, 38, 38, 0.25);
 }
 
-* {
+/* Dark Theme Overrides */
+[data-theme='dark'] {
+  --bg-main: #0b0f19;
+  --bg-card: #111827;
+  --bg-input: #1f2937;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border-color: #1f2937;
+  --primary-accent: #ef4444;
+  --accent-glow: rgba(239, 68, 68, 0.15);
+  --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+
+  --badge-infra-bg: rgba(239, 68, 68, 0.15);
+  --badge-infra-text: #ef4444;
+  --badge-infra-border: rgba(239, 68, 68, 0.3);
+}
+
+/* Universal Reset */
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-              border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-              color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html, body {
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   background-color: var(--bg-main);
   color: var(--text-primary);
-  min-height: 100vh;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  line-height: 1.5;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-code, pre {
-  font-family: 'JetBrains Mono', monospace;
-}
-
-/* Animations */
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade {
-  animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* Form Controls */
-input, textarea {
+/* Element Overrides to Prevent Default Vite Purple Styling */
+a, button {
+  color: inherit;
   font-family: inherit;
-  transition: all 0.2s ease;
 }
 
-input:focus, textarea:focus {
+button {
+  background: none;
+  border: none;
   outline: none;
-  border-color: var(--border-focus) !important;
-  box-shadow: 0 0 0 4px var(--accent-glow);
 }
 
-/* Tactile Button Press Effects */
+button:focus, button:focus-visible {
+  outline: 2px solid var(--primary-accent);
+}
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  box-sizing: border-box;
+}
+
+/* Interactive Elements */
 .btn-interactive {
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
 .btn-interactive:hover:not(:disabled) {
-  transform: translateY(-2px);
-  filter: brightness(1.05);
+  transform: translateY(-1px);
 }
 
 .btn-interactive:active:not(:disabled) {
-  transform: translateY(1px) scale(0.98);
-  filter: brightness(0.95);
+  transform: translateY(0);
 }
 
-/* Interactive Option Card Hover */
 .option-card {
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
 }
 
 .option-card:hover {
-  border-color: var(--primary-accent) !important;
-  background-color: var(--bg-card-hover) !important;
-  transform: translateX(4px);
+  border-color: var(--primary-accent);
+}
+
+/* Keyframe Animations */
+.animate-fade {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
