@@ -113,7 +113,7 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh', padding: '32px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div className={`app-shell${(activeTab === 'history' || (activeTab === 'new' && screen === 'results')) ? ' app-shell-wide' : ''}`}>
+      <div className="app-shell app-shell-wide">
         
         {/* Header & Navigation */}
         <header style={{ marginBottom: '36px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
@@ -183,6 +183,7 @@ export default function App() {
         {activeTab === 'new' && (
           <>
             {screen === 'start' && (
+              <div className="narrow-content">
               <div className="animate-fade" style={{ background: 'var(--bg-card)', padding: '36px', borderRadius: '20px', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)' }}>
                 <h2 style={{ fontSize: '22px', fontWeight: '800', marginBottom: '8px', color: 'var(--text-primary)', margin: '0 0 8px 0' }}>
                   Create Project Proposal
@@ -262,10 +263,11 @@ export default function App() {
                   </button>
                 </form>
               </div>
+              </div>
             )}
 
             {screen === 'quiz' && currentQuestion && (
-              <div>
+              <div className="narrow-content">
                 <ProgressBar stepCount={stepCount} totalSteps={totalSteps} />
                 <QuestionCard
                   question={currentQuestion}
