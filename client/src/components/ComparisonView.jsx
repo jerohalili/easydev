@@ -202,15 +202,7 @@ export default function ComparisonView({ projectId, recommendations = [], apiBas
               </div>
 
               {/* Side-by-Side / Stacked Comparison Columns */}
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '16px',
-                  width: '100%',
-                  boxSizing: 'border-box'
-                }}
-              >
+              <div className="comparison-columns">
                 {/* EasyDev Recommended Tech Card */}
                 <div
                   style={{

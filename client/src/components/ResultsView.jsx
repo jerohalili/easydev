@@ -32,7 +32,7 @@ export default function ResultsView({ projectId, results, onRestart }) {
           </p>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '28px', width: '100%' }}>
+        <div className="results-grid" style={{ marginBottom: '28px' }}>
           {(!results || results.length === 0) ? (
             <div 
               style={{

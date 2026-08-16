@@ -121,7 +121,7 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
 
       {/* Project Cards List */}
       {!error && projects.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+        <div className="history-grid">
           {projects.map((proj) => (
             <div
               key={proj.id}

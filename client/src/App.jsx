@@ -113,7 +113,7 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh', padding: '32px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={{ width: '100%', maxWidth: '680px' }}>
+      <div className={`app-shell${(activeTab === 'history' || (activeTab === 'new' && screen === 'results')) ? ' app-shell-wide' : ''}`}>
         
         {/* Header & Navigation */}
         <header style={{ marginBottom: '36px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
