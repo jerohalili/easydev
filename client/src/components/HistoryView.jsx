@@ -1,20 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  Plus, 
-  Trash, 
-  ClockCounterClockwise, 
-  ArrowClockwise, 
-  Code, 
-  FolderSimple 
-} from '@phosphor-icons/react';
 import { apiFetch } from '../config';
 
 const CATEGORY_STYLES = {
-  language: { bg: 'var(--badge-lang-bg)', text: 'var(--badge-lang-text)', border: 'var(--badge-lang-border)' },
-  frontend: { bg: 'var(--badge-front-bg)', text: 'var(--badge-front-text)', border: 'var(--badge-front-border)' },
-  backend: { bg: 'var(--badge-back-bg)', text: 'var(--badge-back-text)', border: 'var(--badge-back-border)' },
-  database: { bg: 'var(--badge-db-bg)', text: 'var(--badge-db-text)', border: 'var(--badge-db-border)' },
-  infrastructure: { bg: 'var(--badge-infra-bg)', text: 'var(--badge-infra-text)', border: 'var(--badge-infra-border)' }
+  language: { bg: 'var(--badge-lang-bg, rgba(239, 68, 68, 0.1))', text: 'var(--badge-lang-text, #ef4444)', border: 'var(--badge-lang-border, rgba(239, 68, 68, 0.3))' },
+  frontend: { bg: 'var(--badge-front-bg, rgba(59, 130, 246, 0.1))', text: 'var(--badge-front-text, #3b82f6)', border: 'var(--badge-front-border, rgba(59, 130, 246, 0.3))' },
+  backend: { bg: 'var(--badge-back-bg, rgba(16, 185, 129, 0.1))', text: 'var(--badge-back-text, #10b981)', border: 'var(--badge-back-border, rgba(16, 185, 129, 0.3))' },
+  database: { bg: 'var(--badge-db-bg, rgba(245, 158, 11, 0.1))', text: 'var(--badge-db-text, #f59e0b)', border: 'var(--badge-db-border, rgba(245, 158, 11, 0.3))' },
+  infrastructure: { bg: 'var(--badge-infra-bg, rgba(139, 92, 246, 0.1))', text: 'var(--badge-infra-text, #8b5cf6)', border: 'var(--badge-infra-border, rgba(139, 92, 246, 0.3))' }
 };
 
 export default function HistoryView({ onSelectProject, onStartNew }) {
@@ -33,7 +25,7 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
       const data = await apiFetch('/projects');
       setProjects(data);
     } catch (err) {
-      setError(err.message || 'Failed to load your project history.');
+      setError(err.message || 'Failed to load project history.');
     } finally {
       setLoading(false);
     }
@@ -52,26 +44,24 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
 
   if (loading) {
     return (
-      <div 
-        style={{ padding: '48px 0', textAlign: 'center', fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}
-      >
+      <div style={{ padding: '48px 0', textAlign: 'center', fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}>
         Loading proposal history...
       </div>
     );
   }
 
   return (
-    <div className="animate-fade" style={{ marginTop: '24px' }}>
+    <div style={{ marginTop: '24px', width: '100%', boxSizing: 'border-box' }}>
       {/* Header Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '16px', flexWrap: 'wrap' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <ClockCounterClockwise size={22} weight="duotone" style={{ color: 'var(--primary-accent)' }} />
+            <svg width="22" height="22" viewBox="0 0 256 256" fill="var(--primary-accent)"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z"/></svg>
             <h2 style={{ fontSize: '22px', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>
               Proposal History
             </h2>
           </div>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
             Review past assessments and their recommended tech stack outputs
           </p>
         </div>
@@ -81,6 +71,7 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
           style={{
             display: 'inline-flex',
             alignItems: 'center',
+            justifyContent: 'center',
             gap: '6px',
             padding: '10px 18px',
             backgroundColor: 'var(--primary-accent)',
@@ -89,51 +80,24 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
             borderRadius: '10px',
             fontWeight: '700',
             fontSize: '13px',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            whiteSpace: 'nowrap'
           }}
         >
-          <Plus size={16} weight="bold" />
+          <svg width="16" height="16" viewBox="0 0 256 256" fill="#ffffff"><path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/></svg>
           <span>New Assessment</span>
         </button>
       </div>
 
       {/* Error Alert */}
       {error && (
-        <div 
-          style={{ 
-            padding: '14px 18px', 
-            backgroundColor: 'var(--accent-glow)', 
-            border: '1px solid var(--primary-accent)', 
-            color: 'var(--primary-accent)', 
-            borderRadius: '12px', 
-            marginBottom: '24px', 
-            fontSize: '13px', 
-            fontWeight: '600',
-            display: 'flex',
-            justify: 'space-between',
-            alignItems: 'center',
-            gap: '12px'
-          }}
-        >
+        <div style={{ padding: '14px 18px', backgroundColor: 'var(--accent-glow)', border: '1px solid var(--primary-accent)', color: 'var(--primary-accent)', borderRadius: '12px', marginBottom: '24px', fontSize: '13px', fontWeight: '600', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
           <span>{error}</span>
           <button
             onClick={fetchHistory}
             className="btn-interactive"
-            style={{ 
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              padding: '6px 12px', 
-              backgroundColor: 'transparent', 
-              color: 'var(--primary-accent)', 
-              border: '1px solid var(--primary-accent)', 
-              borderRadius: '8px', 
-              fontWeight: '700', 
-              fontSize: '12px', 
-              cursor: 'pointer' 
-            }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 12px', backgroundColor: 'transparent', color: 'var(--primary-accent)', border: '1px solid var(--primary-accent)', borderRadius: '8px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}
           >
-            <ArrowClockwise size={14} weight="bold" />
             Retry
           </button>
         </div>
@@ -141,33 +105,14 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
 
       {/* Empty State */}
       {!error && projects.length === 0 && (
-        <div 
-          style={{ 
-            backgroundColor: 'var(--bg-card)', 
-            padding: '40px 20px', 
-            borderRadius: '16px', 
-            border: '1px solid var(--border-color)', 
-            textAlign: 'center',
-            boxShadow: 'var(--card-shadow)'
-          }}
-        >
-          <FolderSimple size={40} weight="duotone" style={{ color: 'var(--text-muted)', marginBottom: '12px' }} />
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '16px' }}>
+        <div style={{ backgroundColor: 'var(--bg-card)', padding: '40px 20px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center', boxShadow: 'var(--card-shadow)' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: '0 0 16px 0' }}>
             No previous project proposals found.
           </p>
           <button
             onClick={onStartNew}
             className="btn-interactive"
-            style={{
-              padding: '10px 18px',
-              backgroundColor: 'var(--primary-accent)',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '10px',
-              fontWeight: '700',
-              fontSize: '13px',
-              cursor: 'pointer'
-            }}
+            style={{ padding: '10px 18px', backgroundColor: 'var(--primary-accent)', color: '#ffffff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}
           >
             Create Your First Proposal
           </button>
@@ -176,7 +121,7 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
 
       {/* Project Cards List */}
       {!error && projects.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
           {projects.map((proj) => (
             <div
               key={proj.id}
@@ -188,27 +133,30 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
                 borderRadius: '16px',
                 border: '1px solid var(--border-color)',
                 boxShadow: 'var(--card-shadow)',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                boxSizing: 'border-box',
+                width: '100%'
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                <h3 style={{ fontSize: '17px', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '8px' }}>
+                <h3 style={{ fontSize: '17px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, lineHeight: '1.3' }}>
                   {proj.title}
                 </h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+                  <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)' }}>
                     {new Date(proj.created_at).toLocaleDateString()}
                   </span>
                   <button
                     onClick={(e) => handleDelete(e, proj.id)}
-                    style={{ 
-                      background: 'none', 
-                      border: 'none', 
-                      color: 'var(--text-muted)', 
-                      cursor: 'pointer', 
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-muted)',
+                      cursor: 'pointer',
                       padding: '4px',
-                      display: 'flex',
+                      display: 'inline-flex',
                       alignItems: 'center',
+                      justifyContent: 'center',
                       borderRadius: '6px',
                       transition: 'color 0.2s ease'
                     }}
@@ -216,18 +164,18 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
                     onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
                     title="Delete project"
                   >
-                    <Trash size={18} weight="regular" />
+                    <svg width="18" height="18" viewBox="0 0 256 256" fill="currentColor"><path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96ZM192,208H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"/></svg>
                   </button>
                 </div>
               </div>
 
               {proj.description && (
-                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '14px', lineHeight: '1.5', margin: '0 0 14px 0' }}>
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 14px 0', lineHeight: '1.5' }}>
                   {proj.description}
                 </p>
               )}
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
                 {proj.recommendations && proj.recommendations.map((rec) => {
                   const styleBadge = CATEGORY_STYLES[rec.category] || { 
                     bg: 'var(--bg-input)', 
@@ -240,17 +188,17 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
                       style={{
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: '4px',
+                        gap: '6px',
                         fontSize: '11px',
                         fontWeight: '700',
                         padding: '4px 10px',
                         borderRadius: '6px',
                         backgroundColor: styleBadge.bg,
                         color: styleBadge.text,
-                        border: `1px solid ${styleBadge.border}`
+                        border: `1px solid ${styleBadge.border}`,
+                        whiteSpace: 'nowrap'
                       }}
                     >
-                      <Code size={12} weight="bold" />
                       {rec.name}
                     </span>
                   );
