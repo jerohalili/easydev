@@ -4,7 +4,7 @@ import QuestionCard from './components/QuestionCard';
 import ResultsView from './components/ResultsView';
 import HistoryView from './components/HistoryView';
 import ThemeToggle from './components/ThemeToggle';
-import { API_BASE } from './config';
+import { API_BASE, apiFetch } from './config';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('new');
@@ -27,7 +27,7 @@ export default function App() {
     setLoading(true);
     setError(null);
     try {
-      const projRes = await fetch(`${API_BASE}/projects`, {
+      const projData = await apiFetch('/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -35,7 +35,6 @@ export default function App() {
           description: projectDescription
         })
       });
-      const projData = await projRes.json();
       setProjectId(projData.project.id);
 
       if (projData.first_question_id) {
@@ -45,15 +44,14 @@ export default function App() {
         setScreen('quiz');
       }
     } catch (err) {
-      setError('Could not connect to server. Ensure Express is running.');
+      setError(err.message || 'Could not start the assessment. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   const fetchQuestion = async (questionId) => {
-    const res = await fetch(`${API_BASE}/questions/${questionId}`);
-    const data = await res.json();
+    const data = await apiFetch(`/questions/${questionId}`);
     setCurrentQuestion(data.question);
     setOptions(data.options);
     return data.remaining_steps;
@@ -65,7 +63,7 @@ export default function App() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/projects/${projectId}/answers`, {
+      const data = await apiFetch(`/projects/${projectId}/answers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -73,7 +71,6 @@ export default function App() {
           option_ids: optionIds
         })
       });
-      const data = await res.json();
 
       if (data.next_question_id) {
         const remaining = await fetchQuestion(data.next_question_id);
@@ -84,7 +81,7 @@ export default function App() {
         await fetchResults(projectId);
       }
     } catch (err) {
-      setError('Failed to record answers.');
+      setError(err.message || 'Failed to record answers. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -92,23 +89,22 @@ export default function App() {
 
   const fetchResults = async (targetProjectId) => {
     const idToUse = targetProjectId || projectId;
-    const res = await fetch(`${API_BASE}/projects/${idToUse}/score`, { method: 'POST' });
-    const data = await res.json();
+    const data = await apiFetch(`/projects/${idToUse}/score`, { method: 'POST' });
     setResults(data.recommendations);
     setScreen('results');
   };
 
   const loadPastProject = async (id) => {
     setLoading(true);
+    setError(null);
     try {
-      const res = await fetch(`${API_BASE}/projects/${id}`);
-      const data = await res.json();
+      const data = await apiFetch(`/projects/${id}`);
       setProjectId(data.project.id);
       setResults(data.recommendations);
       setActiveTab('new');
       setScreen('results');
     } catch (err) {
-      setError('Failed to load project detail.');
+      setError(err.message || 'Failed to load project detail.');
     } finally {
       setLoading(false);
     }

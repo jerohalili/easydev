@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { API_BASE } from '../config';
+import { apiFetch } from '../config';
 
 const CATEGORY_STYLES = {
   language: { bg: 'var(--badge-lang-bg)', text: 'var(--badge-lang-text)', border: 'var(--badge-lang-border)' },
@@ -12,18 +12,20 @@ const CATEGORY_STYLES = {
 export default function HistoryView({ onSelectProject, onStartNew }) {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchHistory();
   }, []);
 
   const fetchHistory = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const res = await fetch(`${API_BASE}/projects`);
-      const data = await res.json();
+      const data = await apiFetch('/projects');
       setProjects(data);
     } catch (err) {
-      console.error('Failed to load history:', err);
+      setError(err.message || 'Failed to load your project history.');
     } finally {
       setLoading(false);
     }
@@ -32,8 +34,12 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
   const handleDelete = async (e, id) => {
     e.stopPropagation();
     if (!confirm('Are you sure you want to delete this proposal from history?')) return;
-    await fetch(`${API_BASE}/projects/${id}`, { method: 'DELETE' });
-    setProjects(prev => prev.filter(p => p.id !== id));
+    try {
+      await apiFetch(`/projects/${id}`, { method: 'DELETE' });
+      setProjects(prev => prev.filter(p => p.id !== id));
+    } catch (err) {
+      setError(err.message || 'Failed to delete project. Please try again.');
+    }
   };
 
   if (loading) {
@@ -67,7 +73,20 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
         </button>
       </div>
 
-      {projects.length === 0 ? (
+      {error && (
+        <div style={{ padding: '14px 18px', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#dc2626', borderRadius: '12px', marginBottom: '24px', fontSize: '14px', fontWeight: '600', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span>{error}</span>
+          <button
+            onClick={fetchHistory}
+            className="btn-interactive"
+            style={{ padding: '6px 14px', backgroundColor: 'transparent', color: '#dc2626', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '8px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}
+          >
+            Try again
+          </button>
+        </div>
+      )}
+
+      {!error && projects.length === 0 && (
         <div style={{ background: 'var(--bg-card)', padding: '40px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center', boxShadow: 'var(--card-shadow)' }}>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>No previous project proposals found.</p>
           <button
@@ -78,7 +97,9 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
             Create Your First Proposal
           </button>
         </div>
-      ) : (
+      )}
+
+      {!error && projects.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {projects.map((proj) => (
             <div

@@ -32,7 +32,15 @@ export default function ResultsView({ projectId, results, onRestart }) {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-          {results.map((item) => {
+          {results.length === 0 ? (
+            <div style={{ border: '1px dashed var(--border-color)', padding: '24px', borderRadius: '14px', textAlign: 'center' }}>
+              <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                No recommendations were generated for this assessment. This can happen if your answers
+                didn't weight strongly enough toward any specific technology in a category — try restarting
+                and adjusting your responses.
+              </p>
+            </div>
+          ) : results.map((item) => {
             const styleBadge = CATEGORY_STYLES[item.category] || { bg: 'var(--accent-glow)', text: 'var(--primary-accent)', border: 'var(--border-color)' };
 
             return (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { API_BASE } from '../config';
+import { API_BASE, apiFetch } from '../config';
 
 const CATEGORIES = ['language', 'frontend', 'backend', 'database', 'infrastructure'];
 
@@ -7,20 +7,21 @@ export default function ComparisonView({ projectId, recommendations, apiBase = A
   const [techItems, setTechItems] = useState([]);
   const [userSelections, setUserSelections] = useState({});
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [saveError, setSaveError] = useState(null);
 
   useEffect(() => {
     loadComparisonData();
   }, [projectId]);
 
   const loadComparisonData = async () => {
+    setLoading(true);
+    setLoadError(null);
     try {
-      const [techRes, userStackRes] = await Promise.all([
-        fetch(`${apiBase}/tech-items`),
-        fetch(`${apiBase}/projects/${projectId}/user-stack`)
+      const [techData, userStackData] = await Promise.all([
+        apiFetch('/tech-items', undefined, apiBase),
+        apiFetch(`/projects/${projectId}/user-stack`, undefined, apiBase)
       ]);
-
-      const techData = await techRes.json();
-      const userStackData = await userStackRes.json();
 
       setTechItems(techData);
 
@@ -30,7 +31,7 @@ export default function ComparisonView({ projectId, recommendations, apiBase = A
       });
       setUserSelections(mappedSelections);
     } catch (err) {
-      console.error('Failed loading comparison data:', err);
+      setLoadError(err.message || 'Failed to load the comparison data.');
     } finally {
       setLoading(false);
     }
@@ -39,15 +40,16 @@ export default function ComparisonView({ projectId, recommendations, apiBase = A
   const handleSelectTech = async (category, techItemId) => {
     const numericId = Number(techItemId);
     setUserSelections(prev => ({ ...prev, [category]: numericId }));
+    setSaveError(null);
 
     try {
-      await fetch(`${apiBase}/projects/${projectId}/user-stack`, {
+      await apiFetch(`/projects/${projectId}/user-stack`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category, tech_item_id: numericId })
-      });
+      }, apiBase);
     } catch (err) {
-      console.error('Error saving selection:', err);
+      setSaveError(err.message || 'Failed to save your selection — it may not persist.');
     }
   };
 
@@ -55,6 +57,21 @@ export default function ComparisonView({ projectId, recommendations, apiBase = A
     return (
       <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>
         Loading architectural trade-off analyzer...
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="animate-fade" style={{ marginTop: '36px', padding: '20px', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+        <span style={{ color: '#dc2626', fontSize: '14px', fontWeight: '600' }}>{loadError}</span>
+        <button
+          onClick={loadComparisonData}
+          className="btn-interactive"
+          style={{ padding: '6px 14px', backgroundColor: 'transparent', color: '#dc2626', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '8px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}
+        >
+          Try again
+        </button>
       </div>
     );
   }
@@ -68,6 +85,11 @@ export default function ComparisonView({ projectId, recommendations, apiBase = A
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
           Evaluate technical pros, cons, and tradeoffs when selecting alternative stack choices.
         </p>
+        {saveError && (
+          <p style={{ fontSize: '13px', color: '#dc2626', fontWeight: '600', marginTop: '10px' }}>
+            {saveError}
+          </p>
+        )}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
