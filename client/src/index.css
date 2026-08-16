@@ -1,15 +1,15 @@
 :root {
   /* Color Palette Variables (Light Theme Defaults) */
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #475569;  
   --bg-main: #f8fafc;
   --bg-card: #ffffff;
-  --bg-input: #f1f5f9;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  --border-color: #e2e8f0;
-  --primary-accent: #dc2626;
-  --accent-glow: rgba(220, 38, 38, 0.08);
-  --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  --bg-input: #ffffff;
+  --border-color: #cbd5e1;
+  --primary-accent: #2563eb;
+  --accent-glow: rgba(37, 99, 235, 0.15);
+  --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 
   /* Category Badges */
   --badge-lang-bg: rgba(239, 68, 68, 0.1);
@@ -35,32 +35,45 @@
 
 /* Dark Theme Overrides */
 [data-theme='dark'] {
-  --bg-main: #0b0f19;
-  --bg-card: #111827;
-  --bg-input: #1f2937;
   --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --border-color: #1f2937;
-  --primary-accent: #ef4444;
-  --accent-glow: rgba(239, 68, 68, 0.15);
-  --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  --text-secondary: #cbd5e1; 
+  --text-muted: #94a3b8;  
+  --bg-main: #0f172a;
+  --bg-card: #1e293b;
+  --bg-input: #0f172a;
+  --border-color: #334155;
+  --primary-accent: #3b82f6;
+  --accent-glow: rgba(59, 130, 246, 0.2);
+  --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
 
   --badge-infra-bg: rgba(239, 68, 68, 0.15);
   --badge-infra-text: #ef4444;
   --badge-infra-border: rgba(239, 68, 68, 0.3);
 }
 
-/* Universal Reset */
-*, *::before, *::after {
-  box-sizing: border-box;
+html, body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  -webkit-text-size-adjust: 100%;
 }
 
-html, body {
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+/* Ensure app container fits mobile screens cleanly */
+#root {
   width: 100%;
+  max-width: 100vw;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
   overflow-x: hidden;
 }
 
