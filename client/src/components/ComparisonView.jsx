@@ -285,7 +285,6 @@ export default function ComparisonView({ projectId, recommendations = [], apiBas
                         boxSizing: 'border-box'
                       }}
                     >
-                      <option value="">-- Select custom alternative --</option>
                       {catTechs.map(t => (
                         <option key={t.id} value={t.id}>
                           {t.name}
