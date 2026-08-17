@@ -116,8 +116,8 @@ INSERT INTO questions (id, prompt_text, is_first, is_multiselect) VALUES
 (2, 'What platform will your users interact with most?', FALSE, TRUE),
 (3, 'What specialized feature or workload does your system need?', FALSE, TRUE),
 (4, 'What kind of data storage fits your project requirements?', FALSE, FALSE),
-(5, 'What languages or frameworks is your team most comfortable with?', FALSE, TRUE),
-(6, 'What is your team learning bandwidth or setup urgency?', FALSE, FALSE),
+(5, 'What languages or frameworks are you most comfortable with?', FALSE, TRUE),
+(6, 'What is your learning bandwidth or setup urgency?', FALSE, FALSE),
 (7, 'Where do you plan to deploy and host the application?', FALSE, TRUE),
 (8, 'What is your operational budget for infrastructure?', FALSE, FALSE),
 (9, 'What is your project timeline and delivery target?', FALSE, FALSE);
