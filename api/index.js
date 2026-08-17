@@ -8,6 +8,22 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// A safe, broadly-applicable default per category, used only when a category
+// scored zero — i.e. nothing in the user's answers pointed anywhere, usually
+// because they answered "I don't know" for the questions that would have.
+// Prefixing the reasoning text with this marker lets the client detect and
+// badge these picks distinctly, without needing a schema change or a new
+// field in the API response (it round-trips through the `results` table
+// unchanged, so it also survives loading a project from history).
+const SAFE_DEFAULT_MARKER = 'Default pick:';
+const SAFE_DEFAULTS = {
+  language: 1,        // JavaScript / TypeScript
+  frontend: 10,        // Next.js (React)
+  backend: 20,          // Node.js (Express / NestJS)
+  database: 30,          // PostgreSQL
+  infrastructure: 40     // Vercel / Netlify
+};
+
 // Healthcheck
 app.get('/api/health', async (req, res) => {
   try {
@@ -251,6 +267,36 @@ app.post('/api/projects/:id/score', async (req, res) => {
            VALUES ($1, $2, $3, $4, $5)`,
           [projectId, topInCat.tech_item_id, topInCat.category, topInCat.total_score, reasoningText]
         );
+      } else {
+        // Nothing scored for this category at all — the user's answers never
+        // pointed anywhere here (typically several "I don't know" answers in
+        // a row). Rather than leaving the category empty, fall back to a
+        // safe, industry-standard default so the user always gets a
+        // complete, usable stack to start with.
+        const defaultId = SAFE_DEFAULTS[category];
+        if (defaultId) {
+          const defaultRes = await pool.query('SELECT * FROM tech_items WHERE id = $1', [defaultId]);
+          const defaultItem = defaultRes.rows[0];
+
+          if (defaultItem) {
+            const reasoningText = `${SAFE_DEFAULT_MARKER} ${defaultItem.description} Your answers didn't point strongly toward a specific choice here, so we picked a safe, widely-used option to get you started — you can always change this later.`;
+
+            recommendations.push({
+              tech_item_id: defaultItem.id,
+              name: defaultItem.name,
+              category: defaultItem.category,
+              score: 0,
+              reasoning_text: reasoningText,
+              trade_offs: defaultItem.trade_offs
+            });
+
+            await pool.query(
+              `INSERT INTO results (project_id, tech_item_id, category, score, reasoning_text)
+               VALUES ($1, $2, $3, $4, $5)`,
+              [projectId, defaultItem.id, defaultItem.category, 0, reasoningText]
+            );
+          }
+        }
       }
     }
 

@@ -109,7 +109,11 @@ INSERT INTO tech_items (id, name, category, description, trade_offs) VALUES
 (40, 'Vercel / Netlify', 'infrastructure', 'Serverless deployment platform built for instant global edge deployment and automated continuous integration.', '{"pros": ["Zero infrastructure management", "Automatic preview deployments per Git branch"], "cons": ["Higher bandwidth cost at massive scale"]}'),
 (41, 'Docker + VPS (Hetzner / DigitalOcean)', 'infrastructure', 'Containerized hosting configuration offering cost control and infrastructure portability.', '{"pros": ["Predictable flat monthly compute cost", "Complete control over server environment"], "cons": ["Requires manual OS security patching and server maintenance"]}'),
 (42, 'AWS (S3 / ECS / CloudFront)', 'infrastructure', 'Enterprise cloud infrastructure ecosystem capable of supporting arbitrary workload scale.', '{"pros": ["Unlimited horizontal scalability and compliance controls", "Industry standard for production environments"], "cons": ["High configuration complexity and unexpected bill spikes"]}'),
-(43, 'Firebase Hosting / Supabase Cloud', 'infrastructure', 'Managed application cloud platform tailored for BaaS-backed mobile and web apps.', '{"pros": ["Tightly integrated with backend auth and database", "Seamless deployment pipeline"], "cons": ["Tied strictly to ecosystem platform services"]}');
+(43, 'Firebase Hosting / Supabase Cloud', 'infrastructure', 'Managed application cloud platform tailored for BaaS-backed mobile and web apps.', '{"pros": ["Tightly integrated with backend auth and database", "Seamless deployment pipeline"], "cons": ["Tied strictly to ecosystem platform services"]}'),
+
+(50, 'No frontend needed', 'frontend', 'This project has no user-facing interface — e.g. a backend API, CLI tool, or automated data pipeline.', '{"pros": ["Nothing to design, build, or maintain on this layer"], "cons": ["Revisit this if the project later grows an admin panel or client UI"]}'),
+(51, 'No dedicated backend needed', 'backend', 'This project doesn''t need custom backend logic — e.g. a fully static site, or a frontend talking directly to a BaaS.', '{"pros": ["No server-side code to write, deploy, or maintain"], "cons": ["Revisit this if the project later needs custom business logic or private data access"]}'),
+(52, 'No database needed', 'database', 'This project has no persistent data storage requirements.', '{"pros": ["No schema, migrations, or data layer to manage"], "cons": ["Revisit this if the project later needs to persist user or application data"]}');
 
 INSERT INTO questions (id, prompt_text, is_first, is_multiselect) VALUES
 (1, 'What primary type of software are you building?', TRUE, FALSE),
@@ -140,6 +144,7 @@ INSERT INTO options (id, question_id, label, next_question_id) VALUES
 (303, 3, 'Heavy background jobs, AI inference, or data processing', 4),
 (304, 3, 'High-concurrency API handling thousands of requests per second', 4),
 (305, 3, 'I don''t know / Not sure yet', 4),
+(306, 3, 'No backend logic needed (fully static or client-rendered only)', 4),
 
 (401, 4, 'Structured relational tables (Users, orders, relations)', 5),
 (402, 4, 'Flexible JSON documents / unstructured records', 5),
@@ -152,8 +157,8 @@ INSERT INTO options (id, question_id, label, next_question_id) VALUES
 (503, 5, 'Go / Systems Programming', 6),
 (504, 5, 'Dart / Mobile Development', 6),
 (505, 5, 'Open to learning anything recommended', 6),
-(506, 5, 'I don''t know / Not sure yet', 6),
-(507, 5, 'Java / C#', 6),
+(506, 5, 'Java / C#', 6),
+(507, 5, 'I don''t know / Not sure yet', 6),
 
 (601, 6, 'Need fastest possible setup (Minimal boilerplate & config)', 7),
 (602, 6, 'Willing to configure custom servers and tools for performance', 7),
@@ -178,8 +183,8 @@ INSERT INTO weights (option_id, tech_item_id, weight_value) VALUES
 (101, 12, 12), (101, 40, 10), (101, 32, 6),
 (102, 1, 8), (102, 10, 10), (102, 20, 8), (102, 30, 8),
 (103, 4, 10), (103, 13, 12), (103, 14, 10), (103, 23, 10),
-(104, 3, 10), (104, 22, 12), (104, 20, 8), (104, 41, 8),
-(105, 2, 12), (105, 21, 12), (105, 30, 8), (105, 41, 8),
+(104, 3, 10), (104, 22, 12), (104, 20, 8), (104, 41, 8), (104, 50, 20),
+(105, 2, 12), (105, 21, 12), (105, 30, 8), (105, 41, 8), (105, 50, 20),
 (201, 10, 8), (201, 11, 8),
 (202, 13, 10), (202, 14, 10), (202, 43, 8),
 (203, 12, 10), (203, 40, 10),
@@ -187,14 +192,16 @@ INSERT INTO weights (option_id, tech_item_id, weight_value) VALUES
 (302, 20, 10), (302, 33, 10), (302, 23, 8),
 (303, 2, 10), (303, 21, 10), (303, 41, 8),
 (304, 3, 12), (304, 22, 12), (304, 33, 8),
+(306, 51, 20),
 (401, 30, 12),
 (402, 31, 12),
 (403, 32, 12),
+(404, 52, 20),
 (501, 1, 10), (501, 10, 8), (501, 20, 8),
 (502, 2, 10), (502, 21, 10),
 (503, 3, 10), (503, 22, 10),
 (504, 4, 10), (504, 13, 10),
-(507, 5, 12), (507, 42, 8),
+(506, 5, 12), (506, 42, 8),
 (601, 10, 6), (601, 12, 8), (601, 23, 10), (601, 40, 10),
 (602, 22, 8), (602, 41, 10), (602, 42, 8),
 (701, 40, 12),

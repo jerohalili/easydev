@@ -9,7 +9,26 @@ const CATEGORY_STYLES = {
   infrastructure: { bg: 'var(--badge-infra-bg)', text: 'var(--badge-infra-text)', border: 'var(--badge-infra-border)' }
 };
 
+// Matches the marker the scoring engine prefixes onto reasoning_text when a
+// category had no real scoring signal and fell back to a safe, industry-
+// standard default. Detected client-side so it also works for projects
+// loaded from history (the marker is persisted in the results table).
+const SAFE_DEFAULT_MARKER = 'Default pick:';
+
+function isSafeDefault(item) {
+  return typeof item.reasoning_text === 'string' && item.reasoning_text.startsWith(SAFE_DEFAULT_MARKER);
+}
+
+function displayReasoning(item) {
+  return isSafeDefault(item)
+    ? item.reasoning_text.slice(SAFE_DEFAULT_MARKER.length).trim()
+    : item.reasoning_text;
+}
+
 export default function ResultsView({ projectId, results, onRestart }) {
+  const defaultCount = (results || []).filter(isSafeDefault).length;
+  const showSafeDefaultBanner = defaultCount >= 2;
+
   return (
     <div style={{ width: '100%', boxSizing: 'border-box' }} className="animate-fade">
       <div
@@ -31,6 +50,40 @@ export default function ResultsView({ projectId, results, onRestart }) {
             Tailored tech stack generated from your constraint questionnaire choices.
           </p>
         </div>
+
+        {showSafeDefaultBanner && (
+          <div
+            style={{
+              padding: '14px 18px',
+              borderRadius: '14px',
+              backgroundColor: 'var(--bg-main)',
+              border: '1px solid var(--border-color)',
+              marginBottom: '20px',
+              fontSize: '13px',
+              color: 'var(--text-secondary)',
+              lineHeight: '1.5'
+            }}
+          >
+            <strong style={{ color: 'var(--text-primary)' }}>No problem —</strong> a few of your answers were "I don't know," so
+            we filled those in with a safe, industry-standard stack to start with. Look for the{' '}
+            <span
+              style={{
+                fontSize: '10px',
+                fontWeight: '800',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                padding: '2px 8px',
+                borderRadius: '6px',
+                backgroundColor: 'var(--accent-glow)',
+                color: 'var(--primary-accent)',
+                border: '1px solid var(--primary-accent)'
+              }}
+            >
+              Default Pick
+            </span>{' '}
+            badge below — you can always revisit those answers and re-score for a more tailored result.
+          </div>
+        )}
 
         <div className="results-grid" style={{ marginBottom: '28px' }}>
           {(!results || results.length === 0) ? (
@@ -55,6 +108,7 @@ export default function ResultsView({ projectId, results, onRestart }) {
               text: 'var(--primary-accent)', 
               border: 'var(--border-color)' 
             };
+            const isDefault = isSafeDefault(item);
 
             return (
               <div
@@ -75,25 +129,45 @@ export default function ResultsView({ projectId, results, onRestart }) {
                   <span style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', wordBreak: 'break-word', flex: 1 }}>
                     {item.name}
                   </span>
-                  <span
-                    style={{
-                      fontSize: '11px',
-                      fontWeight: '800',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      padding: '4px 10px',
-                      borderRadius: '6px',
-                      backgroundColor: styleBadge.bg,
-                      color: styleBadge.text,
-                      border: `1px solid ${styleBadge.border}`,
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    {item.category}
-                  </span>
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {isDefault && (
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          fontWeight: '800',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          padding: '4px 10px',
+                          borderRadius: '6px',
+                          backgroundColor: 'var(--accent-glow)',
+                          color: 'var(--primary-accent)',
+                          border: '1px solid var(--primary-accent)',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        Default Pick
+                      </span>
+                    )}
+                    <span
+                      style={{
+                        fontSize: '11px',
+                        fontWeight: '800',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        backgroundColor: styleBadge.bg,
+                        color: styleBadge.text,
+                        border: `1px solid ${styleBadge.border}`,
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {item.category}
+                    </span>
+                  </div>
                 </div>
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5', wordBreak: 'break-word' }}>
-                  {item.reasoning_text}
+                  {displayReasoning(item)}
                 </p>
               </div>
             );
