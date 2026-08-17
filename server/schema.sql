@@ -45,7 +45,8 @@ CREATE TABLE weights (
   id SERIAL PRIMARY KEY,
   option_id INT REFERENCES options(id) ON DELETE CASCADE,
   tech_item_id INT REFERENCES tech_items(id) ON DELETE CASCADE,
-  weight_value INT NOT NULL
+  weight_value INT NOT NULL,
+  UNIQUE(option_id, tech_item_id)
 );
 
 -- 6. User Answers Table
@@ -126,6 +127,11 @@ INSERT INTO questions (id, prompt_text, is_first, is_multiselect) VALUES
 (8, 'What is your operational budget for infrastructure?', FALSE, FALSE),
 (9, 'What is your project timeline and delivery target?', FALSE, FALSE);
 
+-- NOTE: In every question below, 'I don't know / Not sure yet' is placed as
+-- the LAST option (highest id in that question's block). The app renders
+-- options in `ORDER BY id ASC` (see api/index.js), so this ordering is what
+-- controls display order. Q3 previously had 306 = 'No backend logic needed'
+-- placed AFTER 305 = 'I don't know' — that's fixed here by swapping the two.
 INSERT INTO options (id, question_id, label, next_question_id) VALUES
 (101, 1, 'Content Site / Blog / Portfolio (Fast static pages, low maintenance)', 2),
 (102, 1, 'Full-Stack Web Application (Dashboards, user accounts, interactive tools)', 2),
@@ -143,8 +149,8 @@ INSERT INTO options (id, question_id, label, next_question_id) VALUES
 (302, 3, 'Real-time features (Live chat, instant notifications, WebSockets)', 4),
 (303, 3, 'Heavy background jobs, AI inference, or data processing', 4),
 (304, 3, 'High-concurrency API handling thousands of requests per second', 4),
-(305, 3, 'I don''t know / Not sure yet', 4),
-(306, 3, 'No backend logic needed (fully static or client-rendered only)', 4),
+(305, 3, 'No backend logic needed (fully static or client-rendered only)', 4),
+(306, 3, 'I don''t know / Not sure yet', 4),
 
 (401, 4, 'Structured relational tables (Users, orders, relations)', 5),
 (402, 4, 'Flexible JSON documents / unstructured records', 5),
@@ -192,7 +198,7 @@ INSERT INTO weights (option_id, tech_item_id, weight_value) VALUES
 (302, 20, 10), (302, 33, 10), (302, 23, 8),
 (303, 2, 10), (303, 21, 10), (303, 41, 8),
 (304, 3, 12), (304, 22, 12), (304, 33, 8),
-(306, 51, 20),
+(305, 51, 20),
 (401, 30, 12),
 (402, 31, 12),
 (403, 32, 12),
