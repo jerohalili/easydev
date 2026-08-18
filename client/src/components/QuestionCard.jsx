@@ -1,19 +1,35 @@
 import React, { useState, useEffect } from 'react';
 
-export default function QuestionCard({ question, options, onSubmitAnswers, loading }) {
-  const [selectedIds, setSelectedIds] = useState([]);
+export default function QuestionCard({ question, options, onSubmitAnswers, loading, initialSelectedIds }) {
+  const [selectedIds, setSelectedIds] = useState(initialSelectedIds || []);
 
-  // Reset selected options whenever a new question loads
+  // Reset selected options whenever a new question loads — but if the app
+  // is showing a question the user already answered (navigating Back, or
+  // jumping in from the review screen to edit an earlier answer),
+  // pre-select whatever they picked last time instead of starting blank.
   useEffect(() => {
-    setSelectedIds([]);
-  }, [question.id]);
+    setSelectedIds(initialSelectedIds || []);
+  }, [question.id, initialSelectedIds]);
 
   const handleSelectOption = (id) => {
     if (question.is_multiselect) {
-      // Toggle for multi-select
-      setSelectedIds((prev) =>
-        prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-      );
+      const clickedOption = options.find((opt) => opt.id === id);
+      const isUnsure = Boolean(clickedOption?.is_unsure);
+
+      setSelectedIds((prev) => {
+        // "I don't know" doesn't make sense combined with a real answer —
+        // picking it clears everything else, and picking a real answer
+        // clears "I don't know" if it was selected. Keeps multi-select
+        // combinations logically consistent instead of letting the two
+        // contradict each other silently.
+        if (isUnsure) {
+          return prev.includes(id) ? [] : [id];
+        }
+        const withoutUnsure = prev.filter((item) => !options.find((opt) => opt.id === item)?.is_unsure);
+        return withoutUnsure.includes(id)
+          ? withoutUnsure.filter((item) => item !== id)
+          : [...withoutUnsure, id];
+      });
     } else {
       // Single selection
       setSelectedIds([id]);

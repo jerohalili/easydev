@@ -25,9 +25,10 @@ function displayReasoning(item) {
     : item.reasoning_text;
 }
 
-export default function ResultsView({ projectId, results, onRestart }) {
+export default function ResultsView({ projectId, results, warnings, onRestart }) {
   const defaultCount = (results || []).filter(isSafeDefault).length;
   const showSafeDefaultBanner = defaultCount >= 2;
+  const activeWarnings = warnings || [];
 
   return (
     <div style={{ width: '100%', boxSizing: 'border-box' }} className="animate-fade">
@@ -82,6 +83,29 @@ export default function ResultsView({ projectId, results, onRestart }) {
               Default Pick
             </span>{' '}
             badge below — you can always revisit those answers and re-score for a more tailored result.
+          </div>
+        )}
+
+        {activeWarnings.length > 0 && (
+          <div
+            style={{
+              padding: '14px 18px',
+              borderRadius: '14px',
+              backgroundColor: 'var(--bg-main)',
+              border: '1px solid var(--badge-back-border, var(--border-color))',
+              marginBottom: '20px',
+              fontSize: '13px',
+              color: 'var(--text-secondary)',
+              lineHeight: '1.5'
+            }}
+          >
+            <strong style={{ color: 'var(--text-primary)' }}>Worth a second look —</strong> a couple of your answers seem to
+            contradict each other:
+            <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
+              {activeWarnings.map((msg, idx) => (
+                <li key={idx} style={{ marginBottom: idx < activeWarnings.length - 1 ? '6px' : 0 }}>{msg}</li>
+              ))}
+            </ul>
           </div>
         )}
 
@@ -146,6 +170,25 @@ export default function ResultsView({ projectId, results, onRestart }) {
                         }}
                       >
                         Default Pick
+                      </span>
+                    )}
+                    {item.needs_confirmation && (
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          fontWeight: '800',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          padding: '4px 10px',
+                          borderRadius: '6px',
+                          backgroundColor: 'var(--bg-input)',
+                          color: 'var(--text-secondary)',
+                          border: '1px dashed var(--border-color)',
+                          whiteSpace: 'nowrap'
+                        }}
+                        title="This was a close call — double-check it fits before treating it as final."
+                      >
+                        Please Confirm
                       </span>
                     )}
                     <span

@@ -13,11 +13,20 @@ export default function App() {
   const [projectTitle, setProjectTitle] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [projectId, setProjectId] = useState(null);
-  const [currentQuestion, setCurrentQuestion] = useState(null);
-  const [options, setOptions] = useState([]);
+  // `history` holds every question screen visited, in order, each with the
+  // options it showed and (once answered) the option ids the user picked.
+  // `historyIndex` points at the one currently on screen. Going "Back" just
+  // moves the pointer left — no re-fetch needed, since the question and its
+  // options are already cached in the entry. Answering the last question in
+  // the chain (next_question_id === null) moves to the review screen
+  // instead of scoring immediately.
+  const [history, setHistory] = useState([]); // [{ question, options, selectedIds }]
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [reviewItems, setReviewItems] = useState([]);
   const [stepCount, setStepCount] = useState(1);
   const [totalSteps, setTotalSteps] = useState(9);
   const [results, setResults] = useState([]);
+  const [warnings, setWarnings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -39,9 +48,11 @@ export default function App() {
       setProjectId(projData.project.id);
 
       if (projData.first_question_id) {
-        const remaining = await fetchQuestion(projData.first_question_id);
+        const { question, options: opts, remaining_steps } = await fetchQuestionData(projData.first_question_id);
+        setHistory([{ question, options: opts, selectedIds: [] }]);
+        setHistoryIndex(0);
         setStepCount(1);
-        setTotalSteps(remaining);
+        setTotalSteps(remaining_steps);
         setScreen('quiz');
       }
     } catch (err) {
@@ -51,15 +62,33 @@ export default function App() {
     }
   };
 
-  const fetchQuestion = async (questionId) => {
+  const fetchQuestionData = async (questionId) => {
     const data = await apiFetch(`/questions/${questionId}`);
-    setCurrentQuestion(data.question);
-    setOptions(data.options);
-    return data.remaining_steps;
+    return { question: data.question, options: data.options, remaining_steps: data.remaining_steps };
+  };
+
+  const currentEntry = historyIndex >= 0 ? history[historyIndex] : null;
+
+  const goBack = () => {
+    if (historyIndex > 0) {
+      setHistoryIndex(historyIndex - 1);
+      setStepCount(stepCount - 1);
+    }
+  };
+
+  // Jump back into the quiz to edit an earlier answer from the review
+  // screen. Everything after that point in history is discarded once the
+  // user re-submits — if the edited answer changes where the chain goes
+  // next (e.g. project type on Q1), the old forward path would be stale
+  // anyway, so handleSubmitAnswers rebuilds it fresh from here.
+  const editQuestion = (index) => {
+    setScreen('quiz');
+    setHistoryIndex(index);
+    setStepCount(index + 1);
   };
 
   const handleSubmitAnswers = async (optionIds) => {
-    if (!optionIds || optionIds.length === 0) return;
+    if (!optionIds || optionIds.length === 0 || !currentEntry) return;
 
     setLoading(true);
     setError(null);
@@ -68,18 +97,28 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          question_id: currentQuestion.id,
+          question_id: currentEntry.question.id,
           option_ids: optionIds
         })
       });
 
+      // Record the answer on the current entry, discarding any stale
+      // forward history from a previous path through the quiz.
+      const answeredEntry = { ...currentEntry, selectedIds: optionIds };
+      const trimmedHistory = history.slice(0, historyIndex + 1);
+      trimmedHistory[historyIndex] = answeredEntry;
+
       if (data.next_question_id) {
-        const remaining = await fetchQuestion(data.next_question_id);
-        const newStep = stepCount + 1;
+        const { question, options: opts, remaining_steps } = await fetchQuestionData(data.next_question_id);
+        const newIndex = historyIndex + 1;
+        setHistory([...trimmedHistory, { question, options: opts, selectedIds: [] }]);
+        setHistoryIndex(newIndex);
+        const newStep = newIndex + 1;
         setStepCount(newStep);
-        setTotalSteps(newStep - 1 + remaining);
+        setTotalSteps(newStep - 1 + remaining_steps);
       } else {
-        await fetchResults(projectId);
+        setHistory(trimmedHistory);
+        await showReview();
       }
     } catch (err) {
       setError(err.message || 'Failed to record answers. Please try again.');
@@ -88,11 +127,26 @@ export default function App() {
     }
   };
 
+  const showReview = async () => {
+    const data = await apiFetch(`/projects/${projectId}/summary`);
+    setReviewItems(data || []);
+    setScreen('review');
+  };
+
   const fetchResults = async (targetProjectId) => {
     const idToUse = targetProjectId || projectId;
-    const data = await apiFetch(`/projects/${idToUse}/score`, { method: 'POST' });
-    setResults(data.recommendations);
-    setScreen('results');
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await apiFetch(`/projects/${idToUse}/score`, { method: 'POST' });
+      setResults(data.recommendations);
+      setWarnings(data.warnings || []);
+      setScreen('results');
+    } catch (err) {
+      setError(err.message || 'Failed to generate recommendation. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const loadPastProject = async (id) => {
@@ -102,6 +156,10 @@ export default function App() {
       const data = await apiFetch(`/projects/${id}`);
       setProjectId(data.project.id);
       setResults(data.recommendations);
+      // Contradiction warnings are computed live at scoring time, not
+      // persisted — a project loaded from history won't have them until
+      // it's re-scored.
+      setWarnings([]);
       setActiveTab('new');
       setScreen('results');
     } catch (err) {
@@ -266,15 +324,105 @@ export default function App() {
               </div>
             )}
 
-            {screen === 'quiz' && currentQuestion && (
+            {screen === 'quiz' && currentEntry && (
               <div className="narrow-content">
                 <ProgressBar stepCount={stepCount} totalSteps={totalSteps} />
+                {historyIndex > 0 && (
+                  <button
+                    type="button"
+                    onClick={goBack}
+                    disabled={loading}
+                    className="btn-interactive"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '8px 4px',
+                      marginBottom: '10px',
+                      border: 'none',
+                      background: 'none',
+                      color: 'var(--text-secondary)',
+                      fontWeight: '700',
+                      fontSize: '13px',
+                      cursor: loading ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    ← Back
+                  </button>
+                )}
                 <QuestionCard
-                  question={currentQuestion}
-                  options={options}
+                  question={currentEntry.question}
+                  options={currentEntry.options}
+                  initialSelectedIds={currentEntry.selectedIds}
                   onSubmitAnswers={handleSubmitAnswers}
                   loading={loading}
                 />
+              </div>
+            )}
+
+            {screen === 'review' && (
+              <div className="narrow-content">
+                <div className="animate-fade" style={{ background: 'var(--bg-card)', padding: '32px 24px', borderRadius: '20px', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)' }}>
+                  <h2 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 6px 0' }}>
+                    Review your answers
+                  </h2>
+                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 22px 0', lineHeight: '1.5' }}>
+                    Here's everything you told us. Tap any answer to change it before we generate your stack.
+                  </p>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+                    {reviewItems.map((item) => {
+                      const historyIdx = history.findIndex((h) => h.question.id === item.question_id);
+                      const labels = (item.selected_options || []).map((o) => o.label).join(', ');
+                      return (
+                        <button
+                          key={item.question_id}
+                          type="button"
+                          onClick={() => historyIdx >= 0 && editQuestion(historyIdx)}
+                          className="btn-interactive"
+                          style={{
+                            textAlign: 'left',
+                            padding: '14px 16px',
+                            borderRadius: '12px',
+                            border: '1px solid var(--border-color)',
+                            backgroundColor: 'var(--bg-main)',
+                            cursor: historyIdx >= 0 ? 'pointer' : 'default',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '4px'
+                          }}
+                        >
+                          <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            {item.prompt_text}
+                          </span>
+                          <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                            {labels || '—'}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => fetchResults(projectId)}
+                    disabled={loading}
+                    className="btn-interactive"
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      backgroundColor: !loading ? 'var(--primary-accent)' : 'var(--bg-input)',
+                      color: !loading ? '#ffffff' : 'var(--text-muted)',
+                      border: 'none',
+                      borderRadius: '12px',
+                      fontWeight: '700',
+                      fontSize: '15px',
+                      cursor: loading ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    {loading ? 'Generating...' : 'Looks good — Get My Recommendation'}
+                  </button>
+                </div>
               </div>
             )}
 
@@ -282,9 +430,14 @@ export default function App() {
               <ResultsView
                 projectId={projectId}
                 results={results}
+                warnings={warnings}
                 onRestart={() => {
                   setProjectTitle('');
                   setProjectDescription('');
+                  setWarnings([]);
+                  setHistory([]);
+                  setHistoryIndex(-1);
+                  setReviewItems([]);
                   setScreen('start');
                 }}
               />
