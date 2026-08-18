@@ -140,12 +140,12 @@ cd client && npm install && cd ..
 cp .env.example .env
 ```
 
-Fill in `DATABASE_URL` with your Neon pooled connection string (it must include `sslmode=require`, which `server/db.js` checks for to enable SSL) — or run `vercel env pull .env` if the project is already linked to Vercel.
+Fill in `DATABASE_URL` with your Neon pooled connection string (it must include `sslmode=require`, which `db/db.js` checks for to enable SSL) — or run `vercel env pull .env` if the project is already linked to Vercel.
 
 ### 4. Load the schema and seed data
 
 ```
-psql "$DATABASE_URL" -f server/schema.sql
+psql "$DATABASE_URL" -f db/schema.sql
 ```
 
 ### 5. Run it
