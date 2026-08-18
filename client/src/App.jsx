@@ -102,6 +102,8 @@ export default function App() {
         })
       });
 
+      setWarnings(data.warnings || []);
+
       // Record the answer on the current entry, discarding any stale
       // forward history from a previous path through the quiz.
       const answeredEntry = { ...currentEntry, selectedIds: optionIds };
@@ -349,6 +351,29 @@ export default function App() {
                   >
                     ← Back
                   </button>
+                )}
+                {warnings.length > 0 && (
+                  <div
+                    style={{
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      backgroundColor: 'var(--bg-card)',
+                      border: '1px dashed var(--border-color)',
+                      marginBottom: '14px',
+                      fontSize: '13px',
+                      color: 'var(--text-secondary)',
+                      lineHeight: '1.5'
+                    }}
+                  >
+                    <strong style={{ color: 'var(--text-primary)' }}>Heads up —</strong>{' '}
+                    {warnings.length === 1 ? warnings[0] : (
+                      <ul style={{ margin: '6px 0 0 0', paddingLeft: '18px' }}>
+                        {warnings.map((msg, idx) => (
+                          <li key={idx} style={{ marginBottom: idx < warnings.length - 1 ? '4px' : 0 }}>{msg}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                 )}
                 <QuestionCard
                   question={currentEntry.question}

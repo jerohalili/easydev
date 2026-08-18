@@ -130,7 +130,8 @@ INSERT INTO tech_items (id, name, category, description, trade_offs) VALUES
 (32, 'SQLite / Turso', 'database', 'Lightweight embedded or edge-replicated SQL database with zero configuration requirements.', '{"pros": ["Zero server setup cost or maintenance overhead", "Extremely fast local and edge read latency"], "cons": ["Not designed for heavy concurrent write operations"]}'),
 (33, 'Redis (In-Memory Cache)', 'database', 'In-memory key-value data store used for high-speed caching, session management, and pub/sub broker queues.', '{"pros": ["Sub-millisecond read/write execution", "Built-in data structures (Lists, Sets, Hashes)"], "cons": ["Data size limited by RAM budget", "Requires persistence configuration for durable storage"]}'),
 (34, 'MySQL / MariaDB', 'database', 'The most widely-deployed open-source relational database, especially common on traditional/shared hosting.', '{"pros": ["Enormous hosting availability and community familiarity", "Simpler operational model than Postgres for basic CRUD"], "cons": ["Fewer advanced data types and extensions than PostgreSQL"]}'),
-(35, 'DynamoDB', 'database', 'Fully-managed, serverless key-value/wide-column NoSQL database built for AWS-scale, low-latency workloads.', '{"pros": ["Scales to essentially unlimited throughput with no server management", "Predictable low-latency at very large scale"], "cons": ["Query patterns must be designed upfront — awkward for ad-hoc queries"]}'),
+(35, 'DynamoDB', 'database', 'Fully-managed, serverless key-value/wide-column NoSQL database built for AWS-scale, low-latency workloads.', '{"pros": ["Scales to essentially unlimited throughput with no server management"], "cons": ["Query patterns must be designed upfront — awkward for ad-hoc queries"]}'),
+(36, 'Firestore / Realtime Database', 'database', 'Firebase''s managed, real-time-syncing NoSQL database, tightly paired with Firebase Auth and Hosting.', '{"pros": ["Live data sync to clients with almost no backend code", "Zero setup when already using Firebase for auth/hosting"], "cons": ["Query capabilities are more limited than a relational or full document database"]}'),
 
 (40, 'Vercel / Netlify', 'infrastructure', 'Serverless deployment platform built for instant global edge deployment and automated continuous integration.', '{"pros": ["Zero infrastructure management", "Automatic preview deployments per Git branch"], "cons": ["Higher bandwidth cost at massive scale"]}'),
 (41, 'Docker + VPS (Hetzner / DigitalOcean)', 'infrastructure', 'Containerized hosting configuration offering cost control and infrastructure portability.', '{"pros": ["Predictable flat monthly compute cost", "Complete control over server environment"], "cons": ["Requires manual OS security patching and server maintenance"]}'),
@@ -215,7 +216,7 @@ INSERT INTO options (id, question_id, label, next_question_id, is_unsure) VALUES
 (402, 4, 'Flexible JSON documents / unstructured records', 5, FALSE),
 (403, 4, 'Lightweight local database or file-based storage', 5, FALSE),
 (404, 4, 'No database required (Pure static files or external API calls)', 5, FALSE),
-(405, 4, 'I don''t know / Not sure yet', 5, TRUE),
+(407, 4, 'I don''t know / Not sure yet', 5, TRUE),
 
 (501, 5, 'JavaScript / TypeScript', 6, FALSE),
 (502, 5, 'Python', 6, FALSE),
@@ -226,7 +227,7 @@ INSERT INTO options (id, question_id, label, next_question_id, is_unsure) VALUES
 (508, 5, 'PHP', 6, FALSE),
 (509, 5, 'Ruby', 6, FALSE),
 (510, 5, 'Rust', 6, FALSE),
-(507, 5, 'I don''t know / Not sure yet', 6, TRUE),
+(511, 5, 'I don''t know / Not sure yet', 6, TRUE),
 
 (601, 6, 'Need fastest possible setup (Minimal boilerplate & config)', 7, FALSE),
 (602, 6, 'Willing to configure custom servers and tools for performance', 7, FALSE),
@@ -238,7 +239,7 @@ INSERT INTO options (id, question_id, label, next_question_id, is_unsure) VALUES
 (704, 7, 'Enterprise Cloud Infrastructure (AWS, GCP, Azure)', 8, FALSE),
 (706, 7, 'Edge-first hosting (Cloudflare Workers, Pages, D1)', 8, FALSE),
 (707, 7, 'Simple all-in-one PaaS (Railway, Render, Fly.io)', 8, FALSE),
-(705, 7, 'I don''t know / Not sure yet', 8, TRUE),
+(708, 7, 'I don''t know / Not sure yet', 8, TRUE),
 
 (801, 8, 'Strictly free tier or open-source self-hosted', 9, FALSE),
 (802, 8, 'Moderate monthly budget ($10 - $50/mo)', 9, FALSE),
@@ -292,7 +293,7 @@ INSERT INTO options (id, question_id, label, next_question_id, is_unsure) VALUES
 INSERT INTO weights (option_id, tech_item_id, weight_value) VALUES
 (101, 12, 12), (101, 40, 10), (101, 32, 6),
 (102, 1, 8), (102, 10, 10), (102, 20, 8), (102, 30, 8),
-(103, 4, 10), (103, 13, 12), (103, 14, 10), (103, 23, 10),
+(103, 4, 10), (103, 13, 12), (103, 14, 10), (103, 23, 10), (103, 36, 6),
 (104, 3, 10), (104, 22, 12), (104, 20, 8), (104, 41, 8), (104, 50, 20),
 (105, 2, 12), (105, 21, 12), (105, 30, 8), (105, 41, 8), (105, 50, 20),
 (201, 10, 8), (201, 11, 8),
@@ -320,7 +321,7 @@ INSERT INTO weights (option_id, tech_item_id, weight_value) VALUES
 (602, 22, 8), (602, 41, 10), (602, 42, 8),
 (701, 40, 12),
 (702, 41, 12),
-(703, 23, 10), (703, 43, 12),
+(703, 23, 10), (703, 43, 12), (703, 36, 8),
 (704, 42, 12), (704, 5, 6),
 (706, 44, 12),
 (707, 45, 12),
@@ -334,7 +335,7 @@ INSERT INTO weights (option_id, tech_item_id, weight_value) VALUES
 -- Firebase's headline feature) and its matching hosting; "no" gives a small
 -- nudge toward "no dedicated backend needed" without single-handedly
 -- deciding it (kept low on purpose, see CONFIDENCE_MARGIN_THRESHOLD).
-(1001, 23, 12), (1001, 43, 8), (1001, 20, 6),
+(1001, 23, 12), (1001, 43, 8), (1001, 20, 6), (1001, 36, 6),
 (1002, 51, 6),
 
 -- Q11: expected scale -- database and infra should reflect *load*, not

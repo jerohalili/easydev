@@ -93,8 +93,8 @@ const PRIMARY_BOOST_MULTIPLIER = 5;
 // Contradiction detection
 // ------------------------------------------------------------------
 // A small set of option pairs that don't make sense together within the
-// same project. Checked once at scoring time; surfaced to the user as
-// non-blocking warnings rather than silently picking one side.
+// same project. Checked after every answer is recorded (so the person sees
+// it mid-questionnaire, right when it happens) and again at scoring time.
 const CONTRADICTION_RULES = [
   {
     ids: [305, 302],
@@ -113,6 +113,14 @@ const CONTRADICTION_RULES = [
     message: 'You described this as a simple content site / blog / portfolio, but also said it needs user accounts and login. That\'s a perfectly normal combination (e.g. a membership blog) — just flagging it in case one of those answers was a slip.'
   }
 ];
+
+async function getContradictionWarnings(projectId) {
+  const answeredRes = await pool.query('SELECT option_id FROM answers WHERE project_id = $1', [projectId]);
+  const answeredIds = new Set(answeredRes.rows.map(r => r.option_id));
+  return CONTRADICTION_RULES
+    .filter(rule => rule.ids.every(id => answeredIds.has(id)))
+    .map(rule => rule.message);
+}
 
 // Margin (in points) a "no [layer] needed" pick must beat the runner-up by
 // in that category before the app commits to it outright. Below this
@@ -359,7 +367,8 @@ app.post('/api/projects/:id/answers', async (req, res) => {
       nextQuestionId = skipRes.rows[0] ? skipRes.rows[0].next_question_id : null;
     }
 
-    return res.json({ project_id: Number(projectId), next_question_id: nextQuestionId });
+    const warnings = await getContradictionWarnings(projectId);
+    return res.json({ project_id: Number(projectId), next_question_id: nextQuestionId, warnings });
   } catch (err) {
     console.error('Error recording answers:', err);
     res.status(500).json({ error: 'Failed to record answers' });
@@ -403,12 +412,9 @@ app.post('/api/projects/:id/score', async (req, res) => {
 
     // Contradiction check: flag option pairs that don't logically fit
     // together, so the user sees a heads-up rather than a silently
-    // resolved conflict.
-    const answeredRes = await pool.query('SELECT option_id FROM answers WHERE project_id = $1', [projectId]);
-    const answeredIds = new Set(answeredRes.rows.map(r => r.option_id));
-    const warnings = CONTRADICTION_RULES
-      .filter(rule => rule.ids.every(id => answeredIds.has(id)))
-      .map(rule => rule.message);
+    // resolved conflict. (Also checked live in /answers — this catch-all
+    // covers projects loaded from history or edited via the review screen.)
+    const warnings = await getContradictionWarnings(projectId);
 
     const categories = ['language', 'frontend', 'backend', 'database', 'infrastructure'];
     const recommendations = [];
