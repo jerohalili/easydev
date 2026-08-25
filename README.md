@@ -14,7 +14,7 @@ The project also exists as a way to practice building a real weighted-scoring sy
 
 ## Live Website
 
-**Website:** <https://easydev-mu.vercel.app/>
+**Website:** <https://easydev-nine.vercel.app/>
 
 ---
 
