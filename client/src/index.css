@@ -184,7 +184,7 @@ input, textarea, select {
 
 /* Theme Toggle Hover */
 .theme-toggle:hover {
-  background-color: var(--accent-glow);
+  border-color: var(--primary-accent);
 }
 
 /* Responsive App Shell — narrow for focused reading (forms/quiz), wider for data-dense views */

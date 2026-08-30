@@ -24,7 +24,7 @@ export default function ThemeToggle() {
       style={{
         padding: '8px 16px',
         borderRadius: '30px',
-        border: 'none',
+        border: '1px solid var(--border-color)',
         backgroundColor: 'var(--bg-card)',
         color: 'var(--text-primary)',
         fontSize: '13px',
@@ -34,7 +34,8 @@ export default function ThemeToggle() {
         alignItems: 'center',
         justifyContent: 'center',
         gap: '8px',
-        minWidth: '130px'
+        minWidth: '130px',
+        boxShadow: 'var(--card-shadow)'
       }}
       aria-label="Toggle color theme"
     >
