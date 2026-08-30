@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiFetch } from '../config';
-
-const CATEGORY_STYLES = {
-  language: { bg: 'var(--badge-lang-bg, rgba(239, 68, 68, 0.1))', text: 'var(--badge-lang-text, #ef4444)', border: 'var(--badge-lang-border, rgba(239, 68, 68, 0.3))' },
-  frontend: { bg: 'var(--badge-front-bg, rgba(59, 130, 246, 0.1))', text: 'var(--badge-front-text, #3b82f6)', border: 'var(--badge-front-border, rgba(59, 130, 246, 0.3))' },
-  backend: { bg: 'var(--badge-back-bg, rgba(16, 185, 129, 0.1))', text: 'var(--badge-back-text, #10b981)', border: 'var(--badge-back-border, rgba(16, 185, 129, 0.3))' },
-  database: { bg: 'var(--badge-db-bg, rgba(245, 158, 11, 0.1))', text: 'var(--badge-db-text, #f59e0b)', border: 'var(--badge-db-border, rgba(245, 158, 11, 0.3))' },
-  infrastructure: { bg: 'var(--badge-infra-bg, rgba(139, 92, 246, 0.1))', text: 'var(--badge-infra-text, #8b5cf6)', border: 'var(--badge-infra-border, rgba(139, 92, 246, 0.3))' }
-};
+import { CATEGORY_STYLES } from '../categoryStyles';
 
 export default function HistoryView({ onSelectProject, onStartNew }) {
   const [projects, setProjects] = useState([]);

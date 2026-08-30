@@ -5,7 +5,7 @@ import QuestionCard from './components/QuestionCard';
 import ResultsView from './components/ResultsView';
 import HistoryView from './components/HistoryView';
 import ThemeToggle from './components/ThemeToggle';
-import { API_BASE, apiFetch } from './config';
+import { apiFetch } from './config';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('new');
@@ -473,7 +473,6 @@ export default function App() {
         {/* History Tab */}
         {activeTab === 'history' && (
           <HistoryView
-            apiBase={API_BASE}
             onSelectProject={loadPastProject}
             onStartNew={() => {
               setActiveTab('new');

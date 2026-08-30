@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { API_BASE, apiFetch } from '../config';
+import { apiFetch } from '../config';
 
 const CATEGORIES = ['language', 'frontend', 'backend', 'database', 'infrastructure'];
 
-export default function ComparisonView({ projectId, recommendations = [], apiBase = API_BASE }) {
+export default function ComparisonView({ projectId, recommendations = [] }) {
   const [techItems, setTechItems] = useState([]);
   const [userSelections, setUserSelections] = useState({});
   const [loading, setLoading] = useState(true);
@@ -21,8 +21,8 @@ export default function ComparisonView({ projectId, recommendations = [], apiBas
     setLoadError(null);
     try {
       const [techData, userStackData] = await Promise.all([
-        apiFetch('/tech-items', undefined, apiBase),
-        apiFetch(`/projects/${projectId}/user-stack`, undefined, apiBase)
+        apiFetch('/tech-items'),
+        apiFetch(`/projects/${projectId}/user-stack`)
       ]);
 
       setTechItems(techData || []);
@@ -60,7 +60,7 @@ export default function ComparisonView({ projectId, recommendations = [], apiBas
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category, tech_item_id: numericId })
-      }, apiBase);
+      });
     } catch (err) {
       setSaveError(err.message || 'Failed to save your selection — it may not persist.');
     }
@@ -127,7 +127,7 @@ export default function ComparisonView({ projectId, recommendations = [], apiBas
           Evaluate technical pros, cons, and tradeoffs when selecting alternative stack choices.
         </p>
         {saveError && (
-          <p style={{ fontSize: '13px', fontWeight: '700', color: '#dc2626', margin: '8px 0 0 0' }}>
+          <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-cons)', margin: '8px 0 0 0' }}>
             {saveError}
           </p>
         )}
@@ -236,10 +236,10 @@ export default function ComparisonView({ projectId, recommendations = [], apiBas
                   {recItem && recItem.trade_offs && (
                     <div style={{ fontSize: '11px', paddingTop: '12px', borderTop: '1px solid var(--border-color)', color: 'var(--text-primary)', lineHeight: '1.5' }}>
                       <div style={{ marginBottom: '8px' }}>
-                        <strong style={{ color: '#16a34a' }}>Pros:</strong> {recItem.trade_offs.pros?.join(', ')}
+                        <strong style={{ color: 'var(--color-pros)' }}>Pros:</strong> {recItem.trade_offs.pros?.join(', ')}
                       </div>
                       <div>
-                        <strong style={{ color: '#dc2626' }}>Cons:</strong> {recItem.trade_offs.cons?.join(', ')}
+                        <strong style={{ color: 'var(--color-cons)' }}>Cons:</strong> {recItem.trade_offs.cons?.join(', ')}
                       </div>
                     </div>
                   )}
@@ -302,10 +302,10 @@ export default function ComparisonView({ projectId, recommendations = [], apiBas
                   {customItem && customItem.trade_offs && (
                     <div style={{ fontSize: '11px', paddingTop: '12px', borderTop: '1px solid var(--border-color)', color: 'var(--text-primary)', lineHeight: '1.5' }}>
                       <div style={{ marginBottom: '8px' }}>
-                        <strong style={{ color: '#16a34a' }}>Pros:</strong> {customItem.trade_offs.pros?.join(', ')}
+                        <strong style={{ color: 'var(--color-pros)' }}>Pros:</strong> {customItem.trade_offs.pros?.join(', ')}
                       </div>
                       <div>
-                        <strong style={{ color: '#dc2626' }}>Cons:</strong> {customItem.trade_offs.cons?.join(', ')}
+                        <strong style={{ color: 'var(--color-cons)' }}>Cons:</strong> {customItem.trade_offs.cons?.join(', ')}
                       </div>
                     </div>
                   )}

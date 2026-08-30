@@ -3,7 +3,7 @@ import { Sun, Moon } from '@phosphor-icons/react';
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('easydev_theme') || 'light';
+    return localStorage.getItem('easydev_theme') || 'dark';
   });
 
   useEffect(() => {
