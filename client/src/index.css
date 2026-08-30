@@ -1,15 +1,17 @@
 :root {
+  color-scheme: dark light;
+
   /* Color Palette Variables (Dark Theme Defaults) */
   --text-primary: #f5f5f5;
   --text-secondary: #d4d4d4;
-  --text-muted: #a3a3a3;
+  --text-muted: #b0b0b0;
   --bg-main: #171717;
-  --bg-card: #262626;
+  --bg-card: #2e2e2e;
   --bg-input: #1f1f1f;
   --border-color: #404040;
-  --primary-accent: #ef4444;
-  --accent-glow: rgba(239, 68, 68, 0.2);
-  --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  --primary-accent: #dc2626;
+  --accent-glow: rgba(220, 38, 38, 0.2);
+  --card-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 4px 20px rgba(0, 0, 0, 0.4);
 
   /* Semantic Colors */
   --color-pros: #16a34a;
@@ -113,13 +115,27 @@ a, button {
 button {
   background: none;
   border: none;
-  outline: none;
+}
+
+/* Focus Indicators — keyboard-accessible outlines */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--primary-accent);
+  outline-offset: 2px;
 }
 
 input, textarea, select {
   font-family: inherit;
   font-size: inherit;
   box-sizing: border-box;
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+/* Global Theme Transitions — smooth color changes when toggling theme */
+[data-theme] *:not(button):not(.btn-interactive):not(.option-card) {
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
 }
 
 /* Interactive Elements */
@@ -225,4 +241,33 @@ input, textarea, select {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Selection Highlight */
+::selection {
+  background: var(--accent-glow);
+  color: var(--primary-accent);
+}
+
+/* Scrollbar Theming */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+* {
+  scrollbar-color: var(--border-color) var(--bg-main);
+  scrollbar-width: thin;
 }
