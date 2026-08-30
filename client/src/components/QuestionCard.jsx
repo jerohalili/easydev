@@ -154,7 +154,7 @@ export default function QuestionCard({ question, options, onSubmitAnswers, loadi
           padding: '14px',
           backgroundColor: selectedIds.length > 0 && !loading ? 'var(--primary-accent)' : 'var(--bg-input)',
           color: selectedIds.length > 0 && !loading ? '#ffffff' : 'var(--text-muted)',
-          border: 'none',
+          border: selectedIds.length > 0 && !loading ? 'none' : '1px solid var(--border-color)',
           borderRadius: '12px',
           fontWeight: '700',
           fontSize: '15px',
