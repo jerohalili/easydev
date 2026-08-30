@@ -173,7 +173,7 @@ input, textarea, select {
 
 /* Tab Button Hover */
 .tab-btn:hover:not([data-active="true"]) {
-  background-color: var(--accent-glow);
+  border-color: var(--primary-accent);
 }
 
 /* Delete Button Hover */

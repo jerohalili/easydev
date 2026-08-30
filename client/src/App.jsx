@@ -195,13 +195,14 @@ export default function App() {
                   alignItems: 'center',
                   gap: '6px',
                   padding: '8px 14px',
-                  border: 'none',
-                  borderRadius: '8px',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '10px',
                   backgroundColor: activeTab === 'new' ? 'var(--primary-accent)' : 'transparent',
                   color: activeTab === 'new' ? '#ffffff' : 'var(--text-secondary)',
                   fontWeight: '700',
                   fontSize: '13px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  boxShadow: 'var(--card-shadow)'
                 }}
               >
                 <ClipboardText size={16} weight="duotone" />
@@ -216,13 +217,14 @@ export default function App() {
                   alignItems: 'center',
                   gap: '6px',
                   padding: '8px 14px',
-                  border: 'none',
-                  borderRadius: '8px',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '10px',
                   backgroundColor: activeTab === 'history' ? 'var(--primary-accent)' : 'transparent',
                   color: activeTab === 'history' ? '#ffffff' : 'var(--text-secondary)',
                   fontWeight: '700',
                   fontSize: '13px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  boxShadow: 'var(--card-shadow)'
                 }}
               >
                 <ClockCounterClockwise size={16} weight="duotone" />
