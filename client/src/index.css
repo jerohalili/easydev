@@ -3,6 +3,7 @@
 
   /* Option card hover filter */
   --option-hover-filter: brightness(1.2);
+  --btn-hover-filter: brightness(1.15);
 
   /* Color Palette Variables (Dark Theme Defaults) */
   --text-primary: #f5f5f5;
@@ -45,6 +46,7 @@
 /* Light Theme Overrides */
 [data-theme='light'] {
   --option-hover-filter: brightness(0.92);
+  --btn-hover-filter: brightness(0.9);
 
   --text-primary: #0f172a;
   --text-secondary: #334155;
@@ -149,7 +151,7 @@ input, textarea, select {
 }
 
 .btn-interactive:hover:not(:disabled) {
-  filter: brightness(1.15);
+  filter: var(--btn-hover-filter);
 }
 
 .btn-interactive:active:not(:disabled) {
