@@ -32,7 +32,9 @@ export default function ThemeToggle() {
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: '8px',
+        minWidth: '130px',
         boxShadow: 'var(--card-shadow)'
       }}
       aria-label="Toggle color theme"
