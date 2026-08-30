@@ -188,7 +188,8 @@ export default function App() {
             <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-card)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)' }}>
               <button
                 onClick={() => setActiveTab('new')}
-                className="btn-interactive"
+                className="btn-interactive tab-btn"
+                data-active={activeTab === 'new'}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -208,7 +209,8 @@ export default function App() {
               </button>
               <button
                 onClick={() => setActiveTab('history')}
-                className="btn-interactive"
+                className="btn-interactive tab-btn"
+                data-active={activeTab === 'history'}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',

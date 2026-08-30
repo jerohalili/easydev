@@ -140,22 +140,39 @@ input, textarea, select {
 
 /* Interactive Elements */
 .btn-interactive {
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  transition: filter 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .btn-interactive:hover:not(:disabled) {
-  transform: translateY(-1px);
+  filter: brightness(1.15);
 }
 
 .btn-interactive:active:not(:disabled) {
-  transform: translateY(0);
+  filter: brightness(0.95);
 }
 
 .option-card {
-  transition: border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
 }
 
 .option-card:hover {
+  border-color: var(--primary-accent);
+  filter: brightness(1.08);
+}
+
+/* Tab Button Hover */
+.tab-btn:hover:not([data-active="true"]) {
+  background-color: var(--accent-glow);
+}
+
+/* Delete Button Hover */
+.delete-btn:hover {
+  color: var(--primary-accent) !important;
+  background-color: var(--accent-glow);
+}
+
+/* Theme Toggle Hover */
+.theme-toggle:hover {
   border-color: var(--primary-accent);
 }
 

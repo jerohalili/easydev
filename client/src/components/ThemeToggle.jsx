@@ -20,7 +20,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="btn-interactive"
+      className="btn-interactive theme-toggle"
       style={{
         padding: '8px 16px',
         borderRadius: '30px',
