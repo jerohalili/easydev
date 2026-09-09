@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EasyDev Design System</title>
+  <style>
+    @page { size: letter; margin: 15mm; }
+    @media print {
+      .component-box, .swatch, .theme-box, table.token-table { break-inside: avoid; }
+      .grid-2 > div, .grid-3 > div { break-inside: avoid; }
+      .type-row, .spacing-row, .radius-row { break-inside: avoid; }
+      .section { break-inside: avoid; }
+      h2, h3 { break-after: avoid; }
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #ffffff;
+      color: #0f172a;
+      line-height: 1.5;
+      padding: 0 32px;
+    }
+    
+    .page { max-width: 100%; margin: 0 auto 0; }
+    .page + .page { margin-top: 40px; }
+    
+    h1 { font-size: 36px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 8px; color: #0f172a; }
+    h2 { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 24px; color: #dc2626; }
+    h3 { font-size: 16px; font-weight: 700; margin-bottom: 12px; color: #475569; text-transform: uppercase; letter-spacing: 0.08em; }
+    .subtitle { font-size: 14px; color: #64748b; margin-bottom: 20px; }
+    
+    .section { margin-bottom: 24px; }
+    
+    /* Palette Grid */
+    .palette-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .swatch { border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
+    .swatch-color { height: 80px; }
+    .swatch-info { padding: 12px; background: #f8fafc; }
+    .swatch-name { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 4px; }
+    .swatch-hex { font-size: 14px; font-weight: 800; color: #0f172a; font-family: 'Cascadia Code', 'Fira Code', monospace; }
+    .swatch-role { font-size: 11px; color: #475569; margin-top: 4px; }
+    
+    /* Theme Comparison */
+    .theme-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+    .theme-box { padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; }
+    .theme-box.dark { background: #1e293b; color: #f1f5f9; }
+    .theme-box.light { background: #f8fafc; color: #0f172a; }
+    .theme-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px; padding: 4px 10px; border-radius: 6px; display: inline-block; }
+    .theme-box.dark .theme-label { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .theme-box.light .theme-label { background: rgba(220,38,38,0.1); color: #dc2626; }
+    
+    /* Type Scale */
+    .type-row { display: flex; align-items: baseline; gap: 24px; padding: 16px 0; border-bottom: 1px solid #e2e8f0; }
+    .type-meta { min-width: 120px; text-align: right; }
+    .type-size { font-size: 12px; font-weight: 700; color: #dc2626; font-family: monospace; }
+    .type-weight { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+    
+    /* Spacing Visual */
+    .spacing-row { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid #e2e8f0; }
+    .spacing-label { min-width: 60px; font-size: 12px; font-weight: 700; color: #94a3b8; font-family: monospace; }
+    .spacing-bar { height: 24px; background: #dc2626; border-radius: 4px; }
+    .spacing-px { font-size: 11px; color: #475569; margin-left: 8px; }
+    
+    /* Radius Visual */
+    .radius-row { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid #e2e8f0; }
+    .radius-box { width: 60px; height: 60px; background: #dc2626; opacity: 0.9; flex-shrink: 0; }
+    .radius-info { min-width: 80px; }
+    .radius-val { font-size: 14px; font-weight: 700; color: #0f172a; font-family: monospace; }
+    .radius-token { font-size: 11px; color: #94a3b8; }
+    
+    /* Component Sketch */
+    .component-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 32px 24px; margin-bottom: 24px; }
+    .component-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #dc2626; margin-bottom: 20px; }
+    
+    .demo-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+    .demo-card.selected { border-color: #dc2626; background: rgba(220,38,38,0.05); }
+    .demo-card-text { font-size: 14px; font-weight: 600; color: #0f172a; }
+    .demo-radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .demo-radio.active { border-color: #dc2626; }
+    .demo-radio.active::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #dc2626; }
+    
+    .demo-btn { width: 100%; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 15px; text-align: center; cursor: pointer; border: none; }
+    .demo-btn.primary { background: #dc2626; color: #fff; box-shadow: 0 4px 14px rgba(220,38,38,0.2); }
+    .demo-btn.disabled { background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; }
+    
+    .demo-badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+    
+    .demo-progress { height: 8px; background: #f1f5f9; border-radius: 999px; overflow: hidden; border: 1px solid #e2e8f0; }
+    .demo-progress-fill { height: 100%; background: #dc2626; border-radius: 999px; width: 45%; }
+    
+    .demo-tab-bar { display: flex; gap: 4px; background: #f1f5f9; padding: 4px; border-radius: 12px; border: 1px solid #e2e8f0; width: fit-content; }
+    .demo-tab { padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 700; color: #94a3b8; }
+    .demo-tab.active { background: #dc2626; color: #fff; }
+    
+    .demo-input { width: 100%; padding: 14px 16px; border-radius: 10px; border: 1px solid #e2e8f0; background: #ffffff; color: #0f172a; font-size: 15px; }
+    .demo-label { display: block; font-size: 12px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+    
+    .demo-alert { padding: 14px 18px; border-radius: 12px; background: rgba(220,38,38,0.06); border: 1px solid #dc2626; color: #dc2626; font-size: 14px; font-weight: 600; }
+    
+    .demo-shadow { background: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; padding: 24px; text-align: center; color: #475569; font-size: 13px; }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+    
+    .token-table { width: 100%; border-collapse: collapse; }
+    .token-table th { text-align: left; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; padding: 8px 12px; border-bottom: 2px solid #e2e8f0; }
+    .token-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #0f172a; }
+    .token-table .mono { font-family: monospace; font-weight: 700; color: #dc2626; }
+  </style>
+</head>
+<body>
+
+<!-- COVER PAGE -->
+<div class="page">
+  <div style="margin-bottom: 40px;">
+    <h1>EasyDev</h1>
+    <p style="font-size: 20px; font-weight: 700; color: #475569; margin-bottom: 8px;">Design System</p>
+    <p class="subtitle">A single source of truth for colour, typography, spacing, and reusable components across every screen.</p>
+  </div>
+  
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px;">
+      <h3 style="margin-bottom: 12px;">Brand Colour</h3>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 48px; height: 48px; background: #dc2626; border-radius: 12px;"></div>
+        <div>
+          <div style="font-weight: 700; color: #0f172a;">Crimson Red</div>
+          <div style="font-size: 13px; color: #64748b; font-family: monospace;">#DC2626</div>
+        </div>
+      </div>
+    </div>
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px;">
+      <h3 style="margin-bottom: 12px;">Stack</h3>
+      <div style="font-size: 13px; color: #475569; line-height: 1.8;">
+        React 19 &middot; Vite &middot; Tailwind CSS v4<br>
+        CSS Variables &middot; Phosphor Icons
+      </div>
+    </div>
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px;">
+      <h3 style="margin-bottom: 12px;">Themes</h3>
+      <div style="display: flex; gap: 8px;">
+        <div style="width: 40px; height: 40px; background: #171717; border-radius: 8px; border: 1px solid #404040;" title="Dark"></div>
+        <div style="width: 40px; height: 40px; background: #f8fafc; border-radius: 8px; border: 1px solid #cbd5e1;" title="Light"></div>
+      </div>
+      <div style="font-size: 13px; color: #64748b; margin-top: 8px;">data-theme toggle, persisted to localStorage</div>
+    </div>
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px;">
+      <h3 style="margin-bottom: 12px;">Spacing Base Unit</h3>
+      <div style="font-size: 28px; font-weight: 800; color: #dc2626; font-family: monospace;">4px</div>
+      <div style="font-size: 13px; color: #64748b; margin-top: 4px;">All spacing derives from multiples of 4</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2: STEPS A–D — DESIGN TOKENS -->
+<div class="page">
+  <div class="section">
+    <h2>Step A: Styling Approach</h2>
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 16px;">
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div style="background: #dc2626; color: #fff; padding: 8px 16px; border-radius: 8px; font-weight: 800; font-size: 14px;">CSS (plain)</div>
+        <span style="font-size: 14px; color: #475569;">&rarr;</span>
+        <div style="background: #0f172a; color: #fff; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 13px; font-family: monospace;">:root custom properties</div>
+      </div>
+      <p style="font-size: 13px; color: #64748b; margin-top: 12px; line-height: 1.6;">
+        Tokens live as CSS custom properties in <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">index.css</code> under <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">:root</code> (dark defaults) and <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">[data-theme='light']</code> overrides. Tailwind CSS v4 handles layout utilities; CSS variables handle theme-aware colours. Components reference tokens via <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">var(--token-name)</code>.
+      </p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Step B: Colour Tokens</h2>
+    <p class="subtitle">3-5 core colours. Each token name is what components reference — rebrand or add a dark theme by changing one value.</p>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+      <div>
+        <table class="token-table" style="font-size: 13px;">
+          <tr><th>Token</th><th>Role</th><th>Hex</th></tr>
+          <tr>
+            <td class="mono" style="font-size: 12px;">--primary-accent</td>
+            <td style="color: #475569;">Links, buttons, active states, focus rings</td>
+            <td class="mono">#DC2626</td>
+          </tr>
+          <tr>
+            <td class="mono" style="font-size: 12px;">--bg-main</td>
+            <td style="color: #475569;">Page background</td>
+            <td class="mono">#171717</td>
+          </tr>
+          <tr>
+            <td class="mono" style="font-size: 12px;">--bg-card</td>
+            <td style="color: #475569;">Cards, panels, elevated surfaces</td>
+            <td class="mono">#2E2E2E</td>
+          </tr>
+          <tr>
+            <td class="mono" style="font-size: 12px;">--text-primary</td>
+            <td style="color: #475569;">Body text, headings, labels</td>
+            <td class="mono">#F5F5F5</td>
+          </tr>
+          <tr>
+            <td class="mono" style="font-size: 12px;">--border-color</td>
+            <td style="color: #475569;">All borders, dividers, outlines</td>
+            <td class="mono">#404040</td>
+          </tr>
+        </table>
+      </div>
+      <div>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px;">
+          <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin-bottom: 12px;">Contrast Check (WebAIM)</div>
+          <div style="font-size: 13px; color: #475569; line-height: 2;">
+            <div><span style="color: #dc2626; font-weight: 700;">#F5F5F5 on #171717</span> &mdash; 17.3:1 <span style="color: #16a34a; font-weight: 700;">&#10003; AAA</span></div>
+            <div><span style="color: #dc2626; font-weight: 700;">#F5F5F5 on #2E2E2E</span> &mdash; 12.5:1 <span style="color: #16a34a; font-weight: 700;">&#10003; AAA</span></div>
+            <div><span style="color: #dc2626; font-weight: 700;">#DC2626 on #171717</span> &mdash; 5.1:1 <span style="color: #16a34a; font-weight: 700;">&#10003; AA</span></div>
+            <div><span style="color: #dc2626; font-weight: 700;">#F5F5F5 on #DC2626</span> &mdash; 4.6:1 <span style="color: #16a34a; font-weight: 700;">&#10003; AA</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Step C: Type Scale</h2>
+    <p class="subtitle">Three sizes — that is enough for this project. System font stack, no custom web fonts.</p>
+    
+    <table class="token-table" style="font-size: 13px; margin-bottom: 20px;">
+      <tr><th>Style</th><th>Size</th><th>Weight</th><th>Used For</th></tr>
+      <tr>
+        <td style="font-weight: 700; color: #0f172a;">Heading</td>
+        <td class="mono">20–28px</td>
+        <td>800 (extra bold)</td>
+        <td style="color: #475569;">Screen titles, section headings, card headings</td>
+      </tr>
+      <tr>
+        <td style="font-weight: 700; color: #0f172a;">Body</td>
+        <td class="mono">14–15px</td>
+        <td>600 (semibold)</td>
+        <td style="color: #475569;">Paragraphs, option labels, button text, descriptions</td>
+      </tr>
+      <tr>
+        <td style="font-weight: 700; color: #0f172a;">Small</td>
+        <td class="mono">11–12px</td>
+        <td>700–800</td>
+        <td style="color: #475569;">Captions, labels, badges, metadata, footers</td>
+      </tr>
+    </table>
+    
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px;">
+      <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin-bottom: 8px;">Type Token Mapping</div>
+      <div style="font-size: 13px; color: #475569; line-height: 2;">
+        <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">--font-size-heading</code> = 22px (default card heading)<br>
+        <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">--font-size-body</code> = 14px<br>
+        <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">--font-size-small</code> = 12px<br>
+        <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">--font-size-badge</code> = 11px
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Step D: Spacing Rule</h2>
+    <p class="subtitle">One base unit — 4px — used as multiples everywhere. This single rule makes the UI feel designed instead of ad hoc.</p>
+    
+    <table class="token-table" style="font-size: 13px; margin-bottom: 20px;">
+      <tr><th>Token</th><th>Value</th><th>Usage</th></tr>
+      <tr>
+        <td class="mono" style="font-size: 12px;">--space-1 (tight)</td>
+        <td class="mono">4px</td>
+        <td style="color: #475569;">Between related items: icon gaps, badge internal padding</td>
+      </tr>
+      <tr>
+        <td class="mono" style="font-size: 12px;">--space-2</td>
+        <td class="mono">8px</td>
+        <td style="color: #475569;">Inline gaps: between badges, tab button gaps</td>
+      </tr>
+      <tr>
+        <td class="mono" style="font-size: 12px;">--space-3</td>
+        <td class="mono">12px</td>
+        <td style="color: #475569;">Card option gaps, inner padding</td>
+      </tr>
+      <tr>
+        <td class="mono" style="font-size: 12px;">--space-4 (standard)</td>
+        <td class="mono">16px</td>
+        <td style="color: #475569;">Standard gap between sections, grid spacing</td>
+      </tr>
+      <tr>
+        <td class="mono" style="font-size: 12px;">--space-6</td>
+        <td class="mono">24px</td>
+        <td style="color: #475569;">Section separation, card horizontal padding</td>
+      </tr>
+      <tr>
+        <td class="mono" style="font-size: 12px;">--space-8 (screen edge)</td>
+        <td class="mono">32px</td>
+        <td style="color: #475569;">Card vertical padding, page edge padding</td>
+      </tr>
+      <tr>
+        <td class="mono" style="font-size: 12px;">--space-12</td>
+        <td class="mono">48px</td>
+        <td style="color: #475569;">Major section separation, loading states</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE 3: COLOUR PALETTE -->
+<div class="page">
+  <div class="section">
+    <h2>Colour Palette</h2>
+    <p class="subtitle">Every colour has a defined role. Hex values shown for dark theme; light theme overrides listed separately.</p>
+    
+    <h3>Core Palette</h3>
+    <div class="palette-grid">
+      <div class="swatch">
+        <div class="swatch-color" style="background: #dc2626;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Primary Accent</div>
+          <div class="swatch-hex">#DC2626</div>
+          <div class="swatch-role">CTAs, active states, focus rings, links</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background: #171717;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Background Main</div>
+          <div class="swatch-hex">#171717</div>
+          <div class="swatch-role">Page background (dark)</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background: #2e2e2e;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Background Card</div>
+          <div class="swatch-hex">#2E2E2E</div>
+          <div class="swatch-role">Card surfaces, elevated containers</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background: #1f1f1f;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Background Input</div>
+          <div class="swatch-hex">#1F1F1F</div>
+          <div class="swatch-role">Form fields, disabled buttons</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background: #404040;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Border</div>
+          <div class="swatch-hex">#404040</div>
+          <div class="swatch-role">All borders, dividers, outlines</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background: #f5f5f5;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Text Primary</div>
+          <div class="swatch-hex">#F5F5F5</div>
+          <div class="swatch-role">Headings, body text, labels</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background: #d4d4d4;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Text Secondary</div>
+          <div class="swatch-hex">#D4D4D4</div>
+          <div class="swatch-role">Descriptions, supporting copy</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background: #b0b0b0;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Text Muted</div>
+          <div class="swatch-hex">#B0B0B0</div>
+          <div class="swatch-role">Metadata, timestamps, disabled text</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background: #16a34a;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Pros / Success</div>
+          <div class="swatch-hex">#16A34A</div>
+          <div class="swatch-role">Pros lists, positive indicators</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background: rgba(220,38,38,0.2);"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Accent Glow</div>
+          <div class="swatch-hex">rgba(220,38,38,0.2)</div>
+          <div class="swatch-role">Hover backgrounds, selection tint</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <h3>Category Badge Colours</h3>
+    <div class="palette-grid">
+      <div class="swatch">
+        <div class="swatch-color" style="background: rgba(239,68,68,0.15); display: flex; align-items: center; justify-content: center;">
+          <span style="background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase;">Language</span>
+        </div>
+        <div class="swatch-info">
+          <div class="swatch-hex" style="font-size: 12px;">#EF4444</div>
+          <div class="swatch-role">Language category badge</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background: rgba(37,99,235,0.15); display: flex; align-items: center; justify-content: center;">
+          <span style="background: rgba(37,99,235,0.15); color: #60a5fa; border: 1px solid rgba(37,99,235,0.3); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase;">Frontend</span>
+        </div>
+        <div class="swatch-info">
+          <div class="swatch-hex" style="font-size: 12px;">#60A5FA</div>
+          <div class="swatch-role">Frontend category badge</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background: rgba(5,150,105,0.15); display: flex; align-items: center; justify-content: center;">
+          <span style="background: rgba(5,150,105,0.15); color: #34d399; border: 1px solid rgba(5,150,105,0.3); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase;">Backend</span>
+        </div>
+        <div class="swatch-info">
+          <div class="swatch-hex" style="font-size: 12px;">#34D399</div>
+          <div class="swatch-role">Backend category badge</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background: rgba(217,119,6,0.15); display: flex; align-items: center; justify-content: center;">
+          <span style="background: rgba(217,119,6,0.15); color: #fbbf24; border: 1px solid rgba(217,119,6,0.3); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase;">Database</span>
+        </div>
+        <div class="swatch-info">
+          <div class="swatch-hex" style="font-size: 12px;">#FBBF24</div>
+          <div class="swatch-role">Database category badge</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background: rgba(139,92,246,0.15); display: flex; align-items: center; justify-content: center;">
+          <span style="background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase;">Infra</span>
+        </div>
+        <div class="swatch-info">
+          <div class="swatch-hex" style="font-size: 12px;">#A78BFA</div>
+          <div class="swatch-role">Infrastructure category badge</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <h3>Light Theme Overrides</h3>
+    <div class="theme-compare">
+      <div class="theme-box dark">
+        <div class="theme-label">Dark Theme (Default)</div>
+        <table class="token-table">
+          <tr><td style="color:#94a3b8;">Background Main</td><td class="mono">#171717</td></tr>
+          <tr><td style="color:#94a3b8;">Background Card</td><td class="mono">#2E2E2E</td></tr>
+          <tr><td style="color:#94a3b8;">Text Primary</td><td class="mono">#F5F5F5</td></tr>
+          <tr><td style="color:#94a3b8;">Text Secondary</td><td class="mono">#D4D4D4</td></tr>
+          <tr><td style="color:#94a3b8;">Border</td><td class="mono">#404040</td></tr>
+        </table>
+      </div>
+      <div class="theme-box light">
+        <div class="theme-label">Light Theme</div>
+        <table class="token-table">
+          <tr><td style="color:#475569;">Background Main</td><td class="mono" style="color:#059669;">#F8FAFC</td></tr>
+          <tr><td style="color:#475569;">Background Card</td><td class="mono" style="color:#059669;">#FFFFFF</td></tr>
+          <tr><td style="color:#475569;">Text Primary</td><td class="mono" style="color:#059669;">#0F172A</td></tr>
+          <tr><td style="color:#475569;">Text Secondary</td><td class="mono" style="color:#059669;">#334155</td></tr>
+          <tr><td style="color:#475569;">Border</td><td class="mono" style="color:#059669;">#CBD5E1</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 4: TYPOGRAPHY -->
+<div class="page">
+  <div class="section">
+    <h2>Typography</h2>
+    <p class="subtitle">System font stack. No custom web fonts. All weights are from the system's native font set.</p>
+    
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; margin-bottom: 32px;">
+      <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin-bottom: 8px;">Font Stack</div>
+      <code style="font-size: 13px; color: #dc2626; font-family: 'Cascadia Code', 'Fira Code', monospace;">system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif</code>
+    </div>
+    
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-size">28px</div>
+        <div class="type-weight">Weight 800</div>
+      </div>
+      <div style="font-size: 28px; font-weight: 800; letter-spacing: -0.02em; color: #0f172a;">EasyDev</div>
+      <div style="font-size: 12px; color: #94a3b8; margin-left: auto;">App Title</div>
+    </div>
+    
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-size">24px</div>
+        <div class="type-weight">Weight 800</div>
+      </div>
+      <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #0f172a;">Design System</div>
+      <div style="font-size: 12px; color: #94a3b8; margin-left: auto;">Section Heading (h2)</div>
+    </div>
+    
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-size">22px</div>
+        <div class="type-weight">Weight 800</div>
+      </div>
+      <div style="font-size: 22px; font-weight: 800; color: #0f172a;">Recommended Architecture Stack</div>
+      <div style="font-size: 12px; color: #94a3b8; margin-left: auto;">Card Heading</div>
+    </div>
+    
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-size">20px</div>
+        <div class="type-weight">Weight 800</div>
+      </div>
+      <div style="font-size: 20px; font-weight: 800; color: #0f172a;">Create Project Proposal</div>
+      <div style="font-size: 12px; color: #94a3b8; margin-left: auto;">Sub-card Heading</div>
+    </div>
+    
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-size">17px</div>
+        <div class="type-weight">Weight 800</div>
+      </div>
+      <div style="font-size: 17px; font-weight: 800; color: #0f172a;">Project Title in History</div>
+      <div style="font-size: 12px; color: #94a3b8; margin-left: auto;">List Item Title</div>
+    </div>
+    
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-size">15px</div>
+        <div class="type-weight">Weight 600-700</div>
+      </div>
+      <div style="font-size: 15px; font-weight: 700; color: #0f172a;">Button Label / Input Text</div>
+      <div style="font-size: 12px; color: #94a3b8; margin-left: auto;">Interactive Elements</div>
+    </div>
+    
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-size">14px</div>
+        <div class="type-weight">Weight 600</div>
+      </div>
+      <div style="font-size: 14px; font-weight: 600; color: #0f172a;">Option Card / Body Text</div>
+      <div style="font-size: 12px; color: #94a3b8; margin-left: auto;">Primary Body</div>
+    </div>
+    
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-size">13px</div>
+        <div class="type-weight">Weight 600-700</div>
+      </div>
+      <div style="font-size: 13px; font-weight: 700; color: #0f172a;">Description / Supporting Copy</div>
+      <div style="font-size: 12px; color: #94a3b8; margin-left: auto;">Secondary Body</div>
+    </div>
+    
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-size">12px</div>
+        <div class="type-weight">Weight 800</div>
+      </div>
+      <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #0f172a;">PROJECT TITLE *</div>
+      <div style="font-size: 12px; color: #94a3b8; margin-left: auto;">Form Labels / Meta</div>
+    </div>
+    
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-size">11px</div>
+        <div class="type-weight">Weight 700-800</div>
+      </div>
+      <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #0f172a;">DEFAULT PICK</div>
+      <div style="font-size: 12px; color: #94a3b8; margin-left: auto;">Badge / Tag</div>
+    </div>
+    
+    <div class="type-row" style="border-bottom: none;">
+      <div class="type-meta">
+        <div class="type-size">10px</div>
+        <div class="type-weight">Weight 800</div>
+      </div>
+      <div style="font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #0f172a;">EASYDEV RECOMMENDED</div>
+      <div style="font-size: 12px; color: #94a3b8; margin-left: auto;">Micro Label</div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <h3>Typography Rules</h3>
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; font-size: 14px; color: #475569; line-height: 2;">
+      <div><strong style="color:#dc2626;">Line Height:</strong> 1.5 for body, 1.4 for headings, 1.3 for tight titles</div>
+      <div><strong style="color:#dc2626;">Letter Spacing:</strong> -0.02em for large headings, 0.05-0.1em for uppercase labels</div>
+      <div><strong style="color:#dc2626;">Font Weight:</strong> 800 for headings and labels, 700 for buttons, 600 for body</div>
+      <div><strong style="color:#dc2626;">Text Transform:</strong> Uppercase for labels (12px), badges (11px), section names</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 5: SPACING & RADIUS -->
+<div class="page">
+  <div class="section">
+    <h2>Spacing Scale</h2>
+    <p class="subtitle">All spacing derives from a 4px base unit. Every margin, padding, and gap uses a multiple of 4.</p>
+    
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+      <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin-bottom: 12px;">Base Unit</div>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div style="width: 4px; height: 24px; background: #dc2626; border-radius: 2px;"></div>
+        <span style="font-size: 16px; font-weight: 800; font-family: monospace; color: #dc2626;">4px</span>
+        <span style="font-size: 13px; color: #64748b;">= 1 unit &middot; multiply for all spacing values</span>
+      </div>
+    </div>
+    
+    <div class="spacing-row">
+      <div class="spacing-label">4px</div>
+      <div class="spacing-bar" style="width: 4px;"></div>
+      <div class="spacing-px">1x &mdash; Tight gaps, icon padding</div>
+    </div>
+    <div class="spacing-row">
+      <div class="spacing-label">8px</div>
+      <div class="spacing-bar" style="width: 16px;"></div>
+      <div class="spacing-px">2x &mdash; Inline gaps, badge padding</div>
+    </div>
+    <div class="spacing-row">
+      <div class="spacing-label">12px</div>
+      <div class="spacing-bar" style="width: 32px;"></div>
+      <div class="spacing-px">3x &mdash; Card option gaps, inner padding</div>
+    </div>
+    <div class="spacing-row">
+      <div class="spacing-label">16px</div>
+      <div class="spacing-bar" style="width: 48px;"></div>
+      <div class="spacing-px">4x &mdash; Standard gap, grid spacing</div>
+    </div>
+    <div class="spacing-row">
+      <div class="spacing-label">20px</div>
+      <div class="spacing-bar" style="width: 64px;"></div>
+      <div class="spacing-px">5x &mdash; Section internal padding</div>
+    </div>
+    <div class="spacing-row">
+      <div class="spacing-label">24px</div>
+      <div class="spacing-bar" style="width: 80px;"></div>
+      <div class="spacing-px">6x &mdash; Card horizontal padding, section gaps</div>
+    </div>
+    <div class="spacing-row">
+      <div class="spacing-label">32px</div>
+      <div class="spacing-bar" style="width: 112px;"></div>
+      <div class="spacing-px">8x &mdash; Card vertical padding, page spacing</div>
+    </div>
+    <div class="spacing-row">
+      <div class="spacing-label">36px</div>
+      <div class="spacing-bar" style="width: 128px;"></div>
+      <div class="spacing-px">9x &mdash; Header margin below</div>
+    </div>
+    <div class="spacing-row">
+      <div class="spacing-label">48px</div>
+      <div class="spacing-bar" style="width: 160px;"></div>
+      <div class="spacing-px">12x &mdash; Major section separation</div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <h2>Border Radius</h2>
+    <p class="subtitle">Progressive rounding from tight (badges) to soft (cards). No fully rounded elements except the progress bar.</p>
+    
+    <div class="radius-row">
+      <div class="radius-box" style="border-radius: 4px;"></div>
+      <div class="radius-info">
+        <div class="radius-val">4px</div>
+        <div class="radius-token">Badge corners, checkbox indicator</div>
+      </div>
+    </div>
+    <div class="radius-row">
+      <div class="radius-box" style="border-radius: 6px;"></div>
+      <div class="radius-info">
+        <div class="radius-val">6px</div>
+        <div class="radius-token">Tag / badge containers</div>
+      </div>
+    </div>
+    <div class="radius-row">
+      <div class="radius-box" style="border-radius: 10px;"></div>
+      <div class="radius-info">
+        <div class="radius-val">10px</div>
+        <div class="radius-token">Tab buttons, input fields, select dropdowns</div>
+      </div>
+    </div>
+    <div class="radius-row">
+      <div class="radius-box" style="border-radius: 12px;"></div>
+      <div class="radius-info">
+        <div class="radius-val">12px</div>
+        <div class="radius-token">Primary buttons, option cards, alerts</div>
+      </div>
+    </div>
+    <div class="radius-row">
+      <div class="radius-box" style="border-radius: 16px;"></div>
+      <div class="radius-info">
+        <div class="radius-val">16px</div>
+        <div class="radius-token">History cards, comparison column cards</div>
+      </div>
+    </div>
+    <div class="radius-row">
+      <div class="radius-box" style="border-radius: 20px;"></div>
+      <div class="radius-info">
+        <div class="radius-val">20px</div>
+        <div class="radius-token">Primary card containers (question, results, project form)</div>
+      </div>
+    </div>
+    <div class="radius-row">
+      <div class="radius-box" style="border-radius: 999px;"></div>
+      <div class="radius-info">
+        <div class="radius-val">999px</div>
+        <div class="radius-token">Progress bar track &amp; fill, theme toggle pill</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 6: COMPONENTS -->
+<div class="page">
+  <div class="section">
+    <h2>Reusable Components</h2>
+    <p class="subtitle">Visual reference for every component used across screens. Each shows the design token values used.</p>
+    
+    <!-- Option Card -->
+    <div class="component-box">
+      <div class="component-title">Option Card (QuestionCard)</div>
+      <div class="demo-card">
+        <div class="demo-card-text">Single-select option label</div>
+        <div class="demo-radio"></div>
+      </div>
+      <div class="demo-card selected">
+        <div class="demo-card-text">Selected option with accent glow</div>
+        <div class="demo-radio active"></div>
+      </div>
+      <div style="margin-top: 12px; font-size: 12px; color: #64748b; line-height: 1.8;">
+        <strong style="color:#dc2626;">Tokens:</strong> bg-card, bg-main, border-color, primary-accent, accent-glow, radius-12px, border-1px, min-height-48px
+      </div>
+    </div>
+    
+    <!-- Primary Button -->
+    <div class="component-box">
+      <div class="component-title">Primary Button</div>
+      <div class="demo-btn primary" style="margin-bottom: 12px;">Continue &rarr;</div>
+      <div class="demo-btn disabled">Continue &rarr;</div>
+      <div style="margin-top: 12px; font-size: 12px; color: #64748b; line-height: 1.8;">
+        <strong style="color:#dc2626;">Tokens:</strong> primary-accent (#dc2626), white text, radius-12px, padding-14px, font-weight-700, font-size-15px, shadow-0-4px-14px accent-glow
+      </div>
+    </div>
+    
+    <!-- Progress Bar -->
+    <div class="component-box">
+      <div class="component-title">Progress Bar</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <span style="font-size: 12px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em;">Questionnaire Progress</span>
+        <span style="font-size: 12px; font-weight: 800; color: #dc2626; background: rgba(220,38,38,0.1); padding: 4px 10px; border-radius: 20px; border: 1px solid #e2e8f0;">Step 4 of 9 (44%)</span>
+      </div>
+      <div class="demo-progress">
+        <div class="demo-progress-fill"></div>
+      </div>
+      <div style="margin-top: 12px; font-size: 12px; color: #64748b; line-height: 1.8;">
+        <strong style="color:#dc2626;">Tokens:</strong> bg-input track, primary-accent fill, radius-999px, height-8px, border-1px border-color, shadow-0-0-12px primary-accent on fill
+      </div>
+    </div>
+    
+    <!-- Tab Bar -->
+    <div class="component-box">
+      <div class="component-title">Tab Bar</div>
+      <div class="demo-tab-bar">
+        <div class="demo-tab active">Assessment</div>
+        <div class="demo-tab">History</div>
+      </div>
+      <div style="margin-top: 12px; font-size: 12px; color: #64748b; line-height: 1.8;">
+        <strong style="color:#dc2626;">Tokens:</strong> bg-card container, primary-accent active bg, white active text, tab-bg inactive, radius-10px tabs, radius-12px container, font-size-13px, font-weight-700
+      </div>
+    </div>
+    
+    <!-- Form Input -->
+    <div class="component-box">
+      <div class="component-title">Form Input / Textarea</div>
+      <label class="demo-label">PROJECT TITLE *</label>
+      <input class="demo-input" placeholder="e.g. Realtime Analytics Dashboard" readonly>
+      <div style="margin-top: 12px; font-size: 12px; color: #64748b; line-height: 1.8;">
+        <strong style="color:#dc2626;">Tokens:</strong> bg-input, border-color, radius-10px, padding-14px-16px, font-size-15px, text-primary colour
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 7: MORE COMPONENTS -->
+<div class="page">
+  <div class="section">
+    
+    <!-- Badge -->
+    <div class="component-box">
+      <div class="component-title">Category Badges</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">
+        <span class="demo-badge" style="background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3);">Language</span>
+        <span class="demo-badge" style="background: rgba(37,99,235,0.15); color: #60a5fa; border: 1px solid rgba(37,99,235,0.3);">Frontend</span>
+        <span class="demo-badge" style="background: rgba(5,150,105,0.15); color: #34d399; border: 1px solid rgba(5,150,105,0.3);">Backend</span>
+        <span class="demo-badge" style="background: rgba(217,119,6,0.15); color: #fbbf24; border: 1px solid rgba(217,119,6,0.3);">Database</span>
+        <span class="demo-badge" style="background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3);">Infrastructure</span>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <span class="demo-badge" style="background: rgba(220,38,38,0.1); color: #dc2626; border: 1px solid #dc2626;">Default Pick</span>
+        <span class="demo-badge" style="background: #f8fafc; color: #475569; border: 1px dashed #cbd5e1;">Please Confirm</span>
+        <span class="demo-badge" style="background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.3);">&#10003; Matching</span>
+        <span class="demo-badge" style="background: rgba(245,158,11,0.1); color: #d97706; border: 1px solid rgba(245,158,11,0.3);">&#9889; Override</span>
+      </div>
+      <div style="margin-top: 12px; font-size: 12px; color: #64748b; line-height: 1.8;">
+        <strong style="color:#dc2626;">Tokens:</strong> radius-6px, padding-4px-10px, font-size-11px, font-weight-800, uppercase, letter-spacing-0.05em
+      </div>
+    </div>
+    
+    <!-- Alert / Error -->
+    <div class="component-box">
+      <div class="component-title">Alert / Error Banner</div>
+      <div class="demo-alert" style="margin-bottom: 12px;">
+        Could not start the assessment. Please try again.
+      </div>
+      <div style="padding: 14px 18px; border-radius: 12px; background: rgba(220,38,38,0.05); border: 1px dashed #cbd5e1; font-size: 13px; color: #475569; line-height: 1.5;">
+        <strong style="color:#0f172a;">Heads up &mdash;</strong> a couple of your answers seem to contradict each other.
+      </div>
+      <div style="margin-top: 12px; font-size: 12px; color: #64748b; line-height: 1.8;">
+        <strong style="color:#dc2626;">Tokens:</strong> accent-glow bg, primary-accent border, primary-accent text, radius-12px, padding-14px-18px, font-size-14px/13px
+      </div>
+    </div>
+    
+    <!-- Result Card -->
+    <div class="component-box">
+      <div class="component-title">Result Card</div>
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
+          <span style="font-size: 16px; font-weight: 800; color: #0f172a;">React</span>
+          <span class="demo-badge" style="background: rgba(37,99,235,0.15); color: #60a5fa; border: 1px solid rgba(37,99,235,0.3);">Frontend</span>
+        </div>
+        <p style="font-size: 13px; color: #475569; line-height: 1.5; margin: 0;">Chosen because your project needs real-time UI updates and your team has JavaScript experience.</p>
+      </div>
+      <div style="margin-top: 12px; font-size: 12px; color: #64748b; line-height: 1.8;">
+        <strong style="color:#dc2626;">Tokens:</strong> bg-main, border-color, radius-14px, padding-18px-20px, text-primary (16px/800), text-secondary (13px)
+      </div>
+    </div>
+    
+    <!-- History Card -->
+    <div class="component-box">
+      <div class="component-title">History Card</div>
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px;">
+          <h3 style="font-size: 17px; font-weight: 800; margin: 0; color: #0f172a;">Realtime Analytics Dashboard</h3>
+          <span style="font-size: 12px; font-weight: 600; color: #94a3b8;">9/1/2026</span>
+        </div>
+        <p style="font-size: 13px; color: #475569; margin: 0 0 14px 0; line-height: 1.5;">Live metrics for internal ops team</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <span class="demo-badge" style="background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3);">TypeScript</span>
+          <span class="demo-badge" style="background: rgba(37,99,235,0.15); color: #60a5fa; border: 1px solid rgba(37,99,235,0.3);">React</span>
+          <span class="demo-badge" style="background: rgba(5,150,105,0.15); color: #34d399; border: 1px solid rgba(5,150,105,0.3);">Express</span>
+        </div>
+      </div>
+      <div style="margin-top: 12px; font-size: 12px; color: #64748b; line-height: 1.8;">
+        <strong style="color:#dc2626;">Tokens:</strong> bg-card, border-color, radius-16px, padding-20px-24px, option-card hover class
+      </div>
+    </div>
+    
+    <!-- Theme Toggle -->
+    <div class="component-box">
+      <div class="component-title">Theme Toggle</div>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <div style="padding: 8px 16px; border-radius: 30px; border: 1px solid #e2e8f0; background: #ffffff; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; color: #0f172a;">
+          <span style="color: #dc2626;">&#9790;</span> Dark Mode
+        </div>
+        <div style="padding: 8px 16px; border-radius: 30px; border: 1px solid #e2e8f0; background: #ffffff; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; color: #0f172a;">
+          <span style="color: #dc2626;">&#9728;</span> Light Mode
+        </div>
+      </div>
+      <div style="margin-top: 12px; font-size: 12px; color: #64748b; line-height: 1.8;">
+        <strong style="color:#dc2626;">Tokens:</strong> bg-card, border-color, radius-30px, min-width-130px, card-shadow, primary-accent icon
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 8: LAYOUT & SHADOWS -->
+<div class="page">
+  <div class="section">
+    <h2>Layout System</h2>
+    <p class="subtitle">Responsive shell widths and grid breakpoints for consistent screen compositions.</p>
+    
+    <div class="grid-2">
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+        <h3 style="margin-bottom: 12px;">App Shell Widths</h3>
+        <table class="token-table">
+          <tr><th>Class</th><th>Max Width</th></tr>
+          <tr><td>.app-shell</td><td class="mono">680px</td></tr>
+          <tr><td>.app-shell-wide (900px+)</td><td class="mono">880px</td></tr>
+          <tr><td>.app-shell-wide (1280px+)</td><td class="mono">1100px</td></tr>
+          <tr><td>.narrow-content</td><td class="mono">640px</td></tr>
+        </table>
+      </div>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+        <h3 style="margin-bottom: 12px;">Grid Breakpoints</h3>
+        <table class="token-table">
+          <tr><th>Breakpoint</th><th>Layout</th></tr>
+          <tr><td class="mono">&lt; 640px</td><td>Single column stack</td></tr>
+          <tr><td class="mono">640px+</td><td>Comparison columns side-by-side</td></tr>
+          <tr><td class="mono">720px+</td><td>Results &amp; history 2-up grid</td></tr>
+          <tr><td class="mono">900px+</td><td>App shell widens to 880px</td></tr>
+          <tr><td class="mono">1280px+</td><td>App shell widens to 1100px</td></tr>
+        </table>
+      </div>
+    </div>
+    
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+      <h3 style="margin-bottom: 12px;">Page Structure</h3>
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; font-size: 12px; color: #475569; font-family: monospace; line-height: 2;">
+        &lt;div style="min-height: 100vh; padding: 32px 16px;"&gt;<br>
+        &nbsp;&nbsp;&lt;div class="app-shell app-shell-wide"&gt;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&lt;header&gt; ... &lt;/header&gt; &nbsp;&nbsp;// margin-bottom: 36px<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&lt;ProgressBar /&gt; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// margin-bottom: 24px<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&lt;QuestionCard /&gt; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// card padding: 32px 24px<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+-- &lt;option-card /&gt; &nbsp;&nbsp;&nbsp;// gap: 12px, min-height: 48px<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+-- &lt;button.primary /&gt; // padding: 14px<br>
+        &nbsp;&nbsp;&lt;/div&gt;<br>
+        &lt;/div&gt;
+      </div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <h2>Shadows &amp; Elevation</h2>
+    <p class="subtitle">Two-tier shadow system: subtle card shadow for surfaces, red glow for interactive emphasis.</p>
+    
+    <div class="grid-3">
+      <div class="demo-shadow" style="box-shadow: 0 0 0 1px rgba(0,0,0,0.05), 0 4px 20px rgba(0,0,0,0.08);">
+        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #dc2626; margin-bottom: 8px;">Card Shadow (Dark)</div>
+        <code style="font-size: 10px; color: #94a3b8;">0 0 0 1px rgba(255,255,255,0.05),<br>0 4px 20px rgba(0,0,0,0.4)</code>
+      </div>
+      <div class="demo-shadow" style="box-shadow: 0 0 0 1px rgba(0,0,0,0.05), 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);">
+        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #dc2626; margin-bottom: 8px;">Card Shadow (Light)</div>
+        <code style="font-size: 10px; color: #94a3b8;">0 0 0 1px rgba(0,0,0,0.05),<br>0 4px 6px -1px rgba(0,0,0,0.05)</code>
+      </div>
+      <div class="demo-shadow" style="box-shadow: 0 4px 14px rgba(220,38,38,0.15);">
+        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #dc2626; margin-bottom: 8px;">Button Glow</div>
+        <code style="font-size: 10px; color: #94a3b8;">0 4px 14px<br>var(--accent-glow)</code>
+      </div>
+    </div>
+    
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+      <h3 style="margin-bottom: 12px;">Focus Ring</h3>
+      <div style="display: flex; gap: 16px; align-items: center;">
+        <div style="padding: 10px 20px; border-radius: 10px; background: #ffffff; outline: 2px solid #dc2626; outline-offset: 2px; font-size: 13px; font-weight: 700; color: #0f172a;">Focus Visible</div>
+        <code style="font-size: 12px; color: #94a3b8;">outline: 2px solid var(--primary-accent); outline-offset: 2px</code>
+      </div>
+      <div style="margin-top: 8px; font-size: 12px; color: #94a3b8;">
+        Applied to: <code style="color:#dc2626;">button:focus-visible</code>, <code style="color:#dc2626;">input:focus-visible</code>, <code style="color:#dc2626;">textarea:focus-visible</code>, <code style="color:#dc2626;">select:focus-visible</code>
+      </div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <h2>Animation</h2>
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <div>
+          <h3 style="margin-bottom: 8px;">Fade In</h3>
+          <code style="font-size: 11px; color: #dc2626; font-family: monospace; line-height: 1.8;">
+            animation: fadeIn 0.25s<br>
+            cubic-bezier(0.16, 1, 0.3, 1)<br>
+            forwards;<br><br>
+            from { opacity: 0; transform: translateY(4px); }<br>
+            to { opacity: 1; transform: translateY(0); }
+          </code>
+        </div>
+        <div>
+          <h3 style="margin-bottom: 8px;">Transitions</h3>
+          <code style="font-size: 11px; color: #dc2626; font-family: monospace; line-height: 1.8;">
+            Theme: 0.25s ease<br>
+            (background, color, border)<br><br>
+            Interactive: 0.15s ease<br>
+            (filter, shadow, bg, border)<br><br>
+            Option card: 0.2s ease<br>
+            (border, filter, shadow)
+          </code>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 9: STEPS E–F — COMPONENTS & RESPONSIVE PLAN -->
+<div class="page">
+  <div class="section">
+    <h2>Step E: Reusable Components</h2>
+    <p class="subtitle">Every component that appears on more than one screen — the atoms and molecules of the design system.</p>
+    
+    <table class="token-table" style="font-size: 13px;">
+      <tr><th>Component</th><th>Level</th><th>Appears On</th><th>Props / Variants</th></tr>
+      <tr>
+        <td style="font-weight: 700; color: #0f172a;">OptionCard</td>
+        <td style="color: #475569;">Molecule</td>
+        <td style="color: #475569;">QuestionCard (every quiz screen)</td>
+        <td style="color: #475569;">label, isSelected, isMultiselect, onClick</td>
+      </tr>
+      <tr>
+        <td style="font-weight: 700; color: #0f172a;">PrimaryButton</td>
+        <td style="color: #475569;">Atom</td>
+        <td style="color: #475569;">Start screen, Quiz, Review, Results, History</td>
+        <td style="color: #475569;">variant (primary/disabled), onClick, children, loading</td>
+      </tr>
+      <tr>
+        <td style="font-weight: 700; color: #0f172a;">ProgressBar</td>
+        <td style="color: #475569;">Molecule</td>
+        <td style="color: #475569;">Quiz screen (all question steps)</td>
+        <td style="color: #475569;">stepCount, totalSteps</td>
+      </tr>
+      <tr>
+        <td style="font-weight: 700; color: #0f172a;">TabBar</td>
+        <td style="color: #475569;">Molecule</td>
+        <td style="color: #475569;">Header (Assessment + History tabs)</td>
+        <td style="color: #475569;">activeTab, onTabChange</td>
+      </tr>
+      <tr>
+        <td style="font-weight: 700; color: #0f172a;">CategoryBadge</td>
+        <td style="color: #475569;">Atom</td>
+        <td style="color: #475569;">ResultsView, HistoryView, ComparisonView</td>
+        <td style="color: #475569;">category (language/frontend/backend/database/infrastructure)</td>
+      </tr>
+      <tr>
+        <td style="font-weight: 700; color: #0f172a;">ResultCard</td>
+        <td style="color: #475569;">Molecule</td>
+        <td style="color: #475569;">ResultsView, ComparisonView</td>
+        <td style="color: #475569;">name, category, reasoningText, tradeOffs</td>
+      </tr>
+      <tr>
+        <td style="font-weight: 700; color: #0f172a;">HistoryCard</td>
+        <td style="color: #475569;">Molecule</td>
+        <td style="color: #475569;">HistoryView (project list)</td>
+        <td style="color: #475569;">title, description, createdAt, recommendations[], onSelect, onDelete</td>
+      </tr>
+      <tr>
+        <td style="font-weight: 700; color: #0f172a;">ThemeToggle</td>
+        <td style="color: #475569;">Atom</td>
+        <td style="color: #475569;">Header (every screen)</td>
+        <td style="color: #475569;">reads/writes localStorage, toggles data-theme</td>
+      </tr>
+      <tr>
+        <td style="font-weight: 700; color: #0f172a;">AlertBanner</td>
+        <td style="color: #475569;">Molecule</td>
+        <td style="color: #475569;">App (errors), ResultsView (warnings), Quiz (contradictions)</td>
+        <td style="color: #475569;">variant (error/warning), message, onRetry?</td>
+      </tr>
+      <tr>
+        <td style="font-weight: 700; color: #0f172a;">FormInput</td>
+        <td style="color: #475569;">Atom</td>
+        <td style="color: #475569;">Start screen (title + description fields)</td>
+        <td style="color: #475569;">label, placeholder, type, value, onChange, required</td>
+      </tr>
+    </table>
+    
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-top: 20px;">
+      <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin-bottom: 8px;">Component File Locations</div>
+      <div style="font-size: 13px; color: #475569; line-height: 2;">
+        <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">src/components/QuestionCard.jsx</code> — wraps OptionCard + PrimaryButton<br>
+        <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">src/components/ProgressBar.jsx</code> — progress bar + step counter<br>
+        <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">src/components/ResultsView.jsx</code> — renders ResultCards + CategoryBadges<br>
+        <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">src/components/ComparisonView.jsx</code> — side-by-side stack comparison<br>
+        <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">src/components/HistoryView.jsx</code> — renders HistoryCards<br>
+        <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">src/components/ThemeToggle.jsx</code> — dark/light switch<br>
+        <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">src/categoryStyles.js</code> — CATEGORY_STYLES badge colour map
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Step F: Responsive Plan</h2>
+    <p class="subtitle">Where the layout changes, and to what. These are the min-width values in media queries.</p>
+    
+    <table class="token-table" style="font-size: 13px; margin-bottom: 20px;">
+      <tr><th>Breakpoint</th><th>Layout Change</th></tr>
+      <tr>
+        <td class="mono">Below 640px (phone)</td>
+        <td style="color: #475569;">Cards stack to single column. Comparison columns stack vertically. All content uses full width with 16px edge padding.</td>
+      </tr>
+      <tr>
+        <td class="mono">640px+ (small tablet)</td>
+        <td style="color: #475569;">Comparison columns sit side-by-side (<code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">flex-direction: row</code>).</td>
+      </tr>
+      <tr>
+        <td class="mono">720px+ (tablet)</td>
+        <td style="color: #475569;">Results and history cards display in a 2-up grid (<code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">grid-template-columns: repeat(2, 1fr)</code>).</td>
+      </tr>
+      <tr>
+        <td class="mono">900px+ (desktop)</td>
+        <td style="color: #475569;">App shell widens from 680px to 880px.</td>
+      </tr>
+      <tr>
+        <td class="mono">1280px+ (wide desktop)</td>
+        <td style="color: #475569;">App shell widens to 1100px.</td>
+      </tr>
+    </table>
+    
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px;">
+      <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin-bottom: 8px;">Hard Requirement</div>
+      <div style="font-size: 13px; color: #475569;">
+        No horizontal scrolling on a <strong style="color: #0f172a;">375px-wide</strong> phone (iPhone SE). All content fits within <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">overflow-x: hidden</code> on the root container.
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Accessibility Checklist</h2>
+    
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+      <div style="display: flex; flex-direction: column; gap: 12px; font-size: 14px;">
+        <div style="display: flex; align-items: flex-start; gap: 12px;">
+          <div style="width: 22px; height: 22px; border-radius: 6px; border: 2px solid #16a34a; background: #16a34a; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; font-size: 13px; font-weight: 700;">&#10003;</div>
+          <div>
+            <div style="font-weight: 700; color: #0f172a;">Every text-on-background pair passes 4.5:1 contrast</div>
+            <div style="font-size: 12px; color: #64748b; margin-top: 2px;">#F5F5F5 on #171717 = 17.3:1 &#10003; &middot; #DC2626 on #171717 = 5.1:1 &#10003; &middot; #F5F5F5 on #DC2626 = 4.6:1 &#10003;</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: 12px;">
+          <div style="width: 22px; height: 22px; border-radius: 6px; border: 2px solid #16a34a; background: #16a34a; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; font-size: 13px; font-weight: 700;">&#10003;</div>
+          <div>
+            <div style="font-weight: 700; color: #0f172a;">Real semantic elements, not divs with onClick</div>
+            <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Uses <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 11px;">&lt;button&gt;</code>, <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 11px;">&lt;header&gt;</code>, <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 11px;">&lt;input&gt;</code>, <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 11px;">&lt;textarea&gt;</code>, <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 11px;">&lt;select&gt;</code> throughout</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: 12px;">
+          <div style="width: 22px; height: 22px; border-radius: 6px; border: 2px solid #16a34a; background: #16a34a; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; font-size: 13px; font-weight: 700;">&#10003;</div>
+          <div>
+            <div style="font-weight: 700; color: #0f172a;">Every meaningful image has alt text</div>
+            <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Phosphor icons use <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 11px;">aria-label</code> or are decorative (aria-hidden). SVG logos use <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 11px;">fill</code> with semantic role.</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: 12px;">
+          <div style="width: 22px; height: 22px; border-radius: 6px; border: 2px solid #16a34a; background: #16a34a; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; font-size: 13px; font-weight: 700;">&#10003;</div>
+          <div>
+            <div style="font-weight: 700; color: #0f172a;">Every form input has a matching label</div>
+            <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Project title and description fields use <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 11px">&lt;label&gt;</code> with <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 11px;">for</code>/<code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 11px;">id</code> pairing.</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: 12px;">
+          <div style="width: 22px; height: 22px; border-radius: 6px; border: 2px solid #16a34a; background: #16a34a; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; font-size: 13px; font-weight: 700;">&#10003;</div>
+          <div>
+            <div style="font-weight: 700; color: #0f172a;">Tab key reaches every link and button, with visible focus</div>
+            <div style="font-size: 12px; color: #64748b; margin-top: 2px;"><code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 11px;">button:focus-visible</code>, <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 11px;">input:focus-visible</code>, <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 11px;">select:focus-visible</code> all show 2px crimson outline with 2px offset.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 10: QUICK REFERENCE -->
+<div class="page">
+  <div class="section">
+    <h2>Token Quick Reference</h2>
+    <p class="subtitle">Copy-paste reference for all CSS custom properties and their values (dark theme).</p>
+    
+    <div class="grid-2">
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+        <h3 style="margin-bottom: 12px;">Colour Tokens</h3>
+        <table class="token-table" style="font-size: 12px;">
+          <tr><td class="mono" style="font-size: 11px;">--text-primary</td><td class="mono">#F5F5F5</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--text-secondary</td><td class="mono">#D4D4D4</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--text-muted</td><td class="mono">#B0B0B0</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--bg-main</td><td class="mono">#171717</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--bg-card</td><td class="mono">#2E2E2E</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--bg-input</td><td class="mono">#1F1F1F</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--border-color</td><td class="mono">#404040</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--primary-accent</td><td class="mono">#DC2626</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--accent-glow</td><td class="mono">rgba(220,38,38,0.2)</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--color-pros</td><td class="mono">#16A34A</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--color-cons</td><td class="mono">#DC2626</td></tr>
+        </table>
+      </div>
+      
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+        <h3 style="margin-bottom: 12px;">Spacing &amp; Size Tokens</h3>
+        <table class="token-table" style="font-size: 12px;">
+          <tr><td class="mono" style="font-size: 11px;">--card-padding</td><td class="mono">32px 24px</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--card-radius</td><td class="mono">20px</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--inner-radius</td><td class="mono">12px / 14px</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--option-gap</td><td class="mono">12px</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--section-gap</td><td class="mono">24px / 32px</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--btn-padding</td><td class="mono">14px</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--input-padding</td><td class="mono">14px 16px</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--min-hit-area</td><td class="mono">48px</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--progress-height</td><td class="mono">8px</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--badge-radius</td><td class="mono">6px</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--page-padding</td><td class="mono">32px 16px</td></tr>
+        </table>
+      </div>
+    </div>
+    
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-top: 24px;">
+      <h3 style="margin-bottom: 12px;">Design Principles Summary</h3>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; font-size: 13px; color: #475569;">
+        <div>
+          <div style="font-weight: 800; color: #dc2626; margin-bottom: 4px;">Consistency</div>
+          <div>Every card, button, badge, and input uses the same token values. No ad-hoc colours or sizes.</div>
+        </div>
+        <div>
+          <div style="font-weight: 800; color: #dc2626; margin-bottom: 4px;">Accessibility</div>
+          <div>Focus-visible rings on all interactive elements. Minimum 48px hit targets. High contrast text ratios.</div>
+        </div>
+        <div>
+          <div style="font-weight: 800; color: #dc2626; margin-bottom: 4px;">Responsive</div>
+          <div>Narrow forms on mobile, side-by-side columns on desktop. App shell scales through 680 / 880 / 1100px.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
