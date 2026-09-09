@@ -43,6 +43,16 @@
     .swatch-hex { font-size: 14px; font-weight: 800; color: #0f172a; font-family: 'Cascadia Code', 'Fira Code', monospace; }
     .swatch-role { font-size: 11px; color: #475569; margin-top: 4px; }
     
+    .hex-swatch {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      border: 1px solid rgba(0,0,0,0.1);
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    
     /* Theme Comparison */
     .theme-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
     .theme-box { padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; }
@@ -182,27 +192,27 @@
           <tr>
             <td class="mono" style="font-size: 12px;">--primary-accent</td>
             <td style="color: #475569;">Links, buttons, active states, focus rings</td>
-            <td class="mono">#DC2626</td>
+            <td class="mono"><span class="hex-swatch" style="background: #DC2626;"></span>#DC2626</td>
           </tr>
           <tr>
             <td class="mono" style="font-size: 12px;">--bg-main</td>
             <td style="color: #475569;">Page background</td>
-            <td class="mono">#171717</td>
+            <td class="mono"><span class="hex-swatch" style="background: #171717;"></span>#171717</td>
           </tr>
           <tr>
             <td class="mono" style="font-size: 12px;">--bg-card</td>
             <td style="color: #475569;">Cards, panels, elevated surfaces</td>
-            <td class="mono">#2E2E2E</td>
+            <td class="mono"><span class="hex-swatch" style="background: #2E2E2E;"></span>#2E2E2E</td>
           </tr>
           <tr>
             <td class="mono" style="font-size: 12px;">--text-primary</td>
             <td style="color: #475569;">Body text, headings, labels</td>
-            <td class="mono">#F5F5F5</td>
+            <td class="mono"><span class="hex-swatch" style="background: #F5F5F5;"></span>#F5F5F5</td>
           </tr>
           <tr>
             <td class="mono" style="font-size: 12px;">--border-color</td>
             <td style="color: #475569;">All borders, dividers, outlines</td>
-            <td class="mono">#404040</td>
+            <td class="mono"><span class="hex-swatch" style="background: #404040;"></span>#404040</td>
           </tr>
         </table>
       </div>
@@ -450,21 +460,21 @@
       <div class="theme-box dark">
         <div class="theme-label">Dark Theme (Default)</div>
         <table class="token-table">
-          <tr><td style="color:#94a3b8;">Background Main</td><td class="mono">#171717</td></tr>
-          <tr><td style="color:#94a3b8;">Background Card</td><td class="mono">#2E2E2E</td></tr>
-          <tr><td style="color:#94a3b8;">Text Primary</td><td class="mono">#F5F5F5</td></tr>
-          <tr><td style="color:#94a3b8;">Text Secondary</td><td class="mono">#D4D4D4</td></tr>
-          <tr><td style="color:#94a3b8;">Border</td><td class="mono">#404040</td></tr>
+          <tr><td style="color:#94a3b8;">Background Main</td><td class="mono"><span class="hex-swatch" style="background: #171717;"></span>#171717</td></tr>
+          <tr><td style="color:#94a3b8;">Background Card</td><td class="mono"><span class="hex-swatch" style="background: #2E2E2E;"></span>#2E2E2E</td></tr>
+          <tr><td style="color:#94a3b8;">Text Primary</td><td class="mono"><span class="hex-swatch" style="background: #F5F5F5;"></span>#F5F5F5</td></tr>
+          <tr><td style="color:#94a3b8;">Text Secondary</td><td class="mono"><span class="hex-swatch" style="background: #D4D4D4;"></span>#D4D4D4</td></tr>
+          <tr><td style="color:#94a3b8;">Border</td><td class="mono"><span class="hex-swatch" style="background: #404040;"></span>#404040</td></tr>
         </table>
       </div>
       <div class="theme-box light">
         <div class="theme-label">Light Theme</div>
         <table class="token-table">
-          <tr><td style="color:#475569;">Background Main</td><td class="mono" style="color:#059669;">#F8FAFC</td></tr>
-          <tr><td style="color:#475569;">Background Card</td><td class="mono" style="color:#059669;">#FFFFFF</td></tr>
-          <tr><td style="color:#475569;">Text Primary</td><td class="mono" style="color:#059669;">#0F172A</td></tr>
-          <tr><td style="color:#475569;">Text Secondary</td><td class="mono" style="color:#059669;">#334155</td></tr>
-          <tr><td style="color:#475569;">Border</td><td class="mono" style="color:#059669;">#CBD5E1</td></tr>
+          <tr><td style="color:#475569;">Background Main</td><td class="mono" style="color:#059669;"><span class="hex-swatch" style="background: #F8FAFC;"></span>#F8FAFC</td></tr>
+          <tr><td style="color:#475569;">Background Card</td><td class="mono" style="color:#059669;"><span class="hex-swatch" style="background: #FFFFFF;"></span>#FFFFFF</td></tr>
+          <tr><td style="color:#475569;">Text Primary</td><td class="mono" style="color:#059669;"><span class="hex-swatch" style="background: #0F172A;"></span>#0F172A</td></tr>
+          <tr><td style="color:#475569;">Text Secondary</td><td class="mono" style="color:#059669;"><span class="hex-swatch" style="background: #334155;"></span>#334155</td></tr>
+          <tr><td style="color:#475569;">Border</td><td class="mono" style="color:#059669;"><span class="hex-swatch" style="background: #CBD5E1;"></span>#CBD5E1</td></tr>
         </table>
       </div>
     </div>
@@ -1156,17 +1166,17 @@
       <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
         <h3 style="margin-bottom: 12px;">Colour Tokens</h3>
         <table class="token-table" style="font-size: 12px;">
-          <tr><td class="mono" style="font-size: 11px;">--text-primary</td><td class="mono">#F5F5F5</td></tr>
-          <tr><td class="mono" style="font-size: 11px;">--text-secondary</td><td class="mono">#D4D4D4</td></tr>
-          <tr><td class="mono" style="font-size: 11px;">--text-muted</td><td class="mono">#B0B0B0</td></tr>
-          <tr><td class="mono" style="font-size: 11px;">--bg-main</td><td class="mono">#171717</td></tr>
-          <tr><td class="mono" style="font-size: 11px;">--bg-card</td><td class="mono">#2E2E2E</td></tr>
-          <tr><td class="mono" style="font-size: 11px;">--bg-input</td><td class="mono">#1F1F1F</td></tr>
-          <tr><td class="mono" style="font-size: 11px;">--border-color</td><td class="mono">#404040</td></tr>
-          <tr><td class="mono" style="font-size: 11px;">--primary-accent</td><td class="mono">#DC2626</td></tr>
-          <tr><td class="mono" style="font-size: 11px;">--accent-glow</td><td class="mono">rgba(220,38,38,0.2)</td></tr>
-          <tr><td class="mono" style="font-size: 11px;">--color-pros</td><td class="mono">#16A34A</td></tr>
-          <tr><td class="mono" style="font-size: 11px;">--color-cons</td><td class="mono">#DC2626</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--text-primary</td><td class="mono"><span class="hex-swatch" style="background: #F5F5F5;"></span>#F5F5F5</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--text-secondary</td><td class="mono"><span class="hex-swatch" style="background: #D4D4D4;"></span>#D4D4D4</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--text-muted</td><td class="mono"><span class="hex-swatch" style="background: #B0B0B0;"></span>#B0B0B0</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--bg-main</td><td class="mono"><span class="hex-swatch" style="background: #171717;"></span>#171717</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--bg-card</td><td class="mono"><span class="hex-swatch" style="background: #2E2E2E;"></span>#2E2E2E</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--bg-input</td><td class="mono"><span class="hex-swatch" style="background: #1F1F1F;"></span>#1F1F1F</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--border-color</td><td class="mono"><span class="hex-swatch" style="background: #404040;"></span>#404040</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--primary-accent</td><td class="mono"><span class="hex-swatch" style="background: #DC2626;"></span>#DC2626</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--accent-glow</td><td class="mono"><span class="hex-swatch" style="background: rgba(220,38,38,0.2);"></span>rgba(220,38,38,0.2)</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--color-pros</td><td class="mono"><span class="hex-swatch" style="background: #16A34A;"></span>#16A34A</td></tr>
+          <tr><td class="mono" style="font-size: 11px;">--color-cons</td><td class="mono"><span class="hex-swatch" style="background: #DC2626;"></span>#DC2626</td></tr>
         </table>
       </div>
       
