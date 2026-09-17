@@ -1,37 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import { apiFetch } from '../config';
-import { CATEGORY_STYLES } from '../categoryStyles';
+import { CATEGORY_STYLES as STACK_LAYER_STYLES } from '../categoryStyles';
 
+// Proposal dashboard — every completed questionnaire is a proposal row with
+// its 5 stack picks denormalized for the badges. Re-scores append to results,
+// never overwrite, so the timeline stays intact (learned that the hard way).
 export default function HistoryView({ onSelectProject, onStartNew }) {
-  const [projects, setProjects] = useState([]);
+  const [proposals, setProposals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchHistory();
+    fetchProposalHistory();
   }, []);
 
-  const fetchHistory = async () => {
+  const fetchProposalHistory = async () => {
     setLoading(true);
     setError(null);
     try {
       const data = await apiFetch('/projects');
-      setProjects(data);
+      setProposals(data);
     } catch (err) {
-      setError(err.message || 'Failed to load project history.');
+      setError(err.message || 'Couldn\'t load your proposal history.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (e, id) => {
+  const dropProposal = async (e, id) => {
     e.stopPropagation();
-    if (!confirm('Are you sure you want to delete this proposal from history?')) return;
+    if (!confirm('Delete this stack proposal and its picks from history?')) return;
     try {
       await apiFetch(`/projects/${id}`, { method: 'DELETE' });
-      setProjects(prev => prev.filter(p => p.id !== id));
+      setProposals(prev => prev.filter(p => p.id !== id));
     } catch (err) {
-      setError(err.message || 'Failed to delete project. Please try again.');
+      setError(err.message || 'Couldn\'t delete that proposal. Try again.');
     }
   };
 
@@ -85,7 +88,7 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
         <div style={{ padding: '14px 18px', backgroundColor: 'var(--accent-glow)', border: '1px solid var(--primary-accent)', color: 'var(--primary-accent)', borderRadius: '12px', marginBottom: '24px', fontSize: '13px', fontWeight: '600', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
           <span>{error}</span>
           <button
-            onClick={fetchHistory}
+            onClick={fetchProposalHistory}
             className="btn-interactive"
             style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 12px', backgroundColor: 'transparent', color: 'var(--primary-accent)', border: '1px solid var(--primary-accent)', borderRadius: '8px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}
           >
@@ -94,7 +97,7 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
         </div>
       )}
 
-      {!error && projects.length === 0 && (
+      {!error && proposals.length === 0 && (
         <div style={{ backgroundColor: 'var(--bg-card)', padding: '40px 20px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center', boxShadow: 'var(--card-shadow)' }}>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: '0 0 16px 0' }}>
             No previous project proposals found.
@@ -109,12 +112,12 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
         </div>
       )}
 
-      {!error && projects.length > 0 && (
+      {!error && proposals.length > 0 && (
         <div className="history-grid">
-          {projects.map((proj) => (
+          {proposals.map((proposal) => (
             <div
-              key={proj.id}
-              onClick={() => onSelectProject(proj.id)}
+              key={proposal.id}
+              onClick={() => onSelectProject(proposal.id)}
               className="option-card"
               style={{
                 backgroundColor: 'var(--bg-card)',
@@ -129,14 +132,14 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '8px' }}>
                 <h3 style={{ fontSize: '17px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, lineHeight: '1.3' }}>
-                  {proj.title}
+                  {proposal.title}
                 </h3>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
                   <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)' }}>
-                    {new Date(proj.created_at).toLocaleDateString()}
+                    {new Date(proposal.created_at).toLocaleDateString()}
                   </span>
                   <button
-                    onClick={(e) => handleDelete(e, proj.id)}
+                    onClick={(e) => dropProposal(e, proposal.id)}
                     className="btn-interactive delete-btn"
                     style={{
                       background: 'none',
@@ -156,22 +159,22 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
                 </div>
               </div>
 
-              {proj.description && (
+              {proposal.description && (
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 14px 0', lineHeight: '1.5' }}>
-                  {proj.description}
+                  {proposal.description}
                 </p>
               )}
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
-                {proj.recommendations && proj.recommendations.map((rec) => {
-                  const styleBadge = CATEGORY_STYLES[rec.category] || { 
-                    bg: 'var(--bg-input)', 
-                    text: 'var(--text-primary)', 
-                    border: 'var(--border-color)' 
+                {proposal.recommendations && proposal.recommendations.map((stackPick) => {
+                  const styleBadge = STACK_LAYER_STYLES[stackPick.category] || {
+                    bg: 'var(--bg-input)',
+                    text: 'var(--text-primary)',
+                    border: 'var(--border-color)'
                   };
                   return (
                     <span
-                      key={rec.name}
+                      key={stackPick.name}
                       style={{
                         display: 'inline-flex',
                         alignItems: 'center',
@@ -186,7 +189,7 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
                         whiteSpace: 'nowrap'
                       }}
                     >
-                      {rec.name}
+                      {stackPick.name}
                     </span>
                   );
                 })}

@@ -1,5 +1,7 @@
 import React from 'react';
 
+// Don't hardcode the total — branching means the API skip path (e.g. no
+// frontend question) is shorter. Backend sends remaining_steps per step.
 export default function ProgressBar({ stepCount, totalSteps = 9 }) {
   const progressPercent = Math.min(Math.round((stepCount / totalSteps) * 100), 100);
 

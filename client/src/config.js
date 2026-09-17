@@ -1,7 +1,11 @@
-// API served from same Vercel deployment, relative path works everywhere
+// EasyDev proposal API helper — same Vercel deployment serves client + /api,
+// so a relative path works everywhere. I consolidated this after the backend
+// migration (standalone Express -> single serverless fn) to kill CORS/base-URL bugs.
 export const API_BASE = '/api';
 
-// Fetch wrapper that treats non-2xx as errors, surfaces server error messages
+// Gotcha: fetch only throws on network failure, not on 500s. I got burned by
+// silently rendering an error payload as a stack pick, so this treats non-2xx
+// as errors and surfaces the server's message when there is one.
 export async function apiFetch(path, options, base = API_BASE) {
   let res;
   try {
@@ -14,7 +18,7 @@ export async function apiFetch(path, options, base = API_BASE) {
   try {
     data = await res.json();
   } catch {
-    // No body or invalid JSON — fall through, data stays null.
+    // DELETEs come back with a tiny JSON body, but just in case — leave null.
   }
 
   if (!res.ok) {

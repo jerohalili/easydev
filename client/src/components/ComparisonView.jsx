@@ -1,68 +1,75 @@
 import React, { useState, useEffect } from 'react';
 import { apiFetch } from '../config';
 
-const CATEGORIES = ['language', 'frontend', 'backend', 'database', 'infrastructure'];
+// The 5 stack layers EasyDev scores — kept in this order for the proposal UI.
+// DB calls these `category` on tech_items; I use stackLayer locally so it's
+// obvious we're talking about the proposal's architecture layers.
+const STACK_LAYERS = ['language', 'frontend', 'backend', 'database', 'infrastructure'];
 
 export default function ComparisonView({ projectId, recommendations = [] }) {
-  const [techItems, setTechItems] = useState([]);
-  const [userSelections, setUserSelections] = useState({});
+  // stackCatalog = full tech_items table; manualStackPicks = user's own stack per layer
+  const [stackCatalog, setStackCatalog] = useState([]);
+  const [manualStackPicks, setManualStackPicks] = useState({});
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(null);
-  const [saveError, setSaveError] = useState(null);
+  const [compareLoadError, setCompareLoadError] = useState(null);
+  const [stackSaveError, setStackSaveError] = useState(null);
 
   useEffect(() => {
     if (projectId) {
-      loadComparisonData();
+      loadStackCompare();
     }
   }, [projectId]);
 
-  const loadComparisonData = async () => {
+  const loadStackCompare = async () => {
     setLoading(true);
-    setLoadError(null);
+    setCompareLoadError(null);
     try {
-      const [techData, userStackData] = await Promise.all([
+      const [catalogData, savedStackData] = await Promise.all([
         apiFetch('/tech-items'),
         apiFetch(`/projects/${projectId}/user-stack`)
       ]);
 
-      setTechItems(techData || []);
+      setStackCatalog(catalogData || []);
 
-      const mappedSelections = {};
-      if (Array.isArray(userStackData)) {
-        userStackData.forEach(item => {
-          mappedSelections[item.category] = item.tech_item_id;
+      const mappedPicks = {};
+      if (Array.isArray(savedStackData)) {
+        savedStackData.forEach(pick => {
+          mappedPicks[pick.category] = pick.tech_item_id;
         });
       }
-      setUserSelections(mappedSelections);
+      setManualStackPicks(mappedPicks);
     } catch (err) {
-      setLoadError(err.message || 'Failed to load the comparison data.');
+      setCompareLoadError(err.message || 'Couldn\'t load the stack comparison for this proposal.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSelectTech = async (category, techItemId) => {
+  // Manual override per layer — saved immediately so a refresh keeps the
+  // junior's own stack next to the recommended one.
+  const pickManualStackLayer = async (stackLayer, techItemId) => {
     if (!techItemId) {
-      setUserSelections(prev => {
+      setManualStackPicks(prev => {
         const copy = { ...prev };
-        delete copy[category];
+        delete copy[stackLayer];
         return copy;
       });
       return;
     }
 
     const numericId = Number(techItemId);
-    setUserSelections(prev => ({ ...prev, [category]: numericId }));
-    setSaveError(null);
+    setManualStackPicks(prev => ({ ...prev, [stackLayer]: numericId }));
+    setStackSaveError(null);
 
     try {
       await apiFetch(`/projects/${projectId}/user-stack`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category, tech_item_id: numericId })
+        // wire keys stay category/tech_item_id — backend + DB contract
+        body: JSON.stringify({ category: stackLayer, tech_item_id: numericId })
       });
     } catch (err) {
-      setSaveError(err.message || 'Failed to save your selection — it may not persist.');
+      setStackSaveError(err.message || 'Couldn\'t save that stack override — it may not stick around.');
     }
   };
 
@@ -74,7 +81,7 @@ export default function ComparisonView({ projectId, recommendations = [] }) {
     );
   }
 
-  if (loadError) {
+  if (compareLoadError) {
     return (
       <div 
         style={{
@@ -93,11 +100,11 @@ export default function ComparisonView({ projectId, recommendations = [] }) {
         }}
       >
         <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--primary-accent)' }}>
-          {loadError}
+          {compareLoadError}
         </span>
         <button
           type="button"
-          onClick={loadComparisonData}
+          onClick={loadStackCompare}
           style={{
             backgroundColor: 'transparent',
             color: 'var(--primary-accent)',
@@ -125,24 +132,24 @@ export default function ComparisonView({ projectId, recommendations = [] }) {
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
           Evaluate technical pros, cons, and tradeoffs when selecting alternative stack choices.
         </p>
-        {saveError && (
+        {stackSaveError && (
           <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-cons)', margin: '8px 0 0 0' }}>
-            {saveError}
+            {stackSaveError}
           </p>
         )}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%', boxSizing: 'border-box' }}>
-        {CATEGORIES.map(category => {
-          const recItem = recommendations.find(r => r.category === category);
-          const catTechs = techItems.filter(t => t.category === category);
-          const customChoiceId = userSelections[category] || (recItem ? recItem.tech_item_id : '');
-          const customItem = techItems.find(t => Number(t.id) === Number(customChoiceId));
-          const isMatch = recItem && Number(customChoiceId) === Number(recItem.tech_item_id);
+        {STACK_LAYERS.map(stackLayer => {
+          const recPick = recommendations.find(r => r.category === stackLayer);
+          const layerCatalog = stackCatalog.filter(t => t.category === stackLayer);
+          const customChoiceId = manualStackPicks[stackLayer] || (recPick ? recPick.tech_item_id : '');
+          const customItem = stackCatalog.find(t => Number(t.id) === Number(customChoiceId));
+          const isMatch = recPick && Number(customChoiceId) === Number(recPick.tech_item_id);
 
           return (
             <div
-              key={category}
+              key={stackLayer}
               style={{
                 backgroundColor: 'var(--bg-card)',
                 borderRadius: '20px',
@@ -177,7 +184,7 @@ export default function ComparisonView({ projectId, recommendations = [] }) {
                     color: 'var(--primary-accent)'
                   }}
                 >
-                  {category} Layer
+                  {stackLayer} Layer
                 </span>
 
                 {customChoiceId && (
@@ -219,22 +226,22 @@ export default function ComparisonView({ projectId, recommendations = [] }) {
                       EasyDev Recommended
                     </div>
                     <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '8px' }}>
-                      {recItem ? recItem.name : 'N/A (Skipped)'}
+                      {recPick ? recPick.name : 'N/A (Skipped)'}
                     </div>
-                    {recItem && (
+                    {recPick && (
                       <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
-                        {recItem.reasoning_text}
+                        {recPick.reasoning_text}
                       </p>
                     )}
                   </div>
 
-                  {recItem && recItem.trade_offs && (
+                  {recPick && recPick.trade_offs && (
                     <div style={{ fontSize: '11px', paddingTop: '12px', borderTop: '1px solid var(--border-color)', color: 'var(--text-primary)', lineHeight: '1.5' }}>
                       <div style={{ marginBottom: '8px' }}>
-                        <strong style={{ color: 'var(--color-pros)' }}>Pros:</strong> {recItem.trade_offs.pros?.join(', ')}
+                        <strong style={{ color: 'var(--color-pros)' }}>Pros:</strong> {recPick.trade_offs.pros?.join(', ')}
                       </div>
                       <div>
-                        <strong style={{ color: 'var(--color-cons)' }}>Cons:</strong> {recItem.trade_offs.cons?.join(', ')}
+                        <strong style={{ color: 'var(--color-cons)' }}>Cons:</strong> {recPick.trade_offs.cons?.join(', ')}
                       </div>
                     </div>
                   )}
@@ -262,7 +269,7 @@ export default function ComparisonView({ projectId, recommendations = [] }) {
                     
                     <select
                       value={customChoiceId}
-                      onChange={e => handleSelectTech(category, e.target.value)}
+                      onChange={e => pickManualStackLayer(stackLayer, e.target.value)}
                       style={{
                         width: '100%',
                         maxWidth: '100%',
@@ -279,7 +286,7 @@ export default function ComparisonView({ projectId, recommendations = [] }) {
                         boxSizing: 'border-box'
                       }}
                     >
-                      {catTechs.map(t => (
+                      {layerCatalog.map(t => (
                         <option key={t.id} value={t.id}>
                           {t.name}
                         </option>

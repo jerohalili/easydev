@@ -8,23 +8,28 @@ import ThemeToggle from './components/ThemeToggle';
 import { apiFetch } from './config';
 
 export default function App() {
+  // Proposal flow state — kept together on purpose, order mirrors the questionnaire:
+  // start -> quiz -> review -> stack picks. I tried splitting this into a reducer
+  // early on and it just made the branching harder to follow.
   const [activeTab, setActiveTab] = useState('new');
   const [screen, setScreen] = useState('start');
   const [projectTitle, setProjectTitle] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
-  const [projectId, setProjectId] = useState(null);
-  // Client-side quiz navigation history (no re-fetch needed)
-  const [history, setHistory] = useState([]); // [{ question, options, selectedIds }]
-  const [historyIndex, setHistoryIndex] = useState(-1);
-  const [reviewItems, setReviewItems] = useState([]);
+  const [proposalId, setProposalId] = useState(null);
+  // Client-side questionnaire path so Back doesn't re-fetch (junior devs go back a lot)
+  const [proposalPath, setProposalPath] = useState([]); // [{ question, options, selectedIds }]
+  const [proposalPathPos, setProposalPathPos] = useState(-1);
+  const [proposalReviewLines, setProposalReviewLines] = useState([]);
   const [stepCount, setStepCount] = useState(1);
   const [totalSteps, setTotalSteps] = useState(9);
-  const [results, setResults] = useState([]);
-  const [warnings, setWarnings] = useState([]);
+  // stackPicks = the 5 recommended techs (language/frontend/backend/database/infra)
+  const [stackPicks, setStackPicks] = useState([]);
+  // proposalFlags = contradiction heads-ups from the scoring engine (Q3 vs Q2 etc.)
+  const [proposalFlags, setProposalFlags] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const startNewProject = async (e) => {
+  const startProposal = async (e) => {
     e.preventDefault();
     if (!projectTitle.trim()) return;
 
@@ -39,120 +44,123 @@ export default function App() {
           description: projectDescription
         })
       });
-      setProjectId(projData.project.id);
+      setProposalId(projData.project.id);
 
       if (projData.first_question_id) {
-        const { question, options: opts, remaining_steps } = await fetchQuestionData(projData.first_question_id);
-        setHistory([{ question, options: opts, selectedIds: [] }]);
-        setHistoryIndex(0);
+        const { question, options: opts, remaining_steps } = await fetchQuestionnaireStep(projData.first_question_id);
+        setProposalPath([{ question, options: opts, selectedIds: [] }]);
+        setProposalPathPos(0);
         setStepCount(1);
+        // NOTE: remaining_steps is a static walk from the DB, not 9-fixed.
+        // My first progress bar hardcoded 9 and it jumped backwards on the API skip path.
         setTotalSteps(remaining_steps);
         setScreen('quiz');
       }
     } catch (err) {
-      setError(err.message || 'Could not start the assessment. Please try again.');
+      setError(err.message || `Couldn't open "${projectTitle}" proposal. Check connection and try again.`);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchQuestionData = async (questionId) => {
+  const fetchQuestionnaireStep = async (questionId) => {
     const data = await apiFetch(`/questions/${questionId}`);
     return { question: data.question, options: data.options, remaining_steps: data.remaining_steps };
   };
 
-  const currentEntry = historyIndex >= 0 ? history[historyIndex] : null;
+  const currentProposalStep = proposalPathPos >= 0 ? proposalPath[proposalPathPos] : null;
 
-  const goBack = () => {
-    if (historyIndex > 0) {
-      setHistoryIndex(historyIndex - 1);
+  const stepBackInProposal = () => {
+    if (proposalPathPos > 0) {
+      setProposalPathPos(proposalPathPos - 1);
       setStepCount(stepCount - 1);
     }
   };
 
-  // Jump back to edit earlier answer; stale forward path discarded on re-submit
-  const editQuestion = (index) => {
+  // Jump back to edit an earlier proposal answer; stale forward branch gets
+  // discarded on re-submit (branching means the old forward path may be invalid now)
+  const jumpBackToProposalStep = (index) => {
     setScreen('quiz');
-    setHistoryIndex(index);
+    setProposalPathPos(index);
     setStepCount(index + 1);
   };
 
-  const handleSubmitAnswers = async (optionIds) => {
-    if (!optionIds || optionIds.length === 0 || !currentEntry) return;
+  const submitProposalAnswer = async (optionIds) => {
+    if (!optionIds || optionIds.length === 0 || !currentProposalStep) return;
 
     setLoading(true);
     setError(null);
     try {
-      const data = await apiFetch(`/projects/${projectId}/answers`, {
+      const data = await apiFetch(`/projects/${proposalId}/answers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          question_id: currentEntry.question.id,
+          question_id: currentProposalStep.question.id,
           option_ids: optionIds
         })
       });
 
-      setWarnings(data.warnings || []);
+      setProposalFlags(data.warnings || []);
 
-      // Record answer, discard stale forward history from previous path
-      const answeredEntry = { ...currentEntry, selectedIds: optionIds };
-      const trimmedHistory = history.slice(0, historyIndex + 1);
-      trimmedHistory[historyIndex] = answeredEntry;
+      // Record answer, drop stale forward history from the previous branch
+      const answeredStep = { ...currentProposalStep, selectedIds: optionIds };
+      const trimmedPath = proposalPath.slice(0, proposalPathPos + 1);
+      trimmedPath[proposalPathPos] = answeredStep;
 
       if (data.next_question_id) {
-        const { question, options: opts, remaining_steps } = await fetchQuestionData(data.next_question_id);
-        const newIndex = historyIndex + 1;
-        setHistory([...trimmedHistory, { question, options: opts, selectedIds: [] }]);
-        setHistoryIndex(newIndex);
+        const { question, options: opts, remaining_steps } = await fetchQuestionnaireStep(data.next_question_id);
+        const newIndex = proposalPathPos + 1;
+        setProposalPath([...trimmedPath, { question, options: opts, selectedIds: [] }]);
+        setProposalPathPos(newIndex);
         const newStep = newIndex + 1;
         setStepCount(newStep);
         setTotalSteps(newStep - 1 + remaining_steps);
       } else {
-        setHistory(trimmedHistory);
-        await showReview();
+        setProposalPath(trimmedPath);
+        await buildProposalReview();
       }
     } catch (err) {
-      setError(err.message || 'Failed to record answers. Please try again.');
+      setError(err.message || 'Couldn\'t save that questionnaire answer for this proposal. Try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const showReview = async () => {
-    const data = await apiFetch(`/projects/${projectId}/summary`);
-    setReviewItems(data || []);
+  const buildProposalReview = async () => {
+    const data = await apiFetch(`/projects/${proposalId}/summary`);
+    setProposalReviewLines(data || []);
     setScreen('review');
   };
 
-  const fetchResults = async (targetProjectId) => {
-    const idToUse = targetProjectId || projectId;
+  const scoreProposalStack = async (targetProposalId) => {
+    const idToUse = targetProposalId || proposalId;
     setLoading(true);
     setError(null);
     try {
       const data = await apiFetch(`/projects/${idToUse}/score`, { method: 'POST' });
-      setResults(data.recommendations);
-      setWarnings(data.warnings || []);
+      setStackPicks(data.recommendations);
+      setProposalFlags(data.warnings || []);
       setScreen('results');
     } catch (err) {
-      setError(err.message || 'Failed to generate recommendation. Please try again.');
+      setError(err.message || 'Stack scoring failed for this proposal. Your answers are saved — try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const loadPastProject = async (id) => {
+  const reopenProposal = async (id) => {
     setLoading(true);
     setError(null);
     try {
       const data = await apiFetch(`/projects/${id}`);
-      setProjectId(data.project.id);
-      setResults(data.recommendations);
-      // Warnings computed at scoring time, not persisted for history loads
-      setWarnings([]);
+      setProposalId(data.project.id);
+      setStackPicks(data.recommendations);
+      // Flags are computed at scoring time, not stored — history reopens clean
+      setProposalFlags([]);
       setActiveTab('new');
       setScreen('results');
     } catch (err) {
-      setError(err.message || 'Failed to load project detail.');
+      setError(err.message || 'Couldn\'t reopen that proposal from history.');
     } finally {
       setLoading(false);
     }
@@ -221,14 +229,14 @@ export default function App() {
           </div>
         </header>
 
-        {/* Error Alert */}
+        {/* Proposal error — kept inline so questionnaire context isn't lost */}
         {error && (
           <div style={{ padding: '14px 18px', backgroundColor: 'var(--accent-glow)', border: '1px solid var(--primary-accent)', color: 'var(--primary-accent)', borderRadius: '12px', marginBottom: '24px', fontSize: '14px', fontWeight: '600' }}>
             {error}
           </div>
         )}
 
-        {/* Assessment Tab */}
+        {/* Stack proposal tab (new questionnaire) */}
         {activeTab === 'new' && (
           <>
             {screen === 'start' && (
@@ -241,7 +249,7 @@ export default function App() {
                   Name your proposal to begin the questionnaire. Select your project requirements and click continue to progress through the assessment.
                 </p>
 
-                <form onSubmit={startNewProject}>
+                <form onSubmit={startProposal}>
                   <div style={{ marginBottom: '20px' }}>
                     <label style={{ display: 'block', fontSize: '12px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
                       PROJECT TITLE *
@@ -315,13 +323,13 @@ export default function App() {
               </div>
             )}
 
-            {screen === 'quiz' && currentEntry && (
+            {screen === 'quiz' && currentProposalStep && (
               <div className="narrow-content">
                 <ProgressBar stepCount={stepCount} totalSteps={totalSteps} />
-                {historyIndex > 0 && (
+                {proposalPathPos > 0 && (
                   <button
                     type="button"
-                    onClick={goBack}
+                    onClick={stepBackInProposal}
                     disabled={loading}
                     className="btn-interactive"
                     style={{
@@ -341,7 +349,7 @@ export default function App() {
                     ← Back
                   </button>
                 )}
-                {warnings.length > 0 && (
+                {proposalFlags.length > 0 && (
                   <div
                     style={{
                       padding: '12px 16px',
@@ -354,21 +362,21 @@ export default function App() {
                       lineHeight: '1.5'
                     }}
                   >
-                    <strong style={{ color: 'var(--text-primary)' }}>Heads up —</strong>{' '}
-                    {warnings.length === 1 ? warnings[0] : (
+                    <strong style={{ color: 'var(--text-primary)' }}>Heads up on your proposal —</strong>{' '}
+                    {proposalFlags.length === 1 ? proposalFlags[0] : (
                       <ul style={{ margin: '6px 0 0 0', paddingLeft: '18px' }}>
-                        {warnings.map((msg, idx) => (
-                          <li key={idx} style={{ marginBottom: idx < warnings.length - 1 ? '4px' : 0 }}>{msg}</li>
+                        {proposalFlags.map((msg, idx) => (
+                          <li key={idx} style={{ marginBottom: idx < proposalFlags.length - 1 ? '4px' : 0 }}>{msg}</li>
                         ))}
                       </ul>
                     )}
                   </div>
                 )}
                 <QuestionCard
-                  question={currentEntry.question}
-                  options={currentEntry.options}
-                  initialSelectedIds={currentEntry.selectedIds}
-                  onSubmitAnswers={handleSubmitAnswers}
+                  question={currentProposalStep.question}
+                  options={currentProposalStep.options}
+                  initialSelectedIds={currentProposalStep.selectedIds}
+                  onSubmitAnswers={submitProposalAnswer}
                   loading={loading}
                 />
               </div>
@@ -385,14 +393,14 @@ export default function App() {
                   </p>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-                    {reviewItems.map((item) => {
-                      const historyIdx = history.findIndex((h) => h.question.id === item.question_id);
+                    {proposalReviewLines.map((item) => {
+                      const pathIdx = proposalPath.findIndex((h) => h.question.id === item.question_id);
                       const labels = (item.selected_options || []).map((o) => o.label).join(', ');
                       return (
                         <button
                           key={item.question_id}
                           type="button"
-                          onClick={() => historyIdx >= 0 && editQuestion(historyIdx)}
+                          onClick={() => pathIdx >= 0 && jumpBackToProposalStep(pathIdx)}
                           className="btn-interactive"
                           style={{
                             textAlign: 'left',
@@ -400,7 +408,7 @@ export default function App() {
                             borderRadius: '12px',
                             border: '1px solid var(--border-color)',
                             backgroundColor: 'var(--bg-main)',
-                            cursor: historyIdx >= 0 ? 'pointer' : 'default',
+                            cursor: pathIdx >= 0 ? 'pointer' : 'default',
                             display: 'flex',
                             flexDirection: 'column',
                             gap: '4px'
@@ -419,7 +427,7 @@ export default function App() {
 
                   <button
                     type="button"
-                    onClick={() => fetchResults(projectId)}
+                    onClick={() => scoreProposalStack(proposalId)}
                     disabled={loading}
                     className="btn-interactive"
                     style={{
@@ -442,16 +450,16 @@ export default function App() {
 
             {screen === 'results' && (
               <ResultsView
-                projectId={projectId}
-                results={results}
-                warnings={warnings}
+                projectId={proposalId}
+                results={stackPicks}
+                warnings={proposalFlags}
                 onRestart={() => {
                   setProjectTitle('');
                   setProjectDescription('');
-                  setWarnings([]);
-                  setHistory([]);
-                  setHistoryIndex(-1);
-                  setReviewItems([]);
+                  setProposalFlags([]);
+                  setProposalPath([]);
+                  setProposalPathPos(-1);
+                  setProposalReviewLines([]);
                   setScreen('start');
                 }}
               />
@@ -462,7 +470,7 @@ export default function App() {
         {/* History Tab */}
         {activeTab === 'history' && (
           <HistoryView
-            onSelectProject={loadPastProject}
+            onSelectProject={reopenProposal}
             onStartNew={() => {
               setActiveTab('new');
               setScreen('start');

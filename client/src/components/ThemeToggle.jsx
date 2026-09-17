@@ -1,25 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { Sun, Moon } from '@phosphor-icons/react';
 
+// Tiny proposal-theme switch — CSS vars do the real work via data-theme on <html>.
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState(() => {
+  const [proposalTheme, setProposalTheme] = useState(() => {
     const stored = localStorage.getItem('easydev_theme');
     if (stored) return stored;
     return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   });
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('easydev_theme', theme);
-  }, [theme]);
+    document.documentElement.setAttribute('data-theme', proposalTheme);
+    localStorage.setItem('easydev_theme', proposalTheme);
+  }, [proposalTheme]);
 
-  const toggleTheme = () => {
-    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+  const flipProposalTheme = () => {
+    setProposalTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
 
   return (
     <button
-      onClick={toggleTheme}
+      onClick={flipProposalTheme}
       className="btn-interactive theme-toggle"
       style={{
         padding: '8px 16px',
@@ -39,7 +40,7 @@ export default function ThemeToggle() {
       }}
       aria-label="Toggle color theme"
     >
-      {theme === 'light' ? (
+      {proposalTheme === 'light' ? (
         <>
           <Moon size={16} weight="duotone" style={{ color: 'var(--primary-accent)' }} />
           <span>Dark Mode</span>

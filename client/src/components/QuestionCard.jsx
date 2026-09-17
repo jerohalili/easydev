@@ -1,27 +1,24 @@
 import React, { useState, useEffect } from 'react';
 
+// One questionnaire step in the stack proposal flow. Props stay generic
+// (question/options) because they mirror the DB rows directly.
 export default function QuestionCard({ question, options, onSubmitAnswers, loading, initialSelectedIds }) {
-  const [selectedIds, setSelectedIds] = useState(initialSelectedIds || []);
+  const [proposalPickedIds, setProposalPickedIds] = useState(initialSelectedIds || []);
 
-  // Reset selected options whenever a new question loads — but if the app
-  // is showing a question the user already answered (navigating Back, or
-  // jumping in from the review screen to edit an earlier answer),
-  // pre-select whatever they picked last time instead of starting blank.
+  // New step -> reset; Back/edit jump -> restore last picks for that step.
+  // Junior devs second-guess a lot, blanking their answer on Back felt broken.
   useEffect(() => {
-    setSelectedIds(initialSelectedIds || []);
+    setProposalPickedIds(initialSelectedIds || []);
   }, [question.id, initialSelectedIds]);
 
-  const handleSelectOption = (id) => {
+  const toggleProposalOption = (id) => {
     if (question.is_multiselect) {
       const clickedOption = options.find((opt) => opt.id === id);
       const isUnsure = Boolean(clickedOption?.is_unsure);
 
-      setSelectedIds((prev) => {
-        // "I don't know" doesn't make sense combined with a real answer —
-        // picking it clears everything else, and picking a real answer
-        // clears "I don't know" if it was selected. Keeps multi-select
-        // combinations logically consistent instead of letting the two
-        // contradict each other silently.
+      setProposalPickedIds((prev) => {
+        // "I don't know" + a real answer together would zero-out + boost at
+        // the same time in scoring — picking one clears the other.
         if (isUnsure) {
           return prev.includes(id) ? [] : [id];
         }
@@ -31,14 +28,14 @@ export default function QuestionCard({ question, options, onSubmitAnswers, loadi
           : [...withoutUnsure, id];
       });
     } else {
-      setSelectedIds([id]);
+      setProposalPickedIds([id]);
     }
   };
 
-  const handleSubmit = (e) => {
+  const submitProposalStep = (e) => {
     if (e) e.preventDefault();
-    if (selectedIds.length > 0 && !loading) {
-      onSubmitAnswers(selectedIds);
+    if (proposalPickedIds.length > 0 && !loading) {
+      onSubmitAnswers(proposalPickedIds);
     }
   };
 
@@ -77,13 +74,13 @@ export default function QuestionCard({ question, options, onSubmitAnswers, loadi
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px', width: '100%' }}>
         {options.map((opt) => {
-          const isSelected = selectedIds.includes(opt.id);
+          const isSelected = proposalPickedIds.includes(opt.id);
 
           return (
             <button
               key={opt.id}
               type="button"
-              onClick={() => handleSelectOption(opt.id)}
+              onClick={() => toggleProposalOption(opt.id)}
               disabled={loading}
               className="btn-interactive option-card"
               style={{
@@ -143,24 +140,24 @@ export default function QuestionCard({ question, options, onSubmitAnswers, loadi
 
       <button
         type="button"
-        onClick={handleSubmit}
-        disabled={selectedIds.length === 0 || loading}
+        onClick={submitProposalStep}
+        disabled={proposalPickedIds.length === 0 || loading}
         className="btn-interactive"
         style={{
           width: '100%',
           padding: '14px',
-          backgroundColor: selectedIds.length > 0 && !loading ? 'var(--primary-accent)' : 'var(--bg-input)',
-          color: selectedIds.length > 0 && !loading ? '#ffffff' : 'var(--text-muted)',
-          border: selectedIds.length > 0 && !loading ? 'none' : '1px solid var(--border-color)',
+          backgroundColor: proposalPickedIds.length > 0 && !loading ? 'var(--primary-accent)' : 'var(--bg-input)',
+          color: proposalPickedIds.length > 0 && !loading ? '#ffffff' : 'var(--text-muted)',
+          border: proposalPickedIds.length > 0 && !loading ? 'none' : '1px solid var(--border-color)',
           borderRadius: '12px',
           fontWeight: '700',
           fontSize: '15px',
-          cursor: selectedIds.length > 0 && !loading ? 'pointer' : 'not-allowed',
-          boxShadow: selectedIds.length > 0 && !loading ? '0 4px 14px var(--accent-glow)' : 'none',
+          cursor: proposalPickedIds.length > 0 && !loading ? 'pointer' : 'not-allowed',
+          boxShadow: proposalPickedIds.length > 0 && !loading ? '0 4px 14px var(--accent-glow)' : 'none',
           boxSizing: 'border-box'
         }}
       >
-        {loading ? 'Processing...' : 'Continue →'}
+        {loading ? 'Saving proposal answer...' : 'Continue →'}
       </button>
     </div>
   );

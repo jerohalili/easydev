@@ -1,24 +1,29 @@
 import React from 'react';
 import ComparisonView from './ComparisonView';
-import { CATEGORY_STYLES } from '../categoryStyles';
+import { CATEGORY_STYLES as STACK_LAYER_STYLES } from '../categoryStyles';
 
-// Detects zero-score fallback defaults by marker prefix
+// Marker must match api/index.js SAFE_DEFAULT_MARKER exactly — the backend
+// prefixes reasoning_text for zero-score fallback stack picks (all "I don't
+// know" in a layer). I strip it here so juniors don't see the internal tag.
 const SAFE_DEFAULT_MARKER = 'Default pick:';
 
-function isSafeDefault(item) {
-  return typeof item.reasoning_text === 'string' && item.reasoning_text.startsWith(SAFE_DEFAULT_MARKER);
+function isFallbackStackPick(stackPick) {
+  return typeof stackPick.reasoning_text === 'string' && stackPick.reasoning_text.startsWith(SAFE_DEFAULT_MARKER);
 }
 
-function displayReasoning(item) {
-  return isSafeDefault(item)
-    ? item.reasoning_text.slice(SAFE_DEFAULT_MARKER.length).trim()
-    : item.reasoning_text;
+function stripFallbackMarker(stackPick) {
+  return isFallbackStackPick(stackPick)
+    ? stackPick.reasoning_text.slice(SAFE_DEFAULT_MARKER.length).trim()
+    : stackPick.reasoning_text;
 }
 
+// Props stay as projectId/results/warnings (App + API shape), internals use proposal language.
 export default function ResultsView({ projectId, results, warnings, onRestart }) {
-  const defaultCount = (results || []).filter(isSafeDefault).length;
-  const showSafeDefaultBanner = defaultCount >= 2;
-  const activeWarnings = warnings || [];
+  const stackPicks = results || [];
+  const stackFlags = warnings || [];
+  const fallbackPickCount = stackPicks.filter(isFallbackStackPick).length;
+  // Showed the banner for 1 fallback once — noisy. 2+ means the proposal was mostly unsure.
+  const showFallbackBanner = fallbackPickCount >= 2;
 
   return (
     <div style={{ width: '100%', boxSizing: 'border-box' }} className="animate-fade">
@@ -42,7 +47,7 @@ export default function ResultsView({ projectId, results, warnings, onRestart })
           </p>
         </div>
 
-        {showSafeDefaultBanner && (
+        {showFallbackBanner && (
           <div
             style={{
               padding: '14px 18px',
@@ -76,7 +81,7 @@ export default function ResultsView({ projectId, results, warnings, onRestart })
           </div>
         )}
 
-        {activeWarnings.length > 0 && (
+        {stackFlags.length > 0 && (
           <div
             style={{
               padding: '14px 18px',
@@ -92,15 +97,15 @@ export default function ResultsView({ projectId, results, warnings, onRestart })
             <strong style={{ color: 'var(--text-primary)' }}>Worth a second look —</strong> a couple of your answers seem to
             contradict each other:
             <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
-              {activeWarnings.map((msg, idx) => (
-                <li key={idx} style={{ marginBottom: idx < activeWarnings.length - 1 ? '6px' : 0 }}>{msg}</li>
+              {stackFlags.map((msg, idx) => (
+                <li key={idx} style={{ marginBottom: idx < stackFlags.length - 1 ? '6px' : 0 }}>{msg}</li>
               ))}
             </ul>
           </div>
         )}
 
         <div className="results-grid" style={{ marginBottom: '28px' }}>
-          {(!results || results.length === 0) ? (
+          {(!stackPicks || stackPicks.length === 0) ? (
             <div 
               style={{
                 padding: '24px',
@@ -111,18 +116,17 @@ export default function ResultsView({ projectId, results, warnings, onRestart })
               }}
             >
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
-                No recommendations were generated for this assessment. This can happen if your answers
-                didn't weight strongly enough toward any specific technology in a category — try restarting
-                and adjusting your responses.
+                No stack picks came back for this proposal. Usually means the questionnaire answers
+                didn't weight toward any tech in a layer — restart the proposal and tweak a couple answers.
               </p>
             </div>
-          ) : results.map((item) => {
-            const styleBadge = CATEGORY_STYLES[item.category] || { 
-              bg: 'var(--accent-glow)', 
-              text: 'var(--primary-accent)', 
-              border: 'var(--border-color)' 
+          ) : stackPicks.map((item) => {
+            const styleBadge = STACK_LAYER_STYLES[item.category] || {
+              bg: 'var(--accent-glow)',
+              text: 'var(--primary-accent)',
+              border: 'var(--border-color)'
             };
-            const isDefault = isSafeDefault(item);
+            const isDefault = isFallbackStackPick(item);
 
             return (
               <div
@@ -200,7 +204,7 @@ export default function ResultsView({ projectId, results, warnings, onRestart })
                   </div>
                 </div>
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5', wordBreak: 'break-word' }}>
-                  {displayReasoning(item)}
+                  {stripFallbackMarker(item)}
                 </p>
               </div>
             );
