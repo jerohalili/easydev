@@ -914,19 +914,7 @@
       </div>
     </div>
     
-    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-      <h3 style="margin-bottom: 12px;">Page Structure</h3>
-      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; font-size: 12px; color: #475569; font-family: monospace; line-height: 2;">
-        &lt;div style="min-height: 100vh; padding: 32px 16px;"&gt;<br>
-        &nbsp;&nbsp;&lt;div class="app-shell app-shell-wide"&gt;<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&lt;header&gt; ... &lt;/header&gt; &nbsp;&nbsp;// margin-bottom: 36px<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&lt;ProgressBar /&gt; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// margin-bottom: 24px<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&lt;QuestionCard /&gt; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// card padding: 32px 24px<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+-- &lt;option-card /&gt; &nbsp;&nbsp;&nbsp;// gap: 12px, min-height: 48px<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+-- &lt;button.primary /&gt; // padding: 14px<br>
-        &nbsp;&nbsp;&lt;/div&gt;<br>
-        &lt;/div&gt;
-      </div>
+
     </div>
   </div>
   
@@ -949,44 +937,19 @@
       </div>
     </div>
     
-    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
-      <h3 style="margin-bottom: 12px;">Focus Ring</h3>
-      <div style="display: flex; gap: 16px; align-items: center;">
-        <div style="padding: 10px 20px; border-radius: 10px; background: #ffffff; outline: 2px solid #dc2626; outline-offset: 2px; font-size: 13px; font-weight: 700; color: #0f172a;">Focus Visible</div>
-        <code style="font-size: 12px; color: #94a3b8;">outline: 2px solid var(--primary-accent); outline-offset: 2px</code>
-      </div>
-      <div style="margin-top: 8px; font-size: 12px; color: #94a3b8;">
-        Applied to: <code style="color:#dc2626;">button:focus-visible</code>, <code style="color:#dc2626;">input:focus-visible</code>, <code style="color:#dc2626;">textarea:focus-visible</code>, <code style="color:#dc2626;">select:focus-visible</code>
-      </div>
-    </div>
+
   </div>
   
   <div class="section">
     <h2>Animation</h2>
     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-        <div>
-          <h3 style="margin-bottom: 8px;">Fade In</h3>
-          <code style="font-size: 11px; color: #dc2626; font-family: monospace; line-height: 1.8;">
-            animation: fadeIn 0.25s<br>
-            cubic-bezier(0.16, 1, 0.3, 1)<br>
-            forwards;<br><br>
-            from { opacity: 0; transform: translateY(4px); }<br>
-            to { opacity: 1; transform: translateY(0); }
-          </code>
-        </div>
-        <div>
-          <h3 style="margin-bottom: 8px;">Transitions</h3>
-          <code style="font-size: 11px; color: #dc2626; font-family: monospace; line-height: 1.8;">
-            Theme: 0.25s ease<br>
-            (background, color, border)<br><br>
-            Interactive: 0.15s ease<br>
-            (filter, shadow, bg, border)<br><br>
-            Option card: 0.2s ease<br>
-            (border, filter, shadow)
-          </code>
-        </div>
-      </div>
+      <code style="font-size: 11px; color: #dc2626; font-family: monospace; line-height: 1.8;">
+        fadeIn: 0.25s cubic-bezier(0.16, 1, 0.3, 1) — from { opacity: 0; transform: translateY(4px) }<br>
+        Theme transition: background-color 0.25s ease, color 0.25s ease, border 0.25s ease<br>
+        Interactive: filter 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, border 0.15s ease<br>
+        Option card: border 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease<br>
+        Focus outline: outline 2px solid var(--primary-accent), outline-offset 2px (instant)
+      </code>
     </div>
   </div>
 </div>
@@ -1061,18 +1024,7 @@
       </tr>
     </table>
     
-    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-top: 20px;">
-      <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin-bottom: 8px;">Component File Locations</div>
-      <div style="font-size: 13px; color: #475569; line-height: 2;">
-        <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">src/components/QuestionCard.jsx</code> — wraps OptionCard + PrimaryButton<br>
-        <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">src/components/ProgressBar.jsx</code> — progress bar + step counter<br>
-        <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">src/components/ResultsView.jsx</code> — renders ResultCards + CategoryBadges<br>
-        <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">src/components/ComparisonView.jsx</code> — side-by-side stack comparison<br>
-        <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">src/components/HistoryView.jsx</code> — renders HistoryCards<br>
-        <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">src/components/ThemeToggle.jsx</code> — dark/light switch<br>
-        <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">src/categoryStyles.js</code> — CATEGORY_STYLES badge colour map
-      </div>
-    </div>
+
   </div>
 
   <div class="section">
