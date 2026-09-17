@@ -1,9 +1,7 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// Neon connection strings include `sslmode=require`; a bare local
-// Postgres connection string typically doesn't, so this only turns SSL
-// on when it's actually needed.
+// SSL only when connection string requires it (Neon vs local)
 const useSSL = process.env.DATABASE_URL?.includes('sslmode=require');
 
 const pool = new Pool({

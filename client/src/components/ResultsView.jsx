@@ -2,10 +2,7 @@ import React from 'react';
 import ComparisonView from './ComparisonView';
 import { CATEGORY_STYLES } from '../categoryStyles';
 
-// Matches the marker the scoring engine prefixes onto reasoning_text when a
-// category had no real scoring signal and fell back to a safe, industry-
-// standard default. Detected client-side so it also works for projects
-// loaded from history (the marker is persisted in the results table).
+// Detects zero-score fallback defaults by marker prefix
 const SAFE_DEFAULT_MARKER = 'Default pick:';
 
 function isSafeDefault(item) {

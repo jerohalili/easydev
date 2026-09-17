@@ -118,7 +118,6 @@ export default function ComparisonView({ projectId, recommendations = [] }) {
 
   return (
     <div style={{ marginTop: '36px', width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
-      {/* Header Info */}
       <div style={{ marginBottom: '24px' }}>
         <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 4px 0' }}>
           Architectural Trade-Off Analysis
@@ -133,7 +132,6 @@ export default function ComparisonView({ projectId, recommendations = [] }) {
         )}
       </div>
 
-      {/* Category Layer Cards Container */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%', boxSizing: 'border-box' }}>
         {CATEGORIES.map(category => {
           const recItem = recommendations.find(r => r.category === category);
@@ -156,9 +154,8 @@ export default function ComparisonView({ projectId, recommendations = [] }) {
                 maxWidth: '100%',
                 overflow: 'hidden'
               }}
-            >
-              {/* Card Header with Status Badge */}
-              <div
+              >
+                <div
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -201,9 +198,7 @@ export default function ComparisonView({ projectId, recommendations = [] }) {
                 )}
               </div>
 
-              {/* Side-by-Side / Stacked Comparison Columns */}
               <div className="comparison-columns">
-                {/* EasyDev Recommended Tech Card */}
                 <div
                   style={{
                     backgroundColor: 'var(--bg-main)',
@@ -245,7 +240,6 @@ export default function ComparisonView({ projectId, recommendations = [] }) {
                   )}
                 </div>
 
-                {/* Custom Tech Selection Card */}
                 <div
                   style={{
                     backgroundColor: 'var(--bg-main)',

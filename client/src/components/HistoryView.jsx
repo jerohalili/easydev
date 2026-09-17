@@ -45,7 +45,6 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
 
   return (
     <div style={{ marginTop: '24px', width: '100%', boxSizing: 'border-box' }}>
-      {/* Header Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '16px', flexWrap: 'wrap' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -82,7 +81,6 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
         </button>
       </div>
 
-      {/* Error Alert */}
       {error && (
         <div style={{ padding: '14px 18px', backgroundColor: 'var(--accent-glow)', border: '1px solid var(--primary-accent)', color: 'var(--primary-accent)', borderRadius: '12px', marginBottom: '24px', fontSize: '13px', fontWeight: '600', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
           <span>{error}</span>
@@ -96,7 +94,6 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
         </div>
       )}
 
-      {/* Empty State */}
       {!error && projects.length === 0 && (
         <div style={{ backgroundColor: 'var(--bg-card)', padding: '40px 20px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center', boxShadow: 'var(--card-shadow)' }}>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: '0 0 16px 0' }}>
@@ -112,7 +109,6 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
         </div>
       )}
 
-      {/* Project Cards List */}
       {!error && projects.length > 0 && (
         <div className="history-grid">
           {projects.map((proj) => (

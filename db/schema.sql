@@ -1,11 +1,4 @@
--- ========================================================
--- TABLE DEFINITIONS
--- ========================================================
--- NOTE: these CREATE TABLE statements were missing from the original
--- schema.sql (it only contained seed INSERTs), even though the README
--- instructs `psql "$DATABASE_URL" -f server/schema.sql` as the full setup
--- step. Restored here, inferred from the columns actually referenced across
--- api/index.js, so a fresh clone can be set up from this file alone.
+-- CREATE TABLE statements inferred from api/index.js
 
 CREATE TABLE IF NOT EXISTS tech_items (
   id SERIAL PRIMARY KEY,
@@ -27,11 +20,7 @@ CREATE TABLE IF NOT EXISTS options (
   question_id INT NOT NULL REFERENCES questions(id),
   label TEXT NOT NULL,
   next_question_id INT REFERENCES questions(id),
-  -- Marks this option as the question's "I don't know / Not sure yet" choice.
-  -- Added so the client can enforce mutual exclusivity in multi-select
-  -- questions (selecting "I don't know" alongside a real answer is a
-  -- contradiction the UI should prevent, not silently allow) instead of
-  -- relying on fragile string-matching against the label text.
+  -- "I don't know" option: client prevents combining with real answers
   is_unsure BOOLEAN NOT NULL DEFAULT FALSE
 );
 
@@ -47,10 +36,7 @@ CREATE TABLE IF NOT EXISTS projects (
   id SERIAL PRIMARY KEY,
   title TEXT NOT NULL DEFAULT 'Untitled Project',
   description TEXT NOT NULL DEFAULT '',
-  -- Self-reported background, captured once via the first question in the
-  -- flow (id 99). Used only to simplify the questionnaire for beginners
-  -- (see AUTO_ANSWER_FOR_BEGINNERS in api/index.js) -- it is never used as a
-  -- scoring signal for the tech-stack recommendation itself.
+  -- Captured from Q99, used to simplify flow for beginners (never a scoring signal)
   experience_level TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -70,10 +56,7 @@ CREATE TABLE IF NOT EXISTS results (
   category TEXT NOT NULL,
   score INT NOT NULL DEFAULT 0,
   reasoning_text TEXT,
-  -- TRUE when this pick was a low-confidence "no layer needed" result -- the
-  -- margin over the runner-up tech in that category was too thin to commit
-  -- to silently. The client shows this as a question to confirm rather than
-  -- a stated fact. See CONFIDENCE_MARGIN_THRESHOLD in api/index.js.
+  -- Low-confidence "no layer needed" picks require user confirmation
   needs_confirmation BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -87,15 +70,12 @@ CREATE TABLE IF NOT EXISTS user_stacks (
   UNIQUE (project_id, category)
 );
 
--- Idempotent column additions, in case this file is re-run against a
--- database that was already seeded from an earlier version of this schema.
+-- Idempotent column additions for schema migration
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS experience_level TEXT;
 ALTER TABLE options ADD COLUMN IF NOT EXISTS is_unsure BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE results ADD COLUMN IF NOT EXISTS needs_confirmation BOOLEAN NOT NULL DEFAULT FALSE;
 
--- ========================================================
 -- SEED DATA
--- ========================================================
 
 INSERT INTO tech_items (id, name, category, description, trade_offs) VALUES
 (1, 'JavaScript / TypeScript', 'language', 'Industry-standard strongly-typed language for full-stack JavaScript ecosystems.', '{"pros": ["Unified language across frontend and backend", "Massive package ecosystem (npm)"], "cons": ["Single-threaded runtime considerations", "Fast ecosystem churn"]}'),
@@ -144,22 +124,7 @@ INSERT INTO tech_items (id, name, category, description, trade_offs) VALUES
 (51, 'No dedicated backend needed', 'backend', 'This project doesn''t need custom backend logic — e.g. a fully static site, or a frontend talking directly to a BaaS.', '{"pros": ["No server-side code to write, deploy, or maintain"], "cons": ["Revisit this if the project later needs custom business logic or private data access"]}'),
 (52, 'No database needed', 'database', 'This project has no persistent data storage requirements.', '{"pros": ["No schema, migrations, or data layer to manage"], "cons": ["Revisit this if the project later needs to persist user or application data"]}');
 
--- ========================================================
--- QUESTIONS
--- ========================================================
--- Question 99 is a new, unscored gate asked before anything else: it never
--- feeds the weighted-scoring engine (no rows in `weights` reference its
--- options). It exists purely to let the app simplify the flow for total
--- beginners -- see AUTO_ANSWER_FOR_BEGINNERS in api/index.js -- so a brand
--- new coder isn't asked nuanced ops questions (setup complexity, budget
--- tiers) they have no context to answer confidently.
---
--- Questions 10-14 are new and were missing entirely from the original
--- questionnaire: none of the original 9 questions asked about
--- authentication needs, expected user scale, team size, or — critically for
--- someone who already knows exactly what they want — a direct frontend or
--- backend framework preference. All of these materially change the
--- recommended stack (see the questionnaire audit this schema accompanies).
+-- Q99 is an unscored UX gate for beginner-friendly flows
 INSERT INTO questions (id, prompt_text, is_first, is_multiselect) VALUES
 (99, 'How would you describe your coding background?', TRUE, FALSE),
 (1, 'What primary type of software are you building?', FALSE, FALSE),
@@ -177,15 +142,7 @@ INSERT INTO questions (id, prompt_text, is_first, is_multiselect) VALUES
 (13, 'Which frontend framework style appeals to you most?', FALSE, FALSE),
 (14, 'Which backend framework style appeals to you most, if any?', FALSE, FALSE);
 
--- ========================================================
--- OPTIONS
--- ========================================================
--- In every question below, 'I don't know / Not sure yet' is placed as the
--- LAST option (highest id in that question's block) and flagged is_unsure =
--- TRUE. The app renders options in `ORDER BY id ASC` (see api/index.js), so
--- this ordering is what controls display order. is_unsure lets the client
--- enforce that "I don't know" can't be combined with a real answer on
--- multi-select questions (see QuestionCard.jsx).
+-- OPTIONS: "I don't know" placed last per question, flagged is_unsure for mutual exclusivity
 INSERT INTO options (id, question_id, label, next_question_id, is_unsure) VALUES
 (991, 99, 'Brand new — I have never built a project before', 1, FALSE),
 (992, 99, 'Some experience — I have built small things and I am still learning', 1, FALSE),
@@ -277,19 +234,7 @@ INSERT INTO options (id, question_id, label, next_question_id, is_unsure) VALUES
 (1404, 14, 'Whatever fits the language I already picked', NULL, FALSE),
 (1405, 14, 'I don''t know / Not sure yet', NULL, TRUE);
 
--- ========================================================
--- WEIGHTS
--- ========================================================
--- Weight values for questions 1-9 are unchanged from the original dataset.
--- New rows at the bottom cover the new questions (10-12). Question 99
--- (experience level) intentionally has no weight rows -- it is a UX gate,
--- not a scoring input (see schema comment above and api/index.js).
---
--- A separate fix -- boosting the weight of whichever question is the single
--- most *direct* question for a category (Q5 for language, Q4 for database,
--- Q7 for infrastructure) -- is applied at query time in api/index.js rather
--- than by inflating these raw numbers, so this table stays an honest record
--- of each answer's face-value relevance. See PRIMARY_QUESTION_BY_CATEGORY.
+-- Weight values; direct-category boosting applied at query time in api/index.js
 INSERT INTO weights (option_id, tech_item_id, weight_value) VALUES
 (101, 12, 12), (101, 40, 10), (101, 32, 6),
 (102, 1, 8), (102, 10, 10), (102, 20, 8), (102, 30, 8),
@@ -331,37 +276,28 @@ INSERT INTO weights (option_id, tech_item_id, weight_value) VALUES
 (901, 12, 8), (901, 23, 10), (901, 40, 10),
 (902, 30, 8), (902, 41, 8), (902, 42, 8), (902, 5, 6),
 
--- Q10: authentication needs -- "yes" points toward BaaS (auth is Supabase/
--- Firebase's headline feature) and its matching hosting; "no" gives a small
--- nudge toward "no dedicated backend needed" without single-handedly
--- deciding it (kept low on purpose, see CONFIDENCE_MARGIN_THRESHOLD).
+-- Q10: auth "yes" nudges BaaS, "no" nudges no-backend
 (1001, 23, 12), (1001, 43, 8), (1001, 20, 6), (1001, 36, 6),
 (1002, 51, 6),
 
--- Q11: expected scale -- database and infra should reflect *load*, not
--- just budget. A tiny personal project and a free-tier app anticipating
--- real growth were previously indistinguishable to the engine.
+-- Q11: scale — reflects load, not just budget
 (1101, 32, 10), (1101, 40, 6),
 (1102, 30, 10), (1102, 40, 6), (1102, 41, 4),
 (1103, 42, 14), (1103, 30, 8), (1103, 33, 8),
 
--- Q12: team size -- opinionated, convention-heavy frameworks pay off more
--- for teams; lightweight/flexible setups suit a solo builder.
+-- Q12: team size — heavier frameworks pay off for teams
 (1201, 11, 8), (1201, 32, 4),
 (1202, 10, 8), (1202, 20, 6),
 (1203, 5, 10), (1203, 42, 8),
 
--- Q13: frontend framework style -- lets someone who already knows exactly
--- what they want (e.g. "I want Vue") state that directly, instead of it
--- only ever being inferable indirectly from project-type/workload answers.
+-- Q13: frontend style — direct preference instead of indirect inference
 (1301, 10, 8), (1301, 11, 6),
 (1302, 15, 14),
 (1303, 16, 14),
 (1304, 17, 14),
 (1305, 18, 14),
 
--- Q14: backend framework style -- same idea, for Rails/Spring/Laravel,
--- which otherwise had no direct question pointing at them at all.
+-- Q14: backend style — same idea for Rails/Spring/Laravel
 (1401, 24, 14),
 (1402, 25, 14),
 (1403, 26, 14);

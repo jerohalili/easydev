@@ -13,13 +13,7 @@ export default function App() {
   const [projectTitle, setProjectTitle] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [projectId, setProjectId] = useState(null);
-  // `history` holds every question screen visited, in order, each with the
-  // options it showed and (once answered) the option ids the user picked.
-  // `historyIndex` points at the one currently on screen. Going "Back" just
-  // moves the pointer left — no re-fetch needed, since the question and its
-  // options are already cached in the entry. Answering the last question in
-  // the chain (next_question_id === null) moves to the review screen
-  // instead of scoring immediately.
+  // Client-side quiz navigation history (no re-fetch needed)
   const [history, setHistory] = useState([]); // [{ question, options, selectedIds }]
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [reviewItems, setReviewItems] = useState([]);
@@ -76,11 +70,7 @@ export default function App() {
     }
   };
 
-  // Jump back into the quiz to edit an earlier answer from the review
-  // screen. Everything after that point in history is discarded once the
-  // user re-submits — if the edited answer changes where the chain goes
-  // next (e.g. project type on Q1), the old forward path would be stale
-  // anyway, so handleSubmitAnswers rebuilds it fresh from here.
+  // Jump back to edit earlier answer; stale forward path discarded on re-submit
   const editQuestion = (index) => {
     setScreen('quiz');
     setHistoryIndex(index);
@@ -104,8 +94,7 @@ export default function App() {
 
       setWarnings(data.warnings || []);
 
-      // Record the answer on the current entry, discarding any stale
-      // forward history from a previous path through the quiz.
+      // Record answer, discard stale forward history from previous path
       const answeredEntry = { ...currentEntry, selectedIds: optionIds };
       const trimmedHistory = history.slice(0, historyIndex + 1);
       trimmedHistory[historyIndex] = answeredEntry;
@@ -158,9 +147,7 @@ export default function App() {
       const data = await apiFetch(`/projects/${id}`);
       setProjectId(data.project.id);
       setResults(data.recommendations);
-      // Contradiction warnings are computed live at scoring time, not
-      // persisted — a project loaded from history won't have them until
-      // it's re-scored.
+      // Warnings computed at scoring time, not persisted for history loads
       setWarnings([]);
       setActiveTab('new');
       setScreen('results');

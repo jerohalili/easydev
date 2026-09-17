@@ -31,7 +31,6 @@ export default function QuestionCard({ question, options, onSubmitAnswers, loadi
           : [...withoutUnsure, id];
       });
     } else {
-      // Single selection
       setSelectedIds([id]);
     }
   };
@@ -109,7 +108,6 @@ export default function QuestionCard({ question, options, onSubmitAnswers, loadi
             >
               <span style={{ flex: 1, lineHeight: '1.4', wordBreak: 'break-word' }}>{opt.label}</span>
 
-              {/* Selection indicator strictly on the far right */}
               <div
                 style={{
                   width: '20px',
@@ -143,7 +141,6 @@ export default function QuestionCard({ question, options, onSubmitAnswers, loadi
         })}
       </div>
 
-      {/* Submit / Continue Button */}
       <button
         type="button"
         onClick={handleSubmit}
