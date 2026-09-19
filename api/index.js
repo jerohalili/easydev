@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const pool = require('../db/db.js');
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 
 const app = express();
 

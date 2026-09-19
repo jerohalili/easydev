@@ -1,8 +1,21 @@
 {
+  "name": "easydev",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently --kill-others --raw --names \"api,web\" --prefix-colors \"cyan,magenta\" \"npm:dev:api --silent\" \"npm:dev:client --silent\"",
+    "dev:api": "node local-server.js",
+    "dev:client": "npm --prefix client run dev --silent",
+    "dev:vercel": "vercel dev",
+    "install:all": "npm install && npm --prefix client install"
+  },
   "dependencies": {
-    "express": "^5.2.1",
     "cors": "^2.8.6",
-    "pg": "^8.23.0",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }

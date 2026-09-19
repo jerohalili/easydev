@@ -1,5 +1,5 @@
 const { Pool } = require('pg');
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 
 // Neon needs SSL (sslmode=require in the pooled URL), local Postgres doesn't.
 // Got burned once by forcing SSL everywhere — local dev refused to connect.
