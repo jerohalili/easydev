@@ -1,163 +1,172 @@
 # EasyDev | Tech Stack Identifier
 
-## Short Introduction
+[![Made with AI](https://img.shields.io/badge/Made_with-AI_assistance-blue)](AI-USAGE.md)
 
-EasyDev is a full-stack web app that answers one specific question junior developers and recent grads get stuck on: *what should I actually build this with?*
+> Built with AI assistance (Claude + Copilot) across scaffolding, debugging, and copy polish; see [AI-USAGE.md](AI-USAGE.md) for the full log.
 
-Instead of another "best practices" article or a generic framework comparison, EasyDev asks a short, branching questionnaire about the actual project — what it is, how many users it expects, what the team already knows, what the budget looks like — and returns a scored, explained recommendation across five categories: **Language, Frontend Framework, Backend Framework, Database, and Infrastructure**. Every recommendation comes with a plain-language reason and a pros/cons trade-off summary, not just a name.
-
-**Core Philosophy:** *A decision engine, not a lookup table.*
-
-The project also exists as a way to practice building a real weighted-scoring system and a data model (questions, branching logic, weighted options, tech items) that stays maintainable as more questions and technologies get added — rather than a hardcoded if/else chain.
+**Repo:** https://github.com/jerohalili/easydev
+**Live:** https://easydev-nine.vercel.app/
 
 ---
 
-## Live Website
+## 1. Overview
 
-**Website:** <https://easydev-nine.vercel.app/>
+EasyDev is a full-stack web app that tells junior developers and recent grads what to build their project with. You answer a short branching questionnaire about your project, team, scale, and constraints, and it returns a scored recommendation across five categories — Language, Frontend, Backend, Database, Infrastructure — each with plain-language reasoning and pros/cons.
 
----
+**Core philosophy:** *A decision engine, not a lookup table.* Weighted scoring + branching data model instead of hardcoded if/else.
 
-## Technologies Used
-
-### Frontend
-
-- React 19
-- Vite
-- Tailwind CSS v4, layered on top of a custom CSS-variable theming system (`--bg-main`, `--text-primary`, `--primary-accent`, etc.) that drives dark/light mode via a `data-theme` attribute on `<html>` — Tailwind handles layout and utility styling, the CSS variables handle theme-aware colors
-- [@phosphor-icons/react](https://phosphoricons.com/) for icons
-
-### Backend
-
-- Node.js
-- Express 5 — not a standalone server; the entire API is one Express app (`api/index.js`) exported as a handler and run as a single Vercel serverless function. `vercel.json` rewrites all `/api/*` requests to that function and everything else to `index.html`, so the client and API deploy and scale together as one unit.
-- node-postgres (`pg`)
-
-### Database
-
-- PostgreSQL (hosted on [Neon](https://neon.tech))
-- Schema-driven, hand-seeded question tree, weight matrix, and tech-item catalog — no ORM, raw SQL by design, for full control over the scoring queries
-- Core tables: `projects`, `questions`, `options`, `tech_items`, `weights`, `answers`, `results`, `user_stacks`
-
-### Dev Tools
-
-- Vercel CLI (`vercel dev` runs the client and the `/api` serverless function together locally, matching production)
-- ESLint
+Technologies: React 19 + Vite + Tailwind v4 (client), Express 5 as a single Vercel serverless function (`api/index.js`), PostgreSQL on Neon via `pg` (no ORM), Vercel CLI for prod-parity local dev.
 
 ---
 
-## Features
-
-### Branching, Multi-Select Questionnaire
-
-The questionnaire isn't a flat list — later questions depend on earlier answers via each option's `next_question_id`. Choosing "API / Microservice" as the project type skips the frontend-platform question entirely, since it doesn't apply. Several questions also support selecting more than one answer where that's realistic (e.g. a project can need both real-time features *and* heavy background processing).
-
-This reduces:
-- Irrelevant questions for the user's specific project type
-- Forced single-choice answers where multiple things are genuinely true
-
-### Weighted-Scoring Recommendation Engine
-
-Every answer option carries hand-assigned weight values toward specific technologies (`weights` table). When the questionnaire completes, the engine sums weights per technology across every answer given, grouped by category, and returns the highest scorer in each of the five categories — with a `reasoning_text` string generated from which of the user's actual answers contributed most to that pick.
-
-This improves:
-- Recommendation accuracy tied directly to stated constraints, not generic advice
-- Transparency — the user sees *why*, not just *what*
-
-### Trade-Off Comparison Panel
-
-Each recommended technology carries a stored pros/cons summary (`trade_offs`), surfaced alongside the reasoning text and in the comparison view below.
-
-### Project Dashboard & History
-
-Every completed questionnaire is saved as a project. Projects can be revisited from a dashboard (`HistoryView`), and every re-score is preserved as history rather than overwritten — so a project's recommendation timeline stays intact even after answers are edited.
-
-### Side-by-Side Stack Comparison
-
-Beyond the system's recommendation, users can build their own stack manually — picking one technology per category from the same list the engine knows about (`ComparisonView`) — and see it rendered next to the recommended pick with a match/override indicator per category.
-
-This improves:
-- Confidence for users who already have a preference and want to sanity-check it
-- Visibility into where a manual choice diverges from the data-driven pick
-
-### Dark / Light Theme
-
-A CSS-variable theming system with a manual toggle (`ThemeToggle`), persisted to `localStorage` and applied consistently across every screen via a `data-theme` attribute.
-
-### Resilient API Handling
-
-`client/src/config.js` wraps every request in a fetch helper that checks `res.ok` before parsing JSON, surfaces the server's actual error message when available, and falls back to a clear message on network failure — instead of silently treating an error response as a success payload.
-
----
-
-## Development Process (How It Was Built and Why)
-
-### Why I Built It
-
-Most "pick your tech stack" content online is either a static opinion piece or assumes the reader already knows enough to weigh the trade-offs themselves. Neither actually helps someone standing at the very start of a project with a blank terminal and no clear next step.
-
-I wanted to build something that treats the decision the way it actually works in practice: as a set of constraints (team size, scale, timeline, budget, existing skills) that get weighed against each other, not a single "best" answer that ignores context.
-
-### Build Order
-
-The project was built schema-first, deliberately, because the riskiest unknowns — branching logic and a weighted scoring model — live in the data model, not the UI:
-
-1. **Data model first.** Questions, options, branching (`next_question_id`), tech items, and a weight matrix were designed and seeded before any interface existed, validated end-to-end with a hardcoded scoring stub.
-2. **Real scoring engine.** The stub was replaced with an actual weighted-sum SQL query, grouped by category, with dynamically generated reasoning text pulled from whichever answer contributed the most weight to each winning technology.
-3. **Dashboard and persistence.** Projects became revisitable, with results stored as history rather than overwritten on re-score.
-4. **Comparison view.** A second, user-built stack could be assembled and rendered against the recommendation.
-5. **Iterative debugging.** Several real data-integrity bugs surfaced along the way and were fixed deliberately rather than patched over — an unreachable "Java / C#" recommendation with zero weight coverage, a scoring endpoint that was silently deleting result history instead of preserving it, and a progress bar that assumed every path through the questionnaire was the same length when the branching logic meant it wasn't.
-6. **Backend migration.** The API was converted from a standalone Express server to a single Express app running as a Vercel serverless function, with the client's API references consolidated to one relative `/api` constant so client and server deploy as one unit with no CORS or environment-specific base URLs to manage.
-7. **Resilience and polish pass.** `res.ok` checks and user-facing error states were added across the client (`HistoryView`, `ComparisonView`), an empty-state message was added to `ResultsView`, and a full responsive/design-system consistency pass was applied across every screen.
-
----
-
-## Setup Instructions
+## 2. Setup and installation
 
 ### Prerequisites
 
 - Node.js 18+
-- [Vercel CLI](https://vercel.com/docs/cli) (`npm i -g vercel`)
-- A [Neon](https://neon.tech) Postgres database (or any Postgres instance — just point `DATABASE_URL` at it)
+- Vercel CLI: `npm i -g vercel`
+- A Postgres database (Neon recommended — any Postgres works)
 
-### 1. Clone the repo
+### 2.1 Get the code
 
-```
+```bash
 git clone https://github.com/jerohalili/easydev.git
 cd easydev
 ```
 
-### 2. Install dependencies
+### 2.2 Install dependencies
 
-```
+```bash
 npm install
 cd client && npm install && cd ..
+# or: npm run install:all
 ```
 
-### 3. Configure environment
+### 2.3 Environment and configuration
 
-```
+```bash
 cp .env.example .env
 ```
 
-Fill in `DATABASE_URL` with your Neon pooled connection string (it must include `sslmode=require`, which `db/db.js` checks for to enable SSL) — or run `vercel env pull .env` if the project is already linked to Vercel.
+| Variable | Required | Example value | Notes |
+|----------|----------|---------------|-------|
+| `DATABASE_URL` | Yes | `postgresql://user:password@ep-xxx.us-east-2.aws.neon.tech/dbname?sslmode=require` | Neon pooled connection string. Must include `sslmode=require` — `db/db.js` enables SSL only when present. Never commit the real value. Alternative: `vercel env pull .env` if linked to Vercel. |
 
-### 4. Load the schema and seed data
+No other env vars. Client uses relative `API_BASE = '/api'` (`client/src/config.js`), so no frontend env needed.
 
-```
+### 2.4 Set up and seed the database
+
+```bash
 psql "$DATABASE_URL" -f db/schema.sql
 ```
 
-### 5. Run it
+Creates 8 tables (`projects, questions, options, tech_items, weights, answers, results, user_stacks`) and seeds the question tree (Q99–Q14), ~60 options, weight matrix, and ~30 tech items.
 
-```
+---
+
+## 3. How to run it
+
+Primary (prod parity — client + `/api` on one port, same as production):
+
+```bash
 vercel dev
 ```
 
-This serves the client and the `/api` serverless function together on one local port — the same setup as production.
+Alternative (split local dev, no Vercel account needed):
+
+```bash
+npm run dev
+# runs: node local-server.js (API on http://localhost:3001)
+#   +   Vite dev server (client on http://localhost:5173, /api proxied to :3001)
+```
+
+Health check: `GET /api/health` should return 200 with `SELECT NOW()`.
+
+What you should see: the questionnaire start screen (“New” tab) where you create a project with title/description, then the first question. The “History” tab lists past projects. Live reference: https://easydev-nine.vercel.app/
+
+Deploy: push to Vercel; `vercel.json` builds `client/dist` and rewrites `/api/*` to the serverless function, everything else to `index.html`. Set `DATABASE_URL` in Vercel Project Settings → Environment Variables.
+
+---
+
+## 4. Features and usage
+
+Primary flow: **Start → Quiz → Review → Results → Compare → History**
+
+1. **Start:** create a project (`POST /projects`) → first question loads.
+2. **Quiz:** branching questions via `next_question_id` (e.g. “API / Microservice” skips frontend-platform). Multi-select where realistic. `ProgressBar` uses server `remaining_steps`. Contradiction warnings shown inline (e.g. realtime + no-backend-logic).
+3. **Review:** grouped answer summary, click any row to jump back and edit (forward branch is discarded and rebuilt).
+4. **Results:** weighted-sum scoring per category with `PRIMARY_BOOST x5`, `SAFE_DEFAULTS` on all-zero layers, `needs_confirmation` on thin margins. Each pick shows reasoning text + trade-offs.
+5. **Compare:** build your own stack manually from the same catalog and see match/override per category.
+6. **History:** every project + every re-score preserved (append, not overwrite). Reopen, delete, restart.
+
+Other features: dark/light theme (`data-theme` + `localStorage`), responsive layout, resilient fetch helper (`res.ok` check + server message surfacing in `client/src/config.js`).
+
+### Main API endpoints (`api/index.js`, single Express app)
+
+| Method | Path | What it does |
+|--------|------|--------------|
+| GET | `/api/health` | DB healthcheck (`SELECT NOW()`) |
+| GET | `/api/projects` | List projects with latest recommendations |
+| POST | `/api/projects` | Create `{title, description}` → returns `first_question_id` |
+| GET | `/api/projects/:id` | Single project + results + answers |
+| DELETE | `/api/projects/:id` | Delete project (cascades) |
+| GET | `/api/questions/:id` | Quiz step: question + options + `remaining_steps` |
+| GET | `/api/projects/:id/summary` | Review-screen grouped answers |
+| POST | `/api/projects/:id/answers` | Save answers (single `option_id` or `option_ids[]`), returns `{next_question_id, warnings}` |
+| POST | `/api/projects/:id/score` | Run weighted scoring, append result row |
+| GET | `/api/tech-items` | Full tech catalog for comparison view |
+| GET | `/api/projects/:id/user-stack` | Manual picks |
+| POST | `/api/projects/:id/user-stack` | Upsert manual pick `{category, tech_item_id, notes}` |
+
+---
+
+## 5. Project structure
+
+```
+easydev/
+  api/index.js        # entire API: single Express app → Vercel serverless fn
+  client/src/
+    App.jsx           # tab + screen state machine (new/history, start/quiz/review/results)
+    config.js         # API_BASE='/api' + apiFetch with res.ok guard
+    categoryStyles.js # shared badge map
+    components/       # QuestionCard, ProgressBar, ResultsView, HistoryView, ComparisonView, ThemeToggle
+    main.jsx, index.css
+  client/vite.config.js # :5173 + /api → localhost:3001 proxy
+  db/db.js            # pg.Pool, SSL only when sslmode=require
+  db/schema.sql       # 8 tables + seed (questions, options, weights, tech_items)
+  local-server.js     # local dev: require api/index.js, listen :3001
+  vercel.json         # build client/dist, rewrite /api/* → fn, rest → index.html
+  package.json        # concurrently scripts: dev, dev:api, dev:client, dev:vercel
+  DESIGN-SYSTEM.html  # token/component spec
+```
+
+---
+
+## 6. Screenshots
+
+> Captured from the live site by the author (placeholders — replace `docs/screenshots/*.png` with real captures before grading).
+
+![Start screen](docs/screenshots/01-start.png)
+*Start screen — create a project to begin the questionnaire.*
+
+![Quiz](docs/screenshots/02-quiz.png)
+*Branching quiz with multi-select and progress bar.*
+
+![Results](docs/screenshots/03-results.png)
+*Scored picks per category with reasoning + trade-offs, plus side-by-side comparison.*
+
+---
+
+## 7. Known issues and next steps
+
+- Open demo by design: no login; anyone with a project UUID can read/mutate it (no `userId` scoping). Fine for a class demo, would need auth + ownership before real users.
+- `cors()` is unrestricted (`api/index.js:8`). Would restrict to the Vercel origin in production.
+- Server validation is thin (`answers` checks non-empty only; `score`/`user-stack` rely on DB constraints). Would add type/FK/whitelist checks.
+- Post-migration prod verification at `easydev-nine.vercel.app` + final responsive pass still to confirm.
+- Next: auth + per-user history, stricter validation, restricted CORS, pagination on history.
 
 ---
 
 ## License
 
-See [LICENSE](https://github.com/jerohalili/easydev/blob/main/LICENSE) (MIT) for details.
+See [LICENSE](https://github.com/jerohalili/easydev/blob/main/LICENSE) (MIT).
