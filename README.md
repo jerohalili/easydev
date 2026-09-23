@@ -144,16 +144,16 @@ easydev/
 
 ## 6. Screenshots
 
-> Captured from the live site by the author (placeholders — replace `docs/screenshots/*.png` with real captures before grading).
+> Captured from the live site (`easydev-nine.vercel.app`) by the author on Sep 23, 2026.
 
-![Start screen](docs/screenshots/01-start.png)
-*Start screen — create a project to begin the questionnaire.*
+![Start screen](docs/screenshots/proposal-start.jpeg)
+*Start screen — create a project proposal to begin the questionnaire.*
 
-![Quiz](docs/screenshots/02-quiz.png)
-*Branching quiz with multi-select and progress bar.*
+![Proposal history](docs/screenshots/proposal-history.jpeg)
+*Proposal history — past assessments with their recommended stack badges.*
 
-![Results](docs/screenshots/03-results.png)
-*Scored picks per category with reasoning + trade-offs, plus side-by-side comparison.*
+![Results](docs/screenshots/results-tradeoff.jpeg)
+*Scored picks per category with reasoning, plus the architectural trade-off analysis.*
 
 ---
 
