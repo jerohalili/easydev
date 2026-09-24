@@ -144,7 +144,7 @@ easydev/
 
 ## 6. Screenshots
 
-> Captured from the live site (`easydev-nine.vercel.app`) by the author on Sep 23, 2026.
+> Captured from the live site (`easydev-nine.vercel.app`) on Sep 23, 2026.
 
 ![Start screen](docs/screenshots/proposal-start.jpeg)
 *Start screen — create a project proposal to begin the questionnaire.*
