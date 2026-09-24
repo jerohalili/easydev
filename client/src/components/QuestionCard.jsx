@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 // One questionnaire step in the stack proposal flow. Props stay generic
 // (question/options) because they mirror the DB rows directly.
-export default function QuestionCard({ question, options, onSubmitAnswers, loading, initialSelectedIds }) {
+export default function QuestionCard({ question, options, onSubmitAnswers, saving, initialSelectedIds }) {
   const [proposalPickedIds, setProposalPickedIds] = useState(initialSelectedIds || []);
 
   // New step -> reset; Back/edit jump -> restore last picks for that step.
@@ -34,7 +34,9 @@ export default function QuestionCard({ question, options, onSubmitAnswers, loadi
 
   const submitProposalStep = (e) => {
     if (e) e.preventDefault();
-    if (proposalPickedIds.length > 0 && !loading) {
+    // Non-blocking: saves run in the background in App.jsx, so Continue stays
+    // enabled and never shows a spinner — only the final submit loads.
+    if (proposalPickedIds.length > 0) {
       onSubmitAnswers(proposalPickedIds);
     }
   };
@@ -81,7 +83,6 @@ export default function QuestionCard({ question, options, onSubmitAnswers, loadi
               key={opt.id}
               type="button"
               onClick={() => toggleProposalOption(opt.id)}
-              disabled={loading}
               className="btn-interactive option-card"
               style={{
                 width: '100%',
@@ -93,7 +94,7 @@ export default function QuestionCard({ question, options, onSubmitAnswers, loadi
                 borderRadius: '12px',
                 fontSize: '14px',
                 fontWeight: '600',
-                cursor: loading ? 'not-allowed' : 'pointer',
+                cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
@@ -141,24 +142,29 @@ export default function QuestionCard({ question, options, onSubmitAnswers, loadi
       <button
         type="button"
         onClick={submitProposalStep}
-        disabled={proposalPickedIds.length === 0 || loading}
+        disabled={proposalPickedIds.length === 0}
         className="btn-interactive"
         style={{
           width: '100%',
           padding: '14px',
-          backgroundColor: proposalPickedIds.length > 0 && !loading ? 'var(--primary-accent)' : 'var(--bg-input)',
-          color: proposalPickedIds.length > 0 && !loading ? '#ffffff' : 'var(--text-muted)',
-          border: proposalPickedIds.length > 0 && !loading ? 'none' : '1px solid var(--border-color)',
+          backgroundColor: proposalPickedIds.length > 0 ? 'var(--primary-accent)' : 'var(--bg-input)',
+          color: proposalPickedIds.length > 0 ? '#ffffff' : 'var(--text-muted)',
+          border: proposalPickedIds.length > 0 ? 'none' : '1px solid var(--border-color)',
           borderRadius: '12px',
           fontWeight: '700',
           fontSize: '15px',
-          cursor: proposalPickedIds.length > 0 && !loading ? 'pointer' : 'not-allowed',
-          boxShadow: proposalPickedIds.length > 0 && !loading ? '0 4px 14px var(--accent-glow)' : 'none',
+          cursor: proposalPickedIds.length > 0 ? 'pointer' : 'not-allowed',
+          boxShadow: proposalPickedIds.length > 0 ? '0 4px 14px var(--accent-glow)' : 'none',
           boxSizing: 'border-box'
         }}
       >
-        {loading ? 'Saving proposal answer...' : 'Continue →'}
+        Continue →
       </button>
+      {saving && (
+        <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '10px 0 0 0', textAlign: 'center' }}>
+          Saving previous answer in the background…
+        </p>
+      )}
     </div>
   );
 }

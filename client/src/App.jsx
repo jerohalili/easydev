@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ClockCounterClockwise, ArrowRight, ClipboardText } from '@phosphor-icons/react';
 import ProgressBar from './components/ProgressBar';
 import QuestionCard from './components/QuestionCard';
@@ -27,7 +27,16 @@ export default function App() {
   // proposalFlags = contradiction heads-ups from the scoring engine (Q3 vs Q2 etc.)
   const [proposalFlags, setProposalFlags] = useState([]);
   const [loading, setLoading] = useState(false);
+  // Non-blocking questionnaire state: per-answer saves + next-question fetches
+  // run in the background so Continue feels instant. `loading` is reserved for
+  // the true blocking moments (start, review build, final scoring).
+  const [answerSaving, setAnswerSaving] = useState(false);
+  const [loadingNext, setLoadingNext] = useState(false);
   const [error, setError] = useState(null);
+  // Prefetched question payloads: questionId -> { question, options, remaining_steps }
+  const questionCacheRef = useRef(new Map());
+  // In-flight background save promises, flushed before review/scoring.
+  const pendingSavesRef = useRef([]);
 
   const startProposal = async (e) => {
     e.preventDefault();
@@ -35,6 +44,10 @@ export default function App() {
 
     setLoading(true);
     setError(null);
+    questionCacheRef.current.clear();
+    pendingSavesRef.current = [];
+    setAnswerSaving(false);
+    setLoadingNext(false);
     try {
       const projData = await apiFetch('/projects', {
         method: 'POST',
@@ -63,10 +76,48 @@ export default function App() {
     }
   };
 
-  const fetchQuestionnaireStep = async (questionId) => {
+  const fetchQuestionnaireStep = useCallback(async (questionId) => {
+    const cacheKey = Number(questionId);
+    const cached = questionCacheRef.current.get(cacheKey);
+    if (cached) return cached;
     const data = await apiFetch(`/questions/${questionId}`);
-    return { question: data.question, options: data.options, remaining_steps: data.remaining_steps };
-  };
+    const step = { question: data.question, options: data.options, remaining_steps: data.remaining_steps };
+    questionCacheRef.current.set(cacheKey, step);
+    return step;
+  }, []);
+
+  // Fire-and-forget prefetch so Continue is usually a cache hit (instant).
+  const prefetchQuestionSteps = useCallback((questionIds) => {
+    [...new Set((questionIds || []).filter(Boolean))].forEach((id) => {
+      const cacheKey = Number(id);
+      if (questionCacheRef.current.has(cacheKey)) return;
+      apiFetch(`/questions/${id}`)
+        .then((data) => {
+          questionCacheRef.current.set(cacheKey, {
+            question: data.question,
+            options: data.options,
+            remaining_steps: data.remaining_steps
+          });
+        })
+        .catch(() => {});
+    });
+  }, []);
+
+  const trackBackgroundSave = useCallback((promise) => {
+    pendingSavesRef.current.push(promise);
+    setAnswerSaving(true);
+    const cleanup = () => {
+      pendingSavesRef.current = pendingSavesRef.current.filter((p) => p !== promise);
+      if (pendingSavesRef.current.length === 0) setAnswerSaving(false);
+    };
+    promise.then(cleanup, cleanup);
+    return promise;
+  }, []);
+
+  const flushPendingSaves = useCallback(async () => {
+    const pending = [...pendingSavesRef.current];
+    if (pending.length > 0) await Promise.allSettled(pending);
+  }, []);
 
   const currentProposalStep = proposalPathPos >= 0 ? proposalPath[proposalPathPos] : null;
 
@@ -85,51 +136,145 @@ export default function App() {
     setStepCount(index + 1);
   };
 
-  const submitProposalAnswer = async (optionIds) => {
-    if (!optionIds || optionIds.length === 0 || !currentProposalStep) return;
+  // Prefetch successors of the visible step while the user reads, so
+  // Continue is usually an instant cache hit instead of a spinner.
+  useEffect(() => {
+    if (screen !== 'quiz' || !currentProposalStep) return;
+    prefetchQuestionSteps((currentProposalStep.options || []).map((o) => o.next_question_id));
+  }, [screen, currentProposalStep, prefetchQuestionSteps]);
 
+  const buildProposalReview = async () => {
+    // Only blocking loader in the quiz flow besides the final score —
+    // flush the last background save so the summary sees every answer.
     setLoading(true);
     setError(null);
     try {
-      const data = await apiFetch(`/projects/${proposalId}/answers`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          question_id: currentProposalStep.question.id,
-          option_ids: optionIds
-        })
-      });
-
-      setProposalFlags(data.warnings || []);
-
-      // Record answer, drop stale forward history from the previous branch
-      const answeredStep = { ...currentProposalStep, selectedIds: optionIds };
-      const trimmedPath = proposalPath.slice(0, proposalPathPos + 1);
-      trimmedPath[proposalPathPos] = answeredStep;
-
-      if (data.next_question_id) {
-        const { question, options: opts, remaining_steps } = await fetchQuestionnaireStep(data.next_question_id);
-        const newIndex = proposalPathPos + 1;
-        setProposalPath([...trimmedPath, { question, options: opts, selectedIds: [] }]);
-        setProposalPathPos(newIndex);
-        const newStep = newIndex + 1;
-        setStepCount(newStep);
-        setTotalSteps(newStep - 1 + remaining_steps);
-      } else {
-        setProposalPath(trimmedPath);
-        await buildProposalReview();
-      }
+      await flushPendingSaves();
+      const data = await apiFetch(`/projects/${proposalId}/summary`);
+      setProposalReviewLines(data || []);
+      setScreen('review');
     } catch (err) {
-      setError(err.message || 'Couldn\'t save that questionnaire answer for this proposal. Try again.');
+      setError(err.message || `Couldn't load the review for this proposal. Try again.`);
     } finally {
       setLoading(false);
     }
   };
 
-  const buildProposalReview = async () => {
-    const data = await apiFetch(`/projects/${proposalId}/summary`);
-    setProposalReviewLines(data || []);
-    setScreen('review');
+  const advanceToQuestionStep = (step, posSnapshot) => {
+    const newIndex = posSnapshot + 1;
+    setProposalPath((prev) => {
+      const base = prev.slice(0, posSnapshot + 1);
+      return [...base, { question: step.question, options: step.options, selectedIds: [] }];
+    });
+    setProposalPathPos(newIndex);
+    const newStep = newIndex + 1;
+    setStepCount(newStep);
+    setTotalSteps(newStep - 1 + (step.remaining_steps ?? 1));
+    prefetchQuestionSteps((step.options || []).map((o) => o.next_question_id));
+  };
+
+  const submitProposalAnswer = (optionIds) => {
+    if (!optionIds || optionIds.length === 0 || !currentProposalStep) return;
+    if (loading || loadingNext) return;
+
+    setError(null);
+    const stepSnapshot = currentProposalStep;
+    const posSnapshot = proposalPathPos;
+    const activeProposalId = proposalId;
+
+    // Record answer locally first, drop stale forward branch — Back restores
+    // instantly even while the save is still in flight.
+    const answeredStep = { ...stepSnapshot, selectedIds: optionIds };
+    const trimmedPath = proposalPath.slice(0, posSnapshot + 1);
+    trimmedPath[posSnapshot] = answeredStep;
+    setProposalPath(trimmedPath);
+
+    // Server picks next from targetOptionIds[0] — mirror it for the optimistic jump.
+    const localNextId =
+      (stepSnapshot.options || []).find((o) => o.id === optionIds[0])?.next_question_id ?? null;
+
+    // Background save: non-blocking, warnings land async, failures banner only.
+    const savePromise = apiFetch(`/projects/${activeProposalId}/answers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question_id: stepSnapshot.question.id,
+        option_ids: optionIds
+      })
+    })
+      .then((data) => {
+        setProposalFlags(data.warnings || []);
+        return data;
+      })
+      .catch((err) => {
+        setError(err.message || `Couldn't save that questionnaire answer in the background. Check connection — tap Continue again to retry.`);
+        throw err;
+      });
+    trackBackgroundSave(savePromise);
+
+    // Authoritative reconcile (e.g. brand-new auto-skip of Q6/Q8): if the
+    // server skipped past our optimistic pick and the user hasn't answered
+    // that screen yet, swap in the server's step.
+    savePromise
+      .then(async (data) => {
+        const serverNext = data.next_question_id ?? null;
+        if (serverNext === localNextId || serverNext == null) {
+          if (serverNext == null && localNextId == null) {
+            // True end of questionnaire — blocking loader only here.
+            await flushPendingSaves();
+            await buildProposalReview();
+          } else if (serverNext != null && localNextId == null) {
+            try {
+              const serverStep = await fetchQuestionnaireStep(serverNext);
+              advanceToQuestionStep(serverStep, posSnapshot);
+            } catch {
+              // Error banner already set; user stays on a valid step.
+            }
+          }
+          return;
+        }
+        try {
+          const serverStep = await fetchQuestionnaireStep(serverNext);
+          setProposalPath((prev) => {
+            const nextSlot = prev[posSnapshot + 1];
+            if (!nextSlot || (nextSlot.selectedIds || []).length > 0) return prev;
+            if (Number(nextSlot.question.id) !== Number(localNextId)) return prev;
+            const swapped = [...prev];
+            swapped[posSnapshot + 1] = {
+              question: serverStep.question,
+              options: serverStep.options,
+              selectedIds: []
+            };
+            return swapped;
+          });
+          prefetchQuestionSteps((serverStep.options || []).map((o) => o.next_question_id));
+        } catch {
+          // Keep the optimistic step — it is still answerable and savable.
+        }
+      })
+      .catch(() => {});
+
+    if (localNextId == null) {
+      // Optimistically the end; the save callback above finishes the jump to
+      // review (blocking) once the server confirms. Nothing more to do here.
+      return;
+    }
+
+    const cached = questionCacheRef.current.get(Number(localNextId));
+    if (cached) {
+      advanceToQuestionStep(cached, posSnapshot);
+      return;
+    }
+
+    // Cache miss: fetch next without locking the whole UI — Back/options on
+    // the follow-up stay interactive, only a slim placeholder shows.
+    setLoadingNext(true);
+    fetchQuestionnaireStep(localNextId)
+      .then((step) => advanceToQuestionStep(step, posSnapshot))
+      .catch((err) => {
+        setError(err.message || `Couldn't load the next questionnaire step. Try again.`);
+      })
+      .finally(() => setLoadingNext(false));
   };
 
   const scoreProposalStack = async (targetProposalId) => {
@@ -137,6 +282,7 @@ export default function App() {
     setLoading(true);
     setError(null);
     try {
+      await flushPendingSaves();
       const data = await apiFetch(`/projects/${idToUse}/score`, { method: 'POST' });
       setStackPicks(data.recommendations);
       setProposalFlags(data.warnings || []);
@@ -326,29 +472,35 @@ export default function App() {
             {screen === 'quiz' && currentProposalStep && (
               <div className="narrow-content">
                 <ProgressBar stepCount={stepCount} totalSteps={totalSteps} />
-                {proposalPathPos > 0 && (
-                  <button
-                    type="button"
-                    onClick={stepBackInProposal}
-                    disabled={loading}
-                    className="btn-interactive"
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      padding: '8px 4px',
-                      marginBottom: '10px',
-                      border: 'none',
-                      background: 'none',
-                      color: 'var(--text-secondary)',
-                      fontWeight: '700',
-                      fontSize: '13px',
-                      cursor: loading ? 'not-allowed' : 'pointer'
-                    }}
-                  >
-                    ← Back
-                  </button>
-                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: '30px', marginBottom: '10px' }}>
+                  <div>
+                    {proposalPathPos > 0 && (
+                      <button
+                        type="button"
+                        onClick={stepBackInProposal}
+                        disabled={loading || loadingNext}
+                        className="btn-interactive"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '8px 4px',
+                          border: 'none',
+                          background: 'none',
+                          color: 'var(--text-secondary)',
+                          fontWeight: '700',
+                          fontSize: '13px',
+                          cursor: loading || loadingNext ? 'not-allowed' : 'pointer'
+                        }}
+                      >
+                        ← Back
+                      </button>
+                    )}
+                  </div>
+                  <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', whiteSpace: 'nowrap', visibility: answerSaving && !loadingNext ? 'visible' : 'hidden' }}>
+                    Saving…
+                  </span>
+                </div>
                 {proposalFlags.length > 0 && (
                   <div
                     style={{
@@ -372,13 +524,31 @@ export default function App() {
                     )}
                   </div>
                 )}
-                <QuestionCard
-                  question={currentProposalStep.question}
-                  options={currentProposalStep.options}
-                  initialSelectedIds={currentProposalStep.selectedIds}
-                  onSubmitAnswers={submitProposalAnswer}
-                  loading={loading}
-                />
+                {loadingNext ? (
+                  <div
+                    className="animate-fade"
+                    style={{
+                      backgroundColor: 'var(--bg-card)',
+                      padding: '32px 24px',
+                      borderRadius: '20px',
+                      border: '1px solid var(--border-color)',
+                      boxShadow: 'var(--card-shadow)',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: 'var(--text-secondary)'
+                    }}
+                  >
+                    Preparing next question…
+                  </div>
+                ) : (
+                  <QuestionCard
+                    question={currentProposalStep.question}
+                    options={currentProposalStep.options}
+                    initialSelectedIds={currentProposalStep.selectedIds}
+                    onSubmitAnswers={submitProposalAnswer}
+                    saving={answerSaving}
+                  />
+                )}
               </div>
             )}
 
@@ -460,6 +630,10 @@ export default function App() {
                   setProposalPath([]);
                   setProposalPathPos(-1);
                   setProposalReviewLines([]);
+                  questionCacheRef.current.clear();
+                  pendingSavesRef.current = [];
+                  setAnswerSaving(false);
+                  setLoadingNext(false);
                   setScreen('start');
                 }}
               />
