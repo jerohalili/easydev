@@ -312,6 +312,81 @@ export default function App() {
     }
   };
 
+  // Resume an incomplete questionnaire from history — hydrates the answered
+  // path so Back/edit work immediately, then lands on the next question
+  // (or review when every answer is already in).
+  const resumeProposal = async (id) => {
+    setLoading(true);
+    setError(null);
+    questionCacheRef.current.clear();
+    pendingSavesRef.current = [];
+    setAnswerSaving(false);
+    setLoadingNext(false);
+    try {
+      const data = await apiFetch(`/projects/${id}/resume`);
+      const answeredPath = (data.path || []).map((step) => ({
+        question: step.question,
+        options: step.options,
+        selectedIds: step.selectedIds || []
+      }));
+      // Seed the prefetch cache so Continue stays instant after resume.
+      answeredPath.forEach((step) => {
+        questionCacheRef.current.set(Number(step.question.id), {
+          question: step.question,
+          options: step.options,
+          remaining_steps: 1
+        });
+      });
+
+      setProposalId(data.project.id);
+      setProjectTitle(data.project.title || '');
+      setProjectDescription(data.project.description || '');
+      setProposalFlags(data.warnings || []);
+      setStackPicks([]);
+      setProposalReviewLines([]);
+
+      if (!answeredPath.length && !data.next_question) {
+        setProposalPath([]);
+        setProposalPathPos(-1);
+        setActiveTab('new');
+        setScreen('start');
+        return;
+      }
+
+      if (data.next_question) {
+        const nextStep = {
+          question: data.next_question.question,
+          options: data.next_question.options,
+          selectedIds: []
+        };
+        questionCacheRef.current.set(Number(nextStep.question.id), {
+          question: nextStep.question,
+          options: nextStep.options,
+          remaining_steps: data.next_question.remaining_steps ?? 1
+        });
+        const fullPath = [...answeredPath, nextStep];
+        const pos = fullPath.length - 1;
+        setProposalPath(fullPath);
+        setProposalPathPos(pos);
+        setStepCount(pos + 1);
+        setTotalSteps(pos + (data.next_question.remaining_steps ?? 1));
+        prefetchQuestionSteps((nextStep.options || []).map((o) => o.next_question_id));
+      } else {
+        // All answers saved but review never reached — rebuild review now.
+        setProposalPath(answeredPath);
+        setProposalPathPos(answeredPath.length - 1);
+        const data2 = await apiFetch(`/projects/${id}/summary`);
+        setProposalReviewLines(data2 || []);
+      }
+      setActiveTab('new');
+      setScreen(data.next_question ? 'quiz' : 'review');
+    } catch (err) {
+      setError(err.message || 'Couldn\'t resume that questionnaire. Try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div style={{ minHeight: '100vh', padding: '32px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div className="app-shell app-shell-wide">
@@ -645,6 +720,7 @@ export default function App() {
         {activeTab === 'history' && (
           <HistoryView
             onSelectProject={reopenProposal}
+            onResumeProject={resumeProposal}
             onStartNew={() => {
               setActiveTab('new');
               setScreen('start');

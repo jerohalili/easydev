@@ -95,11 +95,12 @@ app.get('/api/health', async (req, res) => {
 app.get('/api/projects', async (req, res) => {
   try {
     const projectsQuery = `
-      SELECT 
-        p.id, 
-        p.title, 
-        p.description, 
+      SELECT
+        p.id,
+        p.title,
+        p.description,
         p.created_at,
+        p.experience_level,
         COALESCE(
           json_agg(
             json_build_object(
@@ -111,14 +112,57 @@ app.get('/api/projects', async (req, res) => {
               'trade_offs', t.trade_offs
             )
           ) FILTER (WHERE r.id IS NOT NULL), '[]'
-        ) AS recommendations
+        ) AS recommendations,
+        COUNT(DISTINCT a.question_id)::int AS answer_count,
+        MAX(a.created_at) AS last_answered_at
       FROM projects p
       LEFT JOIN results r ON p.id = r.project_id
       LEFT JOIN tech_items t ON r.tech_item_id = t.id
+      LEFT JOIN answers a ON a.project_id = p.id
       GROUP BY p.id
       ORDER BY p.created_at DESC;
     `;
     const result = await pool.query(projectsQuery);
+    // Progress denominator per incomplete project: answered + static remaining
+    // walk from where they left off (branching-aware, mirrors POST answers
+    // auto-skip). Falls back to answer_count so one slow project can't break
+    // the whole history response.
+    for (const row of result.rows) {
+      try {
+        if ((row.recommendations || []).length > 0) {
+          row.total_questions = null;
+          continue;
+        }
+        const answered = Number(row.answer_count) || 0;
+        let nextQuestionId = null;
+        if (answered > 0) {
+          const lastRes = await pool.query(
+            `SELECT o.next_question_id FROM answers a
+             JOIN options o ON a.option_id = o.id
+             WHERE a.project_id = $1
+             ORDER BY a.created_at DESC LIMIT 1`,
+            [row.id]
+          );
+          nextQuestionId = lastRes.rows[0] ? lastRes.rows[0].next_question_id : null;
+          while (nextQuestionId && AUTO_ANSWER_FOR_BEGINNERS[nextQuestionId]) {
+            if (row.experience_level !== 'brand_new') break;
+            const skipRes = await pool.query(
+              'SELECT next_question_id FROM options WHERE id = $1',
+              [AUTO_ANSWER_FOR_BEGINNERS[nextQuestionId]]
+            );
+            nextQuestionId = skipRes.rows[0] ? skipRes.rows[0].next_question_id : null;
+          }
+        } else {
+          const firstRes = await pool.query('SELECT id FROM questions WHERE is_first = TRUE LIMIT 1');
+          nextQuestionId = firstRes.rows[0] ? firstRes.rows[0].id : null;
+        }
+        const remaining = nextQuestionId ? await countProposalStepsFrom(Number(nextQuestionId)) : 0;
+        row.total_questions = answered + remaining;
+      } catch {
+        row.total_questions = Number(row.answer_count) || 0;
+      }
+      delete row.experience_level;
+    }
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching proposal history:', err);
@@ -254,6 +298,93 @@ app.get('/api/projects/:id/summary', async (req, res) => {
   } catch (err) {
     console.error('Error fetching proposal answer summary:', err);
     res.status(500).json({ error: 'Failed to load proposal review' });
+  }
+});
+
+// 6c. Resume payload for incomplete questionnaires — rebuilds the answered path
+// in first-answered order plus the authoritative next question (branching +
+// brand-new auto-skip applied, mirroring POST answers). next_question is null
+// when every answer is in and the client should go straight to review.
+app.get('/api/projects/:id/resume', async (req, res) => {
+  const projectId = req.params.id;
+  try {
+    const projectRes = await pool.query('SELECT * FROM projects WHERE id = $1', [projectId]);
+    if (projectRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const answeredQuery = `
+      SELECT
+        q.id AS question_id,
+        MIN(a.created_at) AS answered_at,
+        json_agg(a.option_id ORDER BY a.option_id ASC) AS selected_ids
+      FROM answers a
+      JOIN questions q ON a.question_id = q.id
+      WHERE a.project_id = $1
+      GROUP BY q.id
+      ORDER BY answered_at ASC;
+    `;
+    const answeredRes = await pool.query(answeredQuery, [projectId]);
+
+    const path = [];
+    for (const row of answeredRes.rows) {
+      const questionRes = await pool.query('SELECT * FROM questions WHERE id = $1', [row.question_id]);
+      if (questionRes.rows.length === 0) continue;
+      const optionsRes = await pool.query(
+        'SELECT id, label, next_question_id, is_unsure FROM options WHERE question_id = $1 ORDER BY id ASC',
+        [row.question_id]
+      );
+      path.push({
+        question: questionRes.rows[0],
+        options: optionsRes.rows,
+        selectedIds: (row.selected_ids || []).map(Number)
+      });
+    }
+
+    // Authoritative next step from the last answer (first selected option wins,
+    // same convention as POST answers), with the beginner auto-skip applied.
+    let nextQuestionId = null;
+    if (path.length > 0) {
+      const lastIds = path[path.length - 1].selectedIds;
+      if (lastIds.length > 0) {
+        const optionRes = await pool.query('SELECT next_question_id FROM options WHERE id = $1', [lastIds[0]]);
+        nextQuestionId = optionRes.rows[0] ? optionRes.rows[0].next_question_id : null;
+      }
+      while (nextQuestionId && AUTO_ANSWER_FOR_BEGINNERS[nextQuestionId]) {
+        const projRes = await pool.query('SELECT experience_level FROM projects WHERE id = $1', [projectId]);
+        if (projRes.rows[0]?.experience_level !== 'brand_new') break;
+        const skipRes = await pool.query(
+          'SELECT next_question_id FROM options WHERE id = $1',
+          [AUTO_ANSWER_FOR_BEGINNERS[nextQuestionId]]
+        );
+        nextQuestionId = skipRes.rows[0] ? skipRes.rows[0].next_question_id : null;
+      }
+    } else {
+      const firstRes = await pool.query('SELECT id FROM questions WHERE is_first = TRUE LIMIT 1');
+      nextQuestionId = firstRes.rows[0] ? firstRes.rows[0].id : null;
+    }
+
+    let nextQuestion = null;
+    if (nextQuestionId) {
+      const questionRes = await pool.query('SELECT * FROM questions WHERE id = $1', [nextQuestionId]);
+      if (questionRes.rows.length > 0) {
+        const optionsRes = await pool.query(
+          'SELECT id, label, next_question_id, is_unsure FROM options WHERE question_id = $1 ORDER BY id ASC',
+          [nextQuestionId]
+        );
+        nextQuestion = {
+          question: questionRes.rows[0],
+          options: optionsRes.rows,
+          remaining_steps: await countProposalStepsFrom(Number(nextQuestionId))
+        };
+      }
+    }
+
+    const warnings = await getProposalFlags(projectId);
+    res.json({ project: projectRes.rows[0], path, next_question: nextQuestion, warnings });
+  } catch (err) {
+    console.error('Error building proposal resume payload:', err);
+    res.status(500).json({ error: 'Failed to load this incomplete questionnaire' });
   }
 });
 

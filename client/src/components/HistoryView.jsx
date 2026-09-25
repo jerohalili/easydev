@@ -5,7 +5,7 @@ import { CATEGORY_STYLES as STACK_LAYER_STYLES } from '../categoryStyles';
 // Proposal dashboard — every completed questionnaire is a proposal row with
 // its 5 stack picks denormalized for the badges. Re-scores append to results,
 // never overwrite, so the timeline stays intact (learned that the hard way).
-export default function HistoryView({ onSelectProject, onStartNew }) {
+export default function HistoryView({ onSelectProject, onResumeProject, onStartNew }) {
   const [proposals, setProposals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -57,7 +57,7 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
             </h2>
           </div>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
-            Review past assessments and their recommended tech stack outputs
+            Review past assessments and their recommended tech stack outputs — or continue where you left off
           </p>
         </div>
         <button
@@ -114,10 +114,15 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
 
       {!error && proposals.length > 0 && (
         <div className="history-grid">
-          {proposals.map((proposal) => (
+          {proposals.map((proposal) => {
+            const isComplete = (proposal.recommendations || []).length > 0;
+            const answerCount = Number(proposal.answer_count) || 0;
+            const totalCount = Number(proposal.total_questions) || answerCount;
+            const progressPercent = totalCount > 0 ? Math.min(Math.round((answerCount / totalCount) * 100), 100) : 0;
+            return (
             <div
               key={proposal.id}
-              onClick={() => onSelectProject(proposal.id)}
+              onClick={() => (isComplete ? onSelectProject(proposal.id) : onResumeProject?.(proposal.id))}
               className="option-card"
               style={{
                 backgroundColor: 'var(--bg-card)',
@@ -165,37 +170,70 @@ export default function HistoryView({ onSelectProject, onStartNew }) {
                 </p>
               )}
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
-                {proposal.recommendations && proposal.recommendations.map((stackPick) => {
-                  const styleBadge = STACK_LAYER_STYLES[stackPick.category] || {
-                    bg: 'var(--bg-input)',
-                    text: 'var(--text-primary)',
-                    border: 'var(--border-color)'
-                  };
-                  return (
-                    <span
-                      key={stackPick.name}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        fontSize: '11px',
-                        fontWeight: '700',
-                        padding: '4px 10px',
-                        borderRadius: '6px',
-                        backgroundColor: styleBadge.bg,
-                        color: styleBadge.text,
-                        border: `1px solid ${styleBadge.border}`,
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      {stackPick.name}
+              {!isComplete ? (
+                <div style={{ marginTop: '12px', paddingTop: '14px', borderTop: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--primary-accent)', background: 'var(--accent-glow)', padding: '4px 10px', borderRadius: '20px', border: '1px solid var(--border-color)' }}>
+                      In progress
                     </span>
-                  );
-                })}
-              </div>
+                    <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>
+                      {answerCount > 0 ? `${answerCount} of ${totalCount} answered` : `Not started · ${totalCount} questions`}
+                    </span>
+                  </div>
+                  <div style={{ height: '6px', width: '100%', backgroundColor: 'var(--bg-input)', borderRadius: '999px', overflow: 'hidden', border: '1px solid var(--border-color)', boxSizing: 'border-box' }}>
+                    <div
+                      style={{
+                        height: '100%',
+                        width: `${progressPercent}%`,
+                        backgroundColor: 'var(--primary-accent)',
+                        borderRadius: '999px',
+                        transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+                      }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)' }}>
+                      Tap anywhere to pick up where you left off
+                    </span>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--primary-accent)', whiteSpace: 'nowrap' }}>
+                      {answerCount > 0 ? 'Resume →' : 'Start →'}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
+                  {proposal.recommendations && proposal.recommendations.map((stackPick) => {
+                    const styleBadge = STACK_LAYER_STYLES[stackPick.category] || {
+                      bg: 'var(--bg-input)',
+                      text: 'var(--text-primary)',
+                      border: 'var(--border-color)'
+                    };
+                    return (
+                      <span
+                        key={stackPick.name}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          padding: '4px 10px',
+                          borderRadius: '6px',
+                          backgroundColor: styleBadge.bg,
+                          color: styleBadge.text,
+                          border: `1px solid ${styleBadge.border}`,
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {stackPick.name}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
