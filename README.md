@@ -6,6 +6,7 @@
 
 **Repo:** https://github.com/jerohalili/easydev
 **Live:** https://easydev-nine.vercel.app/
+**Portfolio:** https://jerohalili.github.io/projects/easydev-tech-stack-advisor
 
 ---
 
@@ -90,14 +91,14 @@ Deploy: push to Vercel; `vercel.json` builds `client/dist` and rewrites `/api/*`
 
 ## 4. Features and usage
 
-Primary flow: **Start → Quiz → Review → Results → Compare → History**
+Primary flow: **Start → Quiz → Review → Results → Compare → History (with Continue)**
 
 1. **Start:** create a project (`POST /projects`) → first question loads.
-2. **Quiz:** branching questions via `next_question_id` (e.g. “API / Microservice” skips frontend-platform). Multi-select where realistic. `ProgressBar` uses server `remaining_steps`. Contradiction warnings shown inline (e.g. realtime + no-backend-logic).
+2. **Quiz:** branching questions via `next_question_id` (e.g. “API / Microservice” skips frontend-platform). Multi-select where realistic. `ProgressBar` uses server `remaining_steps`. Contradiction warnings shown inline (e.g. realtime + no-backend-logic). Answers save in the background with next-question prefetch, so advancing feels instant.
 3. **Review:** grouped answer summary, click any row to jump back and edit (forward branch is discarded and rebuilt).
 4. **Results:** weighted-sum scoring per category with `PRIMARY_BOOST x5`, `SAFE_DEFAULTS` on all-zero layers, `needs_confirmation` on thin margins. Each pick shows reasoning text + trade-offs.
 5. **Compare:** build your own stack manually from the same catalog and see match/override per category.
-6. **History:** every project + every re-score preserved (append, not overwrite). Reopen, delete, restart.
+6. **History + Continue:** every project + every re-score preserved (append, not overwrite). Reopen, delete, restart — or **Continue** an unfinished questionnaire from history, which resumes at the exact next question with prior answers hydrated for Back/edit. History rows show `answer_count/total_questions` progress.
 
 Other features: dark/light theme (`data-theme` + `localStorage`), responsive layout, resilient fetch helper (`res.ok` check + server message surfacing in `client/src/config.js`).
 
@@ -106,12 +107,13 @@ Other features: dark/light theme (`data-theme` + `localStorage`), responsive lay
 | Method | Path | What it does |
 |--------|------|--------------|
 | GET | `/api/health` | DB healthcheck (`SELECT NOW()`) |
-| GET | `/api/projects` | List projects with latest recommendations |
+| GET | `/api/projects` | List projects with latest recommendations + `answer_count`, `last_answered_at`, branching-aware `total_questions` for Continue progress |
 | POST | `/api/projects` | Create `{title, description}` → returns `first_question_id` |
 | GET | `/api/projects/:id` | Single project + results + answers |
 | DELETE | `/api/projects/:id` | Delete project (cascades) |
 | GET | `/api/questions/:id` | Quiz step: question + options + `remaining_steps` |
 | GET | `/api/projects/:id/summary` | Review-screen grouped answers |
+| GET | `/api/projects/:id/resume` | Resume payload: answered path in first-answered order + authoritative `next_question` (branching + brand-new auto-skip applied; `null` means go to review) |
 | POST | `/api/projects/:id/answers` | Save answers (single `option_id` or `option_ids[]`), returns `{next_question_id, warnings}` |
 | POST | `/api/projects/:id/score` | Run weighted scoring, append result row |
 | GET | `/api/tech-items` | Full tech catalog for comparison view |
@@ -126,10 +128,10 @@ Other features: dark/light theme (`data-theme` + `localStorage`), responsive lay
 easydev/
   api/index.js        # entire API: single Express app → Vercel serverless fn
   client/src/
-    App.jsx           # tab + screen state machine (new/history, start/quiz/review/results)
+    App.jsx           # tab + screen state machine (new/history, start/quiz/review/results) + background saves, question prefetch cache, resumeProposal()
     config.js         # API_BASE='/api' + apiFetch with res.ok guard
     categoryStyles.js # shared badge map
-    components/       # QuestionCard, ProgressBar, ResultsView, HistoryView, ComparisonView, ThemeToggle
+    components/       # QuestionCard, ProgressBar, ResultsView, HistoryView (Continue + progress), ComparisonView, ThemeToggle
     main.jsx, index.css
   client/vite.config.js # :5173 + /api → localhost:3001 proxy
   db/db.js            # pg.Pool, SSL only when sslmode=require
@@ -162,7 +164,8 @@ easydev/
 - Open demo by design: no login; anyone with a project UUID can read/mutate it (no `userId` scoping). Fine for a class demo, would need auth + ownership before real users.
 - `cors()` is unrestricted (`api/index.js:8`). Would restrict to the Vercel origin in production.
 - Server validation is thin (`answers` checks non-empty only; `score`/`user-stack` rely on DB constraints). Would add type/FK/whitelist checks.
-- Post-migration prod verification at `easydev-nine.vercel.app` + final responsive pass still to confirm.
+- Post-migration prod verification at `easydev-nine.vercel.app` + final responsive pass still to confirm. Continue/Resume + background-save smoke (start → answer → reload → Continue → review → score) is part of that check.
+- Portfolio case study live at `jerohalili.github.io/projects/easydev-tech-stack-advisor` since Sep 25 — reuses these docs + screenshots for strangers/employers.
 - Next: auth + per-user history, stricter validation, restricted CORS, pagination on history.
 
 ---

@@ -10,6 +10,7 @@ Started week 1, kept alongside work. Full 6 + 3 + who-wrote-what for finals badg
 - 2026-09-14, Copilot — `client/src/config.js` `res.ok` guard + server-message surfacing. Kept as-is after 500-rendered-as-picks bug. Commit `6017d02`.
 - 2026-09-15, Claude — `local-server.js` + Vite proxy + `concurrently` scripts for `npm run dev`. Kept, fixed SSL gating (`sslmode=require`). Commit `a5d17be`.
 - 2026-09-19, Claude — README restructure to §§1–7 + SECURITY-CHECKLIST evidence wording. Kept structure, rewrote evidence in own words. Commit (this change).
+- 2026-09-20–26 (Week 6) — no new AI prompts logged. Continue/Resume (`GET /:id/resume`, `resumeProposal()`), background saves + prefetch cache, and portfolio case-study assembly were written by hand; docs §4–§5 updated to match.
 
 ## 2. Where the AI got it wrong
 
