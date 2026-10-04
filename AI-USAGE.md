@@ -9,8 +9,8 @@ Started week 1, kept alongside work. Full 6 + 3 + who-wrote-what for finals badg
 - 2026-09-13, Claude — Vercel migration (standalone Express → single serverless fn). Kept rewrite rules, deleted local-only paths. Commits [`98e259f`](https://github.com/jerohalili/easydev/commit/98e259f6ad6ef4b94faffc417b0f372c7eaa1bd8) / [`8ac6034`](https://github.com/jerohalili/easydev/commit/8ac6034e39f230c569e2db1598379d7c65a2ea95).
 - 2026-09-14, Copilot — `client/src/config.js` `res.ok` guard + server-message surfacing. Kept as-is after 500-rendered-as-picks bug. Commit [`6017d02`](https://github.com/jerohalili/easydev/commit/6017d02cb4e7b70f9d6dd69d883f98e76955a1f3).
 - 2026-09-15, Claude — `local-server.js` + Vite proxy + `concurrently` scripts for `npm run dev`. Kept, fixed SSL gating (`sslmode=require`). Commit [`a5d17be`](https://github.com/jerohalili/easydev/commit/a5d17be43f8f9d25c54bb83d87bf7e3f604321bc).
-- 2026-09-19, Claude — README restructure to §§1–7 + SECURITY-CHECKLIST evidence wording. Kept structure, rewrote evidence in own words. Commit [`dcbd027`](https://github.com/jerohalili/easydev/commit/dcbd027b4bd0e5c3dca28b8513787913e9561383).
-- 2026-09-20–26 (Week 6) — no new AI prompts logged. Continue/Resume (`GET /:id/resume`, `resumeProposal()`), background saves + prefetch cache, and portfolio case-study assembly were written by hand; docs §4–§5 updated to match.
+- 2026-09-19, Claude — README restructure to 1–7 + SECURITY-CHECKLIST evidence wording. Kept structure, rewrote evidence in own words. Commit [`dcbd027`](https://github.com/jerohalili/easydev/commit/dcbd027b4bd0e5c3dca28b8513787913e9561383).
+- 2026-09-20–26 (Week 6) — no new AI prompts logged. Continue/Resume (`GET /:id/resume`, `resumeProposal()`), background saves + prefetch cache, and portfolio case-study assembly were written by hand; docs 4–5 updated to match.
 
 ## 2. Where the AI got it wrong
 
