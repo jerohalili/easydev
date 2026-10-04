@@ -188,3 +188,58 @@ Status: Almost complete — maintenance / polish mode, still touched sometimes.
 ### What is left
 
 - I consider my project almost complete. I still have to verify my production deploy post-migration at `easydev-nine.vercel.app`, update my README §5 setup (`vercel dev` vs `npm run dev`), and do one final responsive pass. I have no known blockers; anything after that is small touches.
+
+
+---
+
+## Week 6 — September 20-26, 2026: docs finalize + Continue/Resume + background save + portfolio launch (8 commits)
+
+### What changed this week
+
+#### Documentation finalize
+
+- `dcbd027 doc: add ai, security, and update readme` — new `AI-USAGE.md` (23 lines), new `SECURITY-CHECKLIST.md` (70 rows), README rewritten to §§1–7 (setup, run, endpoints, structure, screenshots, known issues).
+- `9d034be doc: add screenshots` — 3 live captures in `docs/screenshots/`: `proposal-start.jpeg`, `proposal-history.jpeg`, `results-tradeoff.jpeg`; README §6 caption pass.
+- `1aa9877 fix: remove prev security implementation` — despite the title, a 1-line README caption fix (`by the author` removed); no code change.
+
+#### Background save + performance
+
+- `094fb62 fix: better performance, background save` (`App.jsx` +260/-80, `QuestionCard.jsx` 28 lines): per-answer saves + next-question fetches run in the background (`pendingSavesRef`, `questionCacheRef` prefetch, `answerSaving`/`loadingNext` flags) so advancing feels instant; `loading` is now reserved for true blocking moments (start, review build, final scoring).
+
+#### Continue / Resume
+
+- `e055eb5 feat: add a continue functionality` (`api/index.js` +141, `App.jsx` +76, `HistoryView.jsx` +100): new `GET /api/projects/:id/resume` rebuilds the answered path in first-answered order plus the authoritative next question (branching + brand-new auto-skip applied, mirroring `POST answers`); `next_question=null` means go straight to review. `GET /api/projects` now returns `answer_count`, `last_answered_at`, and branching-aware `total_questions` so history rows show real progress. Client `resumeProposal()` hydrates the path so Back/edit works immediately after resume.
+
+#### Portfolio launch
+
+- `jerohalili.github.io a93dacd` (Sep 25): replaced 4 placeholder projects with 7 real ones including `easydev-tech-stack-advisor.md` (~103 lines: challenge, weighted-scoring highlights, endpoints, run steps) + cover `public/images/projects/easydev-decision-engine.jpeg` + carousel/routing rework; `b30a046` smooth carousel animation, `43ebb66` scroll-refresh fix. EasyDev is now discoverable from the portfolio, not just the repo + live URL.
+
+### Why
+
+- I finalized docs first because a stranger (grader, employer) should be able to run EasyDev from the README alone — that is also what the portfolio case study reuses.
+- I added Continue/Resume because abandoning a half-finished questionnaire and restarting from scratch was the worst UX left; history already stored answers, so resuming from `last_answered_at` was the honest fix.
+- I moved saves/fetches to the background because awaiting every POST made the quiz feel laggy; prefetching `next_question_id` options makes Continue usually a cache hit.
+- I shipped the portfolio page as project progress because distribution is progress: live app proves it runs, the portfolio proves I can explain it.
+
+### What broke or what I got stuck on
+
+- **Misleading commit title:** `1aa9877` says "remove prev security implementation" but changes one README word; I am keeping the title as-is in history and noting it here so the log stays honest.
+- **Resume progress math:** computing `total_questions = answered + remaining` per incomplete project needs a branching-aware walk (`countProposalStepsFrom`) plus brand-new auto-skip; one slow project could break the whole history response, so I wrapped it per-row with fallback to `answer_count`.
+- **Background-save risk:** fire-and-forget saves must flush before review/scoring or answers go missing; I track them in `pendingSavesRef` and flush at those gates, but a prod smoke (answer → reload → Continue → review → score) is still needed.
+
+### What is left
+
+- Prod smoke on `easydev-nine.vercel.app`: start → answer → reload → Continue → Back/edit → review → score → compare; confirm history progress (`answer_count/total_questions`) looks right.
+- Final responsive pass. No known blockers.
+
+---
+
+## Addendum — September 27, 2026: docs follow-up (1 commit, no code)
+
+### What changed
+
+- `0908fc0 feat: continue functionality` — docs-only follow-up: `AI-USAGE.md` +1 line (2026-09-20–26 Week 6 hand-note, no new AI prompts), `README.md` portfolio header + `History (with Continue)` flow copy + `GET /:id/resume` endpoint row + `App.jsx`/`HistoryView` file-map notes.
+
+### Why
+
+- This commit was not covered in the Week 6 block above (landed Sep 27, after the Sep 20–26 window) and reuses the `continue functionality` subject, so it is logged here to keep the report honest.

@@ -139,7 +139,7 @@ easydev/
   local-server.js     # local dev: require api/index.js, listen :3001
   vercel.json         # build client/dist, rewrite /api/* → fn, rest → index.html
   package.json        # concurrently scripts: dev, dev:api, dev:client, dev:vercel
-  DESIGN-SYSTEM.html  # token/component spec
+  docs/DESIGN-SYSTEM.html # token/component spec
 ```
 
 ---
